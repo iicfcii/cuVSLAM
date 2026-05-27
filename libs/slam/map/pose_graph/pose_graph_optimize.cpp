@@ -194,6 +194,9 @@ bool PoseGraph::Optimize(const PoseGraphHypothesis& pose_graph_hypothesis_src,
   // edges_to_optimize_: nodes added in the previous level, to be expanded next (sorted).
   // bfs_visited_: raw neighbor scratch buffer for the current level.
   // bfs_merge_buffer_: merge output buffer, swapped in and cleared each level.
+  if (max_keyframes_to_optimize_ == 0) {
+    return false;
+  }
   keyframes_to_optimize_.reserve(max_keyframes_to_optimize_);
   edges_to_optimize_.reserve(max_keyframes_to_optimize_);
   keyframes_to_optimize_.push_back(start_keyframe);
@@ -218,8 +221,10 @@ bool PoseGraph::Optimize(const PoseGraphHypothesis& pose_graph_hypothesis_src,
     std::set_difference(bfs_visited_.begin(), bfs_visited_.end(), keyframes_to_optimize_.begin(),
                         keyframes_to_optimize_.end(), std::back_inserter(edges_to_optimize_));
 
-    // Trim to remaining capacity
-    const size_t remaining = max_keyframes_to_optimize_ - keyframes_to_optimize_.size();
+    // Trim to remaining capacity (saturating to avoid size_t underflow)
+    const size_t remaining = max_keyframes_to_optimize_ > keyframes_to_optimize_.size()
+                                 ? max_keyframes_to_optimize_ - keyframes_to_optimize_.size()
+                                 : 0;
     if (edges_to_optimize_.size() > remaining) {
       edges_to_optimize_.resize(remaining);
     }
