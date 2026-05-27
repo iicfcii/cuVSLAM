@@ -54,7 +54,7 @@ void PoseGraphKeyFrame::AddKeyframeTransform(const Isometry3T& me, const Isometr
 
 float PoseGraphEdgeStat::Weight() const { return static_cast<float>(tracks3d_number); }
 
-PoseGraph::PoseGraph() = default;
+PoseGraph::PoseGraph(size_t max_keyframes_to_optimize) : max_keyframes_to_optimize_(max_keyframes_to_optimize) {}
 
 PoseGraph::~PoseGraph() { SlamStdout("Destroyed PoseGraph instance. "); }
 
@@ -136,10 +136,8 @@ void PoseGraph::RemoveKeyframe(KeyFrameId keyframe_id) {
   TRACE_EVENT ev = profiler_domain_.trace_event("RemoveKeyframe", profiler_color_);
   // remove all edges with keyframe_id
   std::vector<std::pair<KeyFrameId, KeyFrameId>> edge_pairs;
-  QueryKeyframeEdges(keyframe_id,
-                     [&](KeyFrameId from_keyframe, KeyFrameId to_keyframe, const Isometry3T&, const Matrix6T&) {
-                       edge_pairs.push_back({from_keyframe, to_keyframe});
-                     });
+  QueryKeyframeEdges(keyframe_id, [&](KeyFrameId from_keyframe, KeyFrameId to_keyframe, const Isometry3T&,
+                                      const Matrix6T&) { edge_pairs.push_back({from_keyframe, to_keyframe}); });
 
   for (const auto& edge_pair : edge_pairs) {
     const KeyFrameId from_keyframe = edge_pair.first;

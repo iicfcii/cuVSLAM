@@ -60,7 +60,7 @@ struct PoseGraphEdgeStat {
 
 class PoseGraph {
 public:
-  PoseGraph();
+  explicit PoseGraph(size_t max_keyframes_to_optimize = 300);
   ~PoseGraph();
 
   PoseGraph(const PoseGraph&) = delete;
@@ -102,6 +102,8 @@ public:
                  const PoseGraphEdgeStat* stat = nullptr);
 
   // Optimize pose graph
+  // Runs BFS from the head (tail) keyframe, collects up to max_keyframes_to_optimize_ keyframes,
+  // and optimizes that subgraph. The head keyframe is used as the fixed pose constraint.
   // OUT: vo_to_head - transform for last keyframe
   bool Optimize(const PoseGraphHypothesis& pose_graph_hypothesis_src, PoseGraphHypothesis& pose_graph_hypothesis_dst,
                 bool planar_constraint, Isometry3T& vo_to_head) const;
@@ -189,6 +191,8 @@ private:
   // tail
   KeyFrameId head_keyframe_id_ = InvalidKeyFrameId;
 
+  size_t max_keyframes_to_optimize_;
+
   // latest keyframes to guard in FindHardestEdge()
   size_t max_latest_keyframes_ = 20;
   std::list<KeyFrameId> latest_keyframes_;
@@ -200,6 +204,9 @@ private:
   mutable std::vector<EdgeId> edges_to_optimize_;
   mutable std::vector<KeyFrameId> constrained_keyframes_;
   mutable math::PGOInput inputs_;
+  // scratch buffers for BFS: neighbor collection and sorted merge output
+  mutable std::vector<KeyFrameId> bfs_visited_;
+  mutable std::vector<KeyFrameId> bfs_merge_buffer_;
 
   bool OptimizeSubgraph(const std::vector<KeyFrameId>& keyframes_to_optimize,
                         const std::vector<EdgeId>& edges_to_optimize,
