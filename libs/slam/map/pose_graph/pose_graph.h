@@ -103,7 +103,9 @@ public:
 
   // Optimize pose graph
   // Runs BFS from the head (tail) keyframe, collects up to max_keyframes_to_optimize_ keyframes,
-  // and optimizes that subgraph. The head keyframe is used as the fixed pose constraint.
+  // and optimizes that subgraph. Boundary nodes (connected to the subgraph but outside it) are
+  // pinned as fixed constraints; when the entire graph fits in the window, the oldest keyframe
+  // (smallest ID) is pinned as the fallback reference.
   // OUT: vo_to_head - transform for last keyframe
   bool Optimize(const PoseGraphHypothesis& pose_graph_hypothesis_src, PoseGraphHypothesis& pose_graph_hypothesis_dst,
                 bool planar_constraint, Isometry3T& vo_to_head) const;
