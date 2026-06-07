@@ -71,7 +71,7 @@ def read_stereo_edex(file_path: str) -> Tuple[List[vslam.Camera], bool]:
         rectified = False
 
     cameras = []
-    for idx, cam_data in enumerate(header['cameras']):
+    for cam_data in header['cameras']:
         config = {
             'camera_model': cam_data['intrinsics']['distortion_model'],
             'distortion_coefficients': cam_data['intrinsics']['distortion_params'],
