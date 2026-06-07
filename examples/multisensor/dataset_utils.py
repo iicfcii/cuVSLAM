@@ -67,7 +67,13 @@ def read_stereo_edex(file_path: str) -> Tuple[List[vslam.Camera], bool]:
         data = json.load(file)
 
     header = data[0]
-    rectified = bool(header.get('rectified', False))
+    raw = header.get('rectified', None)
+    if isinstance(raw, bool):
+        rectified = raw
+    elif isinstance(raw, str):
+        rectified = raw.strip().lower() in ('true', '1', 'yes')
+    else:
+        rectified = False
 
     cameras = []
     for cam_data in header['cameras']:
