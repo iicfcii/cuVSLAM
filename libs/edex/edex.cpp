@@ -140,6 +140,8 @@ bool EdexFile::write(const std::string& fileName) const {
   return true;
 }
 bool EdexFile::readHeader(const Json::Value& header) {
+  rectified_ = false;
+
   if (!CheckKey(header, {EDEX_VERSION, EDEX_FRAME_START, EDEX_FRAME_END, EDEX_CAMERAS})) {
     return false;
   }
