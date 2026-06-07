@@ -145,10 +145,10 @@ def add_tracker_arguments(parser: argparse.ArgumentParser) -> None:
         help="Enable denoising of input images.",
     )
     parser.add_argument(
-        "--rectified_stereo_camera",
+        "--override_rectified_stereo_camera",
         type=_str2bool,
-        default=False,
-        help='Enable rectified stereo camera tracking mode (overrides EDEX "rectified" field).',
+        default=None,
+        help='Override EDEX "rectified" field to enable or disable rectified stereo tracking.',
     )
     parser.add_argument(
         "--enable_observations_export",

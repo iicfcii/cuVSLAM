@@ -144,15 +144,19 @@ class Tracker:
         # Configure tracker with safe argument checking
         config_attrs = [
             'odometry_mode', 'multicam_mode', 'use_gpu', 'async_sba',
-            'use_motion_model', 'use_denoising', 'rectified_stereo_camera',
+            'use_motion_model', 'use_denoising',
             'enable_observations_export', 'enable_landmarks_export',
             'enable_final_landmarks_export', 'max_frame_delta_s',
             'debug_dump_directory', 'debug_imu_mode'
         ]
 
         for attr in config_attrs:
-            if hasattr(args, attr):
+            if hasattr(args, attr) and getattr(args, attr) is not None:
                 setattr(self.odom_cfg, attr, getattr(args, attr))
+
+        override = getattr(args, 'override_rectified_stereo_camera', None)
+        if override is not None:
+            self.odom_cfg.rectified_stereo_camera = override
 
     def _initialize_rgbd_settings(self, args: argparse.Namespace) -> Optional[vslam.Tracker.OdometryRGBDSettings]:
         """Initialize RGBD settings based on args and default values.
@@ -474,10 +478,9 @@ def track(args: argparse.Namespace,
         dataset.rig.cameras[0].focal = refined_focal
         dataset.rig.cameras[0].principal = refined_principal
 
-    # The command line can force rectified tracking on; otherwise use the EDEX metadata.
-    args.rectified_stereo_camera = (
-        args.rectified_stereo_camera or getattr(dataset, 'rectified', False)
-    )
+    # Apply EDEX metadata only when the command line did not explicitly override it.
+    if args.override_rectified_stereo_camera is None:
+        args.override_rectified_stereo_camera = getattr(dataset, 'rectified', False)
 
     # If dataset has RGBD settings, transfer them to args
     # depth_camera_id MUST come from stereo.edex
