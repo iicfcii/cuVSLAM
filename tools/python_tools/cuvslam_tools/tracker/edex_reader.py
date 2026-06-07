@@ -57,7 +57,13 @@ class EdexReader(DatasetReader):
             # Load configuration JSON
             config_data = json.load(f)
             rig = self.parse_config(config_data)
-            self.rectified = bool(config_data[0].get('rectified', False))
+            _raw = config_data[0].get('rectified', None)
+            if isinstance(_raw, bool):
+                self.rectified = _raw
+            elif isinstance(_raw, str):
+                self.rectified = _raw.strip().lower() in ('true', '1', 'yes')
+            else:
+                self.rectified = False
             if self.camera_ids:
                 n_cameras = len(rig.cameras)
                 invalid_camera_ids = [
