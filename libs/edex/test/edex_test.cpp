@@ -17,6 +17,7 @@
 
 #include "edex/edex.h"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 
@@ -33,6 +34,7 @@ constexpr char kMinimalEdexHeader[] = R"([
     "version": "0.9",
     "frame_start": 1,
     "frame_end": 2,
+    "rectified": false,
     "cameras": [
       {
         "intrinsics": {
@@ -58,8 +60,14 @@ constexpr char kMinimalEdexHeader[] = R"([
   }
 ])";
 
+std::string UniqueTempPath(const char* prefix) {
+  return (std::filesystem::temp_directory_path() /
+          (std::string(prefix) + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".edex"))
+      .string();
+}
+
 std::string WriteTempEdex(const std::string& json) {
-  const std::string path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+  const std::string path = UniqueTempPath("edex_test_");
   std::ofstream out(path);
   out << json;
   return path;
@@ -85,7 +93,7 @@ TEST(EdexRectifiedTest, RoundTripTrue) {
   json.insert(insert_pos, inject);
 
   const std::string in_path = WriteTempEdex(json);
-  const std::string out_path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+  const std::string out_path = UniqueTempPath("edex_test_out_");
 
   cuvslam::edex::EdexFile f1;
   ASSERT_TRUE(f1.read(in_path));
@@ -103,7 +111,7 @@ TEST(EdexRectifiedTest, RoundTripTrue) {
 
 TEST(EdexRectifiedTest, RoundTripFalse) {
   const std::string in_path = WriteTempEdex(kMinimalEdexHeader);
-  const std::string out_path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+  const std::string out_path = UniqueTempPath("edex_test_out_");
 
   cuvslam::edex::EdexFile f1;
   ASSERT_TRUE(f1.read(in_path));
