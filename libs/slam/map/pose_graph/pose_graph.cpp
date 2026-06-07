@@ -136,8 +136,10 @@ void PoseGraph::RemoveKeyframe(KeyFrameId keyframe_id) {
   TRACE_EVENT ev = profiler_domain_.trace_event("RemoveKeyframe", profiler_color_);
   // remove all edges with keyframe_id
   std::vector<std::pair<KeyFrameId, KeyFrameId>> edge_pairs;
-  QueryKeyframeEdges(keyframe_id, [&](KeyFrameId from_keyframe, KeyFrameId to_keyframe, const Isometry3T&,
-                                      const Matrix6T&) { edge_pairs.push_back({from_keyframe, to_keyframe}); });
+  QueryKeyframeEdges(keyframe_id,
+                     [&](KeyFrameId from_keyframe, KeyFrameId to_keyframe, const Isometry3T&, const Matrix6T&) {
+                       edge_pairs.push_back({from_keyframe, to_keyframe});
+                     });
 
   for (const auto& edge_pair : edge_pairs) {
     const KeyFrameId from_keyframe = edge_pair.first;
