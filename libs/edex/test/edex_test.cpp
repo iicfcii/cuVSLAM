@@ -76,7 +76,7 @@ std::string WriteTempEdex(const std::string& json) {
 
 }  // namespace
 
-TEST(EdexRectifiedTest, AbsentDefaultsFalse) {
+TEST(EdexRectifiedTest, ExplicitFalseRoundTrips) {
   const std::string path = WriteTempEdex(kMinimalEdexHeader);
   cuvslam::edex::EdexFile f;
   ASSERT_TRUE(f.read(path));
@@ -88,7 +88,7 @@ TEST(EdexRectifiedTest, RoundTripTrue) {
   std::string json = kMinimalEdexHeader;
   const size_t pos = json.find(R"("rectified": false)");
   ASSERT_NE(pos, std::string::npos);
-  json.replace(pos, std::string(R"("rectified": false)").size(), R"("rectified": true)");
+  json.replace(pos, std::string_view(R"("rectified": false)").size(), R"("rectified": true)");
 
   const std::string in_path = WriteTempEdex(json);
   const std::string out_path = UniqueTempPath("edex_test_out_");
