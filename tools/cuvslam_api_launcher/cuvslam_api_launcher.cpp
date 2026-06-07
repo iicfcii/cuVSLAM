@@ -673,7 +673,7 @@ bool trackEdexDataSet(const std::string& edex_name, const Odometry::Config& odom
 
       if (FLAGS_localize_forever && loc_context.status == LocalizeInMapStatus::LOCALIZED) {
         // Slam can end up in a bad state, so we need to recreate tracker and slam for next localization attempt
-        odom = std::make_unique<Odometry>(rig, odom_cfg);
+        odom = std::make_unique<Odometry>(rig, effective_odom_cfg);
         slam = std::make_unique<Slam>(rig, odom->GetPrimaryCameras(), slam_cfg);
         loc_context.status = LocalizeInMapStatus::NOT_LOCALIZED;
         next_loc_frame = frame + FLAGS_loc_skip_frames + 1;
