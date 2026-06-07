@@ -125,9 +125,8 @@ void WriteVector(Json::Value& result, const Eigen::MatrixBase<Derived>& v) {
 }
 
 void WriteFloatVector(Json::Value& result, const std::vector<float>& v) {
+  result = Json::Value(Json::arrayValue);
   const int n = static_cast<int>(v.size());
-  result.clear();
-
   for (int i = 0; i < n; i++) {
     result[i] = v[i];
   }
