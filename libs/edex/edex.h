@@ -66,6 +66,7 @@ public:
   RotationStyle rotStyle_;
   std::string frame_meta_log_path_;  // default is empty string
   double fps_ = 0.0;                 // valid only if frame_meta_log_path_ is empty
+  bool rectified_ = false;           // true when stereo pairs have pre-rectified images
 
   EdexFile();
   explicit EdexFile(RotationStyle rs);

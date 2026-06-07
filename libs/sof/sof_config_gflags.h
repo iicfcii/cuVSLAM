@@ -34,7 +34,7 @@ DEFINE_bool(ransac_filter, false, "Preprocess input images with ransac filter");
 
 DEFINE_string(tracker, "lk", "Feature tracker");
 
-DEFINE_string(lr_tracker, "lk", "L-R feature tracker");
+DEFINE_string(override_lr_tracker, "lk", "Override L-R feature tracker (overrides edex 'rectified' flag)");
 
 DEFINE_string(multicam_mode, "moderate", "Multicamera mode");
 
@@ -49,7 +49,7 @@ void ParseSettings(Settings& settings) {
   settings.box3_prefilter = FLAGS_box3_prefilter;
   settings.ransac_filter = FLAGS_ransac_filter;
   settings.tracker = ParseTrackerType(FLAGS_tracker);
-  settings.lr_tracker = ParseTrackerType(FLAGS_lr_tracker);
+  settings.lr_tracker = ParseTrackerType(FLAGS_override_lr_tracker);
   settings.multicam_mode = camera::ParseMulticameraMode(FLAGS_multicam_mode);
 }
 

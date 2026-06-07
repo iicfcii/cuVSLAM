@@ -95,7 +95,7 @@ rr.send_blueprint(rrb.Blueprint(
 rr.log("/", rr.ViewCoordinates.RIGHT_HAND_Y_DOWN, static=True)
 
 # Build rig: 2 RGB-D cameras (+ 1 IMU unless --no-imu was passed)
-cameras = read_stereo_edex('tartan_ground.edex')
+cameras, rectified = read_stereo_edex('tartan_ground.edex')
 rig = vslam.Rig()
 rig.cameras = cameras
 if use_imu:
@@ -111,7 +111,7 @@ cfg = vslam.Tracker.OdometryConfig(
     odometry_mode=vslam.Tracker.OdometryMode.Multisensor,
     multisensor_settings=multisensor_settings,
     enable_final_landmarks_export=True,
-    rectified_stereo_camera=False,
+    rectified_stereo_camera=rectified,
     async_sba=False,
 )
 

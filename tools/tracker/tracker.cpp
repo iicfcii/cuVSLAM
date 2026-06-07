@@ -169,6 +169,10 @@ int main(int argC, char** ppArgV) {
                                                      accelerometer_noise_density, accelerometer_random_walk, frequency);
   svo_settings.verbose = FLAGS_verbose;
 
+  if (f.rectified_ && gflags::GetCommandLineFlagInfoOrDie("override_lr_tracker").is_default) {
+    svo_settings.sof_settings.lr_tracker = sof::TrackerType::LKHorizontal;
+  }
+
   std::unique_ptr<launcher::BaseLauncher> launcher = launcher::CreateLauncher(*rig, svo_settings);
 
   if (!FLAGS_gt_file.empty()) {

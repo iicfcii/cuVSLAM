@@ -53,16 +53,24 @@ def transform_to_pose(transform_16: List[float]) -> vslam.Pose:
     return vslam.Pose(rotation=rotation_quat, translation=translation_opencv)
 
 
-def read_stereo_edex(file_path: str) -> List[vslam.Camera]:
-    """Load cameras from a tartan_ground.edex file (cuvslam EDEX schema)."""
+def read_stereo_edex(file_path: str) -> Tuple[List[vslam.Camera], bool]:
+    """Load cameras and the rectified flag from an EDEX file.
+
+    Returns:
+        Tuple of (cameras, rectified_stereo_camera) where rectified_stereo_camera
+        reflects the ``"rectified"`` field in the edex header (default: False).
+    """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"EDEX file not found: {file_path}")
 
     with open(file_path, 'r') as file:
         data = json.load(file)
 
+    header = data[0]
+    rectified = bool(header.get('rectified', False))
+
     cameras = []
-    for cam_data in data[0]['cameras']:
+    for cam_data in header['cameras']:
         config = {
             'camera_model': cam_data['intrinsics']['distortion_model'],
             'distortion_coefficients': cam_data['intrinsics']['distortion_params'],
@@ -82,7 +90,7 @@ def read_stereo_edex(file_path: str) -> List[vslam.Camera]:
         cam.rig_from_camera = transform_to_pose(config['extrinsics'])
         cameras.append(cam)
 
-    return cameras
+    return cameras, rectified
 
 
 def load_rgb(image_path: str) -> np.ndarray:

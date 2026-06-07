@@ -73,7 +73,7 @@ rr.send_blueprint(rrb.Blueprint(rrb.TimePanel(state="collapsed"),
 rr.log("/", rr.ViewCoordinates.RIGHT_HAND_Y_DOWN, static=True)
 
 # Load camera configuration from EDEX file
-cameras = read_stereo_edex('tartan_ground.edex')
+cameras, rectified = read_stereo_edex('tartan_ground.edex')
 
 for i, camera in enumerate(cameras):
     rr.log('car/cam%s' % i,
@@ -91,7 +91,7 @@ for i, camera in enumerate(cameras):
 rig = vslam.Rig()
 rig.cameras = cameras
 
-cfg = vslam.Tracker.OdometryConfig(enable_final_landmarks_export = True, rectified_stereo_camera=True)
+cfg = vslam.Tracker.OdometryConfig(enable_final_landmarks_export=True, rectified_stereo_camera=rectified)
 
 tracker = vslam.Tracker(rig, cfg)
 

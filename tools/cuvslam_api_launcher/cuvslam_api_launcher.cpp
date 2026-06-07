@@ -463,7 +463,16 @@ bool trackEdexDataSet(const std::string& edex_name, const Odometry::Config& odom
 
   WarmUpGPU();
   Rig rig = createRig(edex_file, edex_rig.get());
-  std::unique_ptr<Odometry> odom = std::make_unique<Odometry>(rig, odom_cfg);
+
+  Odometry::Config effective_odom_cfg = odom_cfg;
+  if (edex_file.rectified_) {
+    gflags::CommandLineFlagInfo flag_info;
+    if (!gflags::GetCommandLineFlagInfo("cfg_horizontal", &flag_info) || flag_info.is_default) {
+      effective_odom_cfg.rectified_stereo_camera = true;
+    }
+  }
+
+  std::unique_ptr<Odometry> odom = std::make_unique<Odometry>(rig, effective_odom_cfg);
   if (!expert_params.empty()) {
     std::vector<cuvslam::internal::InternalParameter> params;
     params.reserve(expert_params.size());

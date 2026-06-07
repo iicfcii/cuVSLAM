@@ -17,10 +17,106 @@
 
 #include "edex/edex.h"
 
+#include <filesystem>
+#include <fstream>
+
 #include "common/include_gtest.h"
 #include "edex/file_name_tools.h"
 
 namespace test::edex {
+
+namespace {
+
+// Minimal valid edex JSON with one pinhole camera.
+constexpr char kMinimalEdexHeader[] = R"([
+  {
+    "version": "0.9",
+    "frame_start": 1,
+    "frame_end": 2,
+    "cameras": [
+      {
+        "intrinsics": {
+          "size": [640, 480],
+          "focal": [320.0, 320.0],
+          "principal": [320.0, 240.0],
+          "distortion_model": "pinhole",
+          "distortion_params": []
+        },
+        "transform": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0]
+        ]
+      }
+    ]
+  },
+  {
+    "sequence": [[]],
+    "points2d": {},
+    "points3d": {},
+    "rig_positions": {}
+  }
+])";
+
+std::string WriteTempEdex(const std::string& json) {
+  const std::string path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+  std::ofstream out(path);
+  out << json;
+  return path;
+}
+
+}  // namespace
+
+TEST(EdexRectifiedTest, AbsentDefaultsFalse) {
+  const std::string path = WriteTempEdex(kMinimalEdexHeader);
+  cuvslam::edex::EdexFile f;
+  ASSERT_TRUE(f.read(path));
+  EXPECT_FALSE(f.rectified_);
+  std::filesystem::remove(path);
+}
+
+TEST(EdexRectifiedTest, RoundTripTrue) {
+  // Build JSON with rectified=true.
+  std::string json = kMinimalEdexHeader;
+  const std::string inject = R"(    "rectified": true,)"
+                             "\n";
+  const size_t insert_pos = json.find(R"("cameras")");
+  ASSERT_NE(insert_pos, std::string::npos);
+  json.insert(insert_pos, inject);
+
+  const std::string in_path = WriteTempEdex(json);
+  const std::string out_path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+
+  cuvslam::edex::EdexFile f1;
+  ASSERT_TRUE(f1.read(in_path));
+  EXPECT_TRUE(f1.rectified_);
+
+  ASSERT_TRUE(f1.write(out_path));
+
+  cuvslam::edex::EdexFile f2;
+  ASSERT_TRUE(f2.read(out_path));
+  EXPECT_TRUE(f2.rectified_);
+
+  std::filesystem::remove(in_path);
+  std::filesystem::remove(out_path);
+}
+
+TEST(EdexRectifiedTest, RoundTripFalse) {
+  const std::string in_path = WriteTempEdex(kMinimalEdexHeader);
+  const std::string out_path = (std::filesystem::temp_directory_path() / (std::to_string(rand()) + ".edex")).string();
+
+  cuvslam::edex::EdexFile f1;
+  ASSERT_TRUE(f1.read(in_path));
+  ASSERT_FALSE(f1.rectified_);
+  ASSERT_TRUE(f1.write(out_path));
+
+  cuvslam::edex::EdexFile f2;
+  ASSERT_TRUE(f2.read(out_path));
+  EXPECT_FALSE(f2.rectified_);
+
+  std::filesystem::remove(in_path);
+  std::filesystem::remove(out_path);
+}
 
 using EdexTest = testing::TestWithParam<const char*>;
 

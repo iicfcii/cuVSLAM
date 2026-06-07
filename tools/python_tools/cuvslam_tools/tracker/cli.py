@@ -148,7 +148,7 @@ def add_tracker_arguments(parser: argparse.ArgumentParser) -> None:
         "--rectified_stereo_camera",
         type=_str2bool,
         default=False,
-        help="Enable rectified stereo camera tracking mode.",
+        help='Enable rectified stereo camera tracking mode (overrides EDEX "rectified" field).',
     )
     parser.add_argument(
         "--enable_observations_export",

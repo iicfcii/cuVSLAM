@@ -474,6 +474,11 @@ def track(args: argparse.Namespace,
         dataset.rig.cameras[0].focal = refined_focal
         dataset.rig.cameras[0].principal = refined_principal
 
+    # The command line can force rectified tracking on; otherwise use the EDEX metadata.
+    args.rectified_stereo_camera = (
+        args.rectified_stereo_camera or getattr(dataset, 'rectified', False)
+    )
+
     # If dataset has RGBD settings, transfer them to args
     # depth_camera_id MUST come from stereo.edex
     if hasattr(dataset, 'rgbd_settings') and dataset.rgbd_settings:

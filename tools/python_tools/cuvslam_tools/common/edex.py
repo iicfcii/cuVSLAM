@@ -232,6 +232,7 @@ class EDEXHeader(BaseModel):
         frame_end: Ending frame index (exclusive)
         cameras: List of camera specifications in the rig
         imu: Optional IMU specification
+        rectified: Whether all stereo pairs in the rig have pre-rectified images (default: False).
     """
 
     version: str = "0.9"
@@ -239,6 +240,7 @@ class EDEXHeader(BaseModel):
     frame_end: int
     cameras: list[Camera]
     imu: Optional[IMU] = None
+    rectified: bool = False
 
 
 class EDEXBody(BaseModel):

@@ -224,7 +224,7 @@ int main(int argC, char** ppArgV) {
     if (argC != 3 && argC != 4) {
       std::cout << "Wrong command line.\n"
                    "Use: <edex file name> <relative path to sequence>\n"
-                   "Example: -lr_tracker=lk test_stereo.edex kitti/12\n";
+                   "Example: -override_lr_tracker=lk test_stereo.edex kitti/12\n";
       return -1;
     }
 

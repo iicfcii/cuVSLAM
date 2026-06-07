@@ -164,6 +164,10 @@ bool EdexFile::readHeader(const Json::Value& header) {
     }
   }
 
+  if (header.isMember(EDEX_RECTIFIED)) {
+    rectified_ = header[EDEX_RECTIFIED].asBool();
+  }
+
   return true;
 }
 bool EdexFile::readBody(const Json::Value& body) {
@@ -269,6 +273,8 @@ void EdexFile::writeHeader(Json::Value& header) const {
   header[EDEX_FRAME_END] = static_cast<Json::UInt>(timeline_.lastFrame());
 
   WriteCameras(cameras_, header[EDEX_CAMERAS]);
+
+  header[EDEX_RECTIFIED] = rectified_;
 }
 void EdexFile::writeBody(Json::Value& body) const {
   WriteSequence(cameras_, body[EDEX_SEQUENCE]);

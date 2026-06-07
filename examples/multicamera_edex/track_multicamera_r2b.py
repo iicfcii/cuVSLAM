@@ -75,7 +75,7 @@ with open(os.path.join('dataset/r2b_galileo_edex/frame_metadata.jsonl'), 'r') as
     frames_metadata = [json.loads(i) for i in f.readlines()]
 
 # Load camera configuration from EDEX file
-cameras = read_stereo_edex('dataset/r2b_galileo_edex/stereo.edex')
+cameras, rectified = read_stereo_edex('dataset/r2b_galileo_edex/stereo.edex')
 
 for i, camera in enumerate(cameras):
     rr.log('car/cam%s' % i,
@@ -93,7 +93,7 @@ for i, camera in enumerate(cameras):
 rig = vslam.Rig()
 rig.cameras = cameras
 
-cfg = vslam.Tracker.OdometryConfig(enable_final_landmarks_export = True)
+cfg = vslam.Tracker.OdometryConfig(enable_final_landmarks_export=True, rectified_stereo_camera=rectified)
 
 tracker = vslam.Tracker(rig, cfg)
 

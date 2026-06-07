@@ -59,6 +59,7 @@ static const char* EDEX_IMU_GYROSCOPE_RANDOM_WALK = "gyro_random_walk";         
 static const char* EDEX_IMU_FREQUENCY = "frequency";                              // optional
 static const char* EDEX_FRAME_META = "frame_metadata";                            // optional
 static const char* EDEX_FPS = "fps";                                              // optional
+static const char* EDEX_RECTIFIED = "rectified";                                  // optional
 
 template <int _SIZE>
 bool isVector(const Json::Value& v) {
