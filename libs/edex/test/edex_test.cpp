@@ -33,7 +33,7 @@ constexpr char kMinimalEdexHeader[] = R"([
   {
     "version": "0.9",
     "frame_start": 1,
-    "frame_end": 2,
+    "frame_end": 1,
     "rectified": false,
     "cameras": [
       {
@@ -53,10 +53,11 @@ constexpr char kMinimalEdexHeader[] = R"([
     ]
   },
   {
-    "sequence": [[]],
+    "sequence": [["image.png"]],
     "points2d": {},
     "points3d": {},
-    "rig_positions": {}
+    "rig_positions": {},
+    "fps": 30
   }
 ])";
 
@@ -84,13 +85,10 @@ TEST(EdexRectifiedTest, AbsentDefaultsFalse) {
 }
 
 TEST(EdexRectifiedTest, RoundTripTrue) {
-  // Build JSON with rectified=true.
   std::string json = kMinimalEdexHeader;
-  const std::string inject = R"(    "rectified": true,)"
-                             "\n";
-  const size_t insert_pos = json.find(R"("cameras")");
-  ASSERT_NE(insert_pos, std::string::npos);
-  json.insert(insert_pos, inject);
+  const size_t pos = json.find(R"("rectified": false)");
+  ASSERT_NE(pos, std::string::npos);
+  json.replace(pos, std::string(R"("rectified": false)").size(), R"("rectified": true)");
 
   const std::string in_path = WriteTempEdex(json);
   const std::string out_path = UniqueTempPath("edex_test_out_");
