@@ -285,6 +285,11 @@ void EdexFile::writeBody(Json::Value& body) const {
   WritePositions(rigPositions_, body[EDEX_RIG_POSITIONS], rotStyle_);
   WriteFrames(keyFrames_, body[EDEX_KEY_FRAMES]);
   WriteFrames(failedFrames_, body[EDEX_FAILED_FRAMES]);
+  if (!frame_meta_log_path_.empty()) {
+    body[EDEX_FRAME_META] = frame_meta_log_path_;
+  } else {
+    body[EDEX_FPS] = fps_;
+  }
 }
 
 std::mutex& EdexFile::getMutex() const {
