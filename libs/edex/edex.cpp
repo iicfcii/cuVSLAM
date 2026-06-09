@@ -252,6 +252,7 @@ bool EdexFile::readBody(const Json::Value& body) {
       return false;
     }
     frame_meta_log_path_ = frame_meta_log.asString();
+    fps_ = 0.0;
   } else {
     if (!fps_present) {
       TraceError("fps is required.");
@@ -263,6 +264,7 @@ bool EdexFile::readBody(const Json::Value& body) {
       return false;
     }
     fps_ = fps.asDouble();
+    frame_meta_log_path_.clear();
   }
 
   return true;
