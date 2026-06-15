@@ -332,6 +332,24 @@ def convert_sequence(zip_path, out_root):
         if not frame_ids:
             sys.exit(f"ERROR: seq {seq}: no paired stereo frames found in {zip_path}")
 
+        # Read GT (if present) up front so we can drop any frame whose pose row
+        # is out of range *before* writing images — this keeps image-pair count
+        # and gt.txt row count strictly 1:1, which the reporter assumes.
+        gt_zip_path = _gt_path_for(zf, seq)
+        poses_lines = None
+        if gt_zip_path is None:
+            print(f"  WARNING: seq {seq}: no GT pose file found, skipping gt.txt")
+        else:
+            poses_lines = zf.read(gt_zip_path).decode().strip().splitlines()
+            print(f"  reading GT from {gt_zip_path} ({len(poses_lines)} rows)")
+            dropped = [f for f in frame_ids if f >= len(poses_lines)]
+            if dropped:
+                print(f"  WARNING: seq {seq}: {len(dropped)} frame(s) out of pose range — "
+                      f"dropping from both image and GT output")
+                frame_ids = [f for f in frame_ids if f < len(poses_lines)]
+                if not frame_ids:
+                    sys.exit(f"ERROR: seq {seq}: all frames out of pose range")
+
         num_frames = len(frame_ids)
         print(f"Sequence {seq}: {num_frames} frames, {width}x{height}, "
               f"fx={fx:.4f}, fy={fy:.4f}, cx={cx:.4f}, cy={cy:.4f}, baseline={baseline:.6f} m")
@@ -341,23 +359,14 @@ def convert_sequence(zip_path, out_root):
             (cam0_dst / f"{seq}.0.{idx:0{FRAME_WIDTH}d}.png").write_bytes(zf.read(cam0_map[frame]))
             (cam1_dst / f"{seq}.1.{idx:0{FRAME_WIDTH}d}.png").write_bytes(zf.read(cam1_map[frame]))
 
-        # Ground truth poses
-        has_gt = False
-        gt_zip_path = _gt_path_for(zf, seq)
-        if gt_zip_path is None:
-            print(f"  WARNING: seq {seq}: no GT pose file found, skipping gt.txt")
-        else:
-            has_gt = True
-            poses_lines = zf.read(gt_zip_path).decode().strip().splitlines()
-            print(f"  reading GT from {gt_zip_path} ({len(poses_lines)} rows)")
-            # CODa poses are T_osWorld_from_os1(t) in the LiDAR FLU frame.  cuVSLAM
-            # tracks in the cam0(0) RDF frame with the first pose pinned to identity
-            # (KITTI convention), so we re-ground via T_cam0(0)_from_cam0(t) =
-            # inv(T_osWorld_from_cam0(0)) @ T_osWorld_from_cam0(t).
+        # Ground truth poses: CODa stores T_osWorld_from_os1(t) in the LiDAR FLU
+        # frame.  cuVSLAM tracks in the cam0(0) RDF frame with the first pose
+        # pinned to identity (KITTI convention), so we re-ground via
+        #   T_cam0(0)_from_cam0(t) = inv(T_osWorld_from_cam0(0)) @ T_osWorld_from_cam0(t).
+        has_gt = poses_lines is not None
+        if has_gt:
             poses_cam0 = []
             for frame in frame_ids:
-                if frame >= len(poses_lines):
-                    break
                 row = poses_lines[frame].split()
                 # ts x y z qw qx qy qz
                 x = float(row[1]); y = float(row[2]); z = float(row[3])
