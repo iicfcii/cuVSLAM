@@ -344,7 +344,11 @@ def convert_sequence(zip_path, out_root):
         else:
             poses_lines = zf.read(gt_zip_path).decode().strip().splitlines()
             print(f"  reading GT from {gt_zip_path} ({len(poses_lines)} rows)")
-            gt_out_lines = []
+            # CODa poses are T_osWorld_from_os1(t) in the LiDAR FLU frame.  cuVSLAM
+            # tracks in the cam0(0) RDF frame with the first pose pinned to identity
+            # (KITTI convention), so we re-ground via T_cam0(0)_from_cam0(t) =
+            # inv(T_osWorld_from_cam0(0)) @ T_osWorld_from_cam0(t).
+            poses_cam0 = []
             for frame in frame_ids:
                 if frame >= len(poses_lines):
                     break
@@ -359,10 +363,13 @@ def convert_sequence(zip_path, out_root):
                     [R[2][0], R[2][1], R[2][2], z],
                     [0.0,    0.0,    0.0,    1.0],
                 ]
-                T_world_from_cam0 = mat4_mul(T_world_from_os1, T_os1_from_cam0)
-                vals = (T_world_from_cam0[0][:4]
-                        + T_world_from_cam0[1][:4]
-                        + T_world_from_cam0[2][:4])
+                poses_cam0.append(mat4_mul(T_world_from_os1, T_os1_from_cam0))
+
+            T0_inv = mat4_inv_rigid(poses_cam0[0])
+            gt_out_lines = []
+            for pose in poses_cam0:
+                rel = mat4_mul(T0_inv, pose)
+                vals = rel[0][:4] + rel[1][:4] + rel[2][:4]
                 gt_out_lines.append(" ".join(repr(v) for v in vals))
             (seq_dst / "gt.txt").write_text("\n".join(gt_out_lines) + "\n")
 
