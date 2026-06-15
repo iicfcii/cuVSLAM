@@ -301,6 +301,9 @@ def convert_sequence(zip_path, out_root):
         Q = _extract_data_array(cam0_yaml, "disparity_matrix")
         if Q is None or len(Q) < 15:
             sys.exit(f"ERROR: seq {seq}: cannot parse cam0 disparity_matrix")
+        if abs(Q[14]) < 1e-9:
+            sys.exit(f"ERROR: seq {seq}: cam0 disparity_matrix has zero/invalid Q[14] "
+                     f"(={Q[14]}); cannot derive baseline")
         baseline = abs(1.0 / Q[14])
 
         ext_data = _extract_data_array(os1_to_cam0_yaml, "extrinsic_matrix")
