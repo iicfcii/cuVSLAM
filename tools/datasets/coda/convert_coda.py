@@ -192,7 +192,7 @@ def _json_val(v):
     return f'"{v}"'
 
 
-def _seq_cfg_entry(seq, mode):
+def _seq_cfg_entry(seq, mode, has_gt):
     is_slam = (mode == "slam")
     label = "SLAM" if is_slam else "ODOM"
     fields = [
@@ -203,14 +203,15 @@ def _seq_cfg_entry(seq, mode):
         ("precompute_key_frames", False),
         ("use_gt_scale", False),
         ("sequence_title", f"CODa-{int(seq):02d}-{label}"),
-        ("gt_file_path", "gt.txt"),
     ]
+    if has_gt:
+        fields.append(("gt_file_path", "gt.txt"))
     if is_slam:
         fields.append(("use_slam", True))
     return fields
 
 
-def _format_cfg(sequences, slam, odom):
+def _format_cfg(sequences, gt_seqs, slam, odom):
     lines = ["{"]
     lines.append('    "version": "0.1",')
     lines.append('    "write_cache": false,')
@@ -222,10 +223,11 @@ def _format_cfg(sequences, slam, odom):
 
     entries = []
     for seq in sequences:
+        has_gt = seq in gt_seqs
         if odom:
-            entries.append(_seq_cfg_entry(seq, "odom"))
+            entries.append(_seq_cfg_entry(seq, "odom", has_gt))
         if slam:
-            entries.append(_seq_cfg_entry(seq, "slam"))
+            entries.append(_seq_cfg_entry(seq, "slam", has_gt))
 
     for ei, fields in enumerate(entries):
         lines.append("        {")
@@ -241,12 +243,14 @@ def _format_cfg(sequences, slam, odom):
     return "\n".join(lines)
 
 
-def write_configs(out_dir, sequences):
+def write_configs(out_dir, sequences, gt_sequences):
+    gt_set = set(gt_sequences)
+    gt_only = [s for s in sequences if s in gt_set]
     configs = {
-        "coda-slam_gt.cfg":     _format_cfg(sequences, slam=True,  odom=False),
-        "coda-vio_gt.cfg":      _format_cfg(sequences, slam=False, odom=True),
-        "coda-vio_slam.cfg":    _format_cfg(sequences, slam=True,  odom=True),
-        "coda-vio_slam_gt.cfg": _format_cfg(sequences, slam=True,  odom=True),
+        "coda-slam_gt.cfg":     _format_cfg(gt_only,   gt_set, slam=True,  odom=False),
+        "coda-vio_gt.cfg":      _format_cfg(gt_only,   gt_set, slam=False, odom=True),
+        "coda-vio_slam.cfg":    _format_cfg(sequences, gt_set, slam=True,  odom=True),
+        "coda-vio_slam_gt.cfg": _format_cfg(gt_only,   gt_set, slam=True,  odom=True),
     }
     for name, text in configs.items():
         (out_dir / name).write_text(text)
@@ -338,10 +342,12 @@ def convert_sequence(zip_path, out_root):
             (cam1_dst / f"{seq}.1.{idx:0{FRAME_WIDTH}d}.png").write_bytes(zf.read(cam1_map[frame]))
 
         # Ground truth poses
+        has_gt = False
         gt_zip_path = _gt_path_for(zf, seq)
         if gt_zip_path is None:
             print(f"  WARNING: seq {seq}: no GT pose file found, skipping gt.txt")
         else:
+            has_gt = True
             poses_lines = zf.read(gt_zip_path).decode().strip().splitlines()
             print(f"  reading GT from {gt_zip_path} ({len(poses_lines)} rows)")
             # CODa poses are T_osWorld_from_os1(t) in the LiDAR FLU frame.  cuVSLAM
@@ -377,6 +383,8 @@ def convert_sequence(zip_path, out_root):
         edex_text = make_edex(seq, fx, fy, cx, cy, width, height, baseline, num_frames)
         (seq_dst / "stereo.edex").write_text(edex_text)
 
+        return has_gt
+
 
 # ---------------------------------------------------------------------------
 # Main
@@ -392,15 +400,17 @@ def convert(raw_dir, out_dir):
     print(f"Found {len(zips)} CODa sequence zip(s):", ", ".join(z.name for z in zips), "\n")
 
     sequences = []
+    gt_sequences = []
     for zp in zips:
         if not zp.stem.isdigit():
             print(f"  skipping {zp.name}: filename is not a sequence number")
             continue
-        convert_sequence(zp, out_dir)
+        if convert_sequence(zp, out_dir):
+            gt_sequences.append(zp.stem)
         sequences.append(zp.stem)
 
     print("\nGenerating config files …")
-    write_configs(out_dir, sequences)
+    write_configs(out_dir, sequences, gt_sequences)
     print(f"\nDone.  Output written to: {out_dir}")
 
 
