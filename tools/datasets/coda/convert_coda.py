@@ -372,8 +372,13 @@ def convert_sequence(zip_path, out_root):
             for frame in frame_ids:
                 row = poses_lines[frame].split()
                 # ts x y z qw qx qy qz
-                x = float(row[1]); y = float(row[2]); z = float(row[3])
-                qw = float(row[4]); qx = float(row[5]); qy = float(row[6]); qz = float(row[7])
+                x = float(row[1])
+                y = float(row[2])
+                z = float(row[3])
+                qw = float(row[4])
+                qx = float(row[5])
+                qy = float(row[6])
+                qz = float(row[7])
                 R = quat_to_rotation(qw, qx, qy, qz)
                 T_world_from_os1 = [
                     [R[0][0], R[0][1], R[0][2], x],

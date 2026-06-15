@@ -49,9 +49,7 @@ echo "Raw dir    : ${raw_dir}"
 echo "Output dir : ${output_dir}"
 echo ""
 
-download_args=("${raw_dir}")
-[[ "${force_download}" -eq 1 ]] && download_args+=(--force)
-bash "${script_dir}/download_coda.sh" "${download_args[@]}"
+bash "${script_dir}/download_coda.sh" "${raw_dir}"
 
 [[ "${download_only}" -eq 1 ]] && exit 0
 
