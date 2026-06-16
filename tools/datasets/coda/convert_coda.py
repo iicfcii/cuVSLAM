@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved.
+#
+# NVIDIA software released under the NVIDIA Community License is intended to be used to enable
+# the further development of AI and robotics technologies. Such software has been designed, tested,
+# and optimized for use with NVIDIA hardware, and this License grants permission to use the software
+# solely with such hardware.
+# Subject to the terms of this License, NVIDIA confirms that you are free to commercially use,
+# modify, and distribute the software with NVIDIA hardware. NVIDIA does not claim ownership of any
+# outputs generated using the software or derivative works thereof. Any code contributions that you
+# share with NVIDIA are licensed to NVIDIA as feedback under this License and may be incorporated
+# in future releases without notice or attribution.
+# By using, reproducing, modifying, distributing, performing, or displaying any portion or element
+# of the software or derivative works thereof, you agree to be bound by this License.
+
 """Convert CODa (UT Campus Object Dataset) per-sequence zip archives to cuVSLAM converted format.
 
 Reads zip entries directly via the `zipfile` module — does NOT extract archives to disk.
@@ -281,8 +295,14 @@ def convert_sequence(zip_path, out_root):
     cam1_dst.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(zip_path) as zf:
+        # Only cam0's calibration is read.  CODa stores rectified images
+        # (2d_rect/cam{0,1}), so the right camera's rectified intrinsics are
+        # identical to the left's by construction — fx, fy, cx, cy, and the
+        # zero distortion all come from cam0.  The baseline is taken from
+        # cam0's disparity_matrix Q[14] = -1/Tx (consistent with the cam0→cam1
+        # extrinsic); we deliberately do not use cam1's projection_matrix
+        # P[0,3] because CODa encodes it off by ~1000× vs the physical baseline.
         cam0_yaml = zf.read(f"calibrations/{seq}/calib_cam0_intrinsics.yaml").decode()
-        cam1_yaml = zf.read(f"calibrations/{seq}/calib_cam1_intrinsics.yaml").decode()
         os1_to_cam0_yaml = zf.read(f"calibrations/{seq}/calib_os1_to_cam0.yaml").decode()
 
         P0 = _extract_data_array(cam0_yaml, "projection_matrix")
