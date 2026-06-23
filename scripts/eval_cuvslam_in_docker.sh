@@ -22,8 +22,6 @@ if [ ! -d "$OUTPUT_DIR/build" ]; then
   exit 1
 fi
 
-"$(dirname "$(realpath "$0")")/check_eval_prerequisites.sh"
-
 KPI_HISTORY_DIR="${KPI_HISTORY_DIR:-$RUNNER_STORAGE_ROOT/cuvslam-ci/kpi-history}"
 RUN_ID="${RUN_ID:-$(date -u +%Y-%m-%d)}"
 RUNNER_LOCAL_DATASETS_ROOT="${RUNNER_LOCAL_DATASETS_ROOT:-${HOME:-/tmp}/.cache/cuvslam}"
