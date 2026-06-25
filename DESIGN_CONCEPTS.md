@@ -152,7 +152,71 @@ struct TrackPerFrameSettings {
 
 ---
 
-## 4. Construction-time config vs internal runtime tuning
+## 4. Three-thread execution model: main, SBA, SLAM
+
+**Rule:** cuVSLAM tracking runs on three logical threads with distinct
+real-time guarantees. Code that lives on one thread must not assume the
+behaviour of another.
+
+| Thread | Owns | Real-time? | What it costs to skip work |
+|---|---|---|---|
+| **Main** | Feature selection, LK tracking, keyframe decision, triangulation | Yes — must finish every frame, or tracking is lost | Skipping a frame is fatal (see below). |
+| **SBA** (background) | Sparse bundle adjustment — fine-tuning of 3D landmark positions | No | Free. Skipping SBA on a frame causes no measurable accuracy loss; it is purely an optimization pass. |
+| **SLAM** (background) | Long-term map, loop-closure search | No — operates "in the past" with a command queue | Free at the cost of latency. The SLAM thread can be hundreds of frames (seconds) behind the main thread; that is the design, not a bug. |
+
+**Why this matters:**
+
+The main thread uses Lucas-Kanade, which assumes a small motion vector between
+adjacent frames. One missed frame at fast motion → no matchable patches →
+tracking loss → relocalize from origin. Linux is not a real-time OS, so
+cuVSLAM is typically the first system component to fail when motion planners
+and DNNs contend for GPU/CPU. This is what `Odometry::Config::async_sba` and
+`Slam::Config::sync_mode` exist to control. For reproducible debugging, force
+SBA and SLAM onto the main thread (`async_sba = false`, `sync_mode = true`).
+For production deployment, leave them on background threads and accept that
+loop-closure corrections arrive late.
+
+**Loop closures are retroactive.** When the SLAM thread finds a loop closure
+"three minutes ago," it sends a correction back through the queue. The main
+thread applies the correction to the current pose on the next frame, which
+the user sees as a small jump in the trajectory. This is correct behaviour —
+the jump is removing accumulated drift, not introducing error.
+
+**What to avoid:**
+
+- Do not move main-thread work onto the SBA or SLAM thread "because they have
+  spare cycles." They do not — they are working in the past.
+- Do not add a synchronous wait from the main thread into the SLAM thread.
+  That converts a real-time-soft system into a real-time-hard one and will
+  cause tracking loss on real robots.
+
+---
+
+## 5. SLAM is a benchmark; odometry is the product
+
+**Rule:** Treat odometry as the externally consumed surface and SLAM as an
+internal benchmark feature. Reviewer expectations differ accordingly.
+
+**Why:** Production users almost never consume cuVSLAM's SLAM output
+directly. Practical robotics applications need access to the map, semantic
+labelling, custom serialization, and integration with planners — so users
+plug in their own mapping stack and use cuVSLAM only as a visual odometry
+source. cuVSLAM's SLAM implementation exists primarily to pass academic loop-
+closure benchmarks (KITTI, EuRoC, …) with a result competitive with
+state-of-the-art.
+
+**How to apply this:**
+
+- An odometry change that affects accuracy is a high-bar review. Run the
+  reporter on all datasets, both VO and VIO modes, before requesting review.
+- A SLAM-only change that does not touch odometry is a lower-bar review —
+  benchmark numbers must not regress, but production impact is bounded.
+- When in doubt about scope, ask: "would a user with their own SLAM stack
+  notice this?" If yes, treat it as odometry-class.
+
+---
+
+## 6. Construction-time config vs internal runtime tuning
 
 Settings fall into three categories:
 
@@ -169,3 +233,25 @@ that intentionally persist after tracker construction use
 
 Do not expose a user-facing feature through `Internals` merely because it is convenient.
 Design a stable public API for that feature instead.
+
+---
+
+## 7. Memory backends are pluggable through the image manager
+
+**Rule:** New memory backends (different allocator kinds, different devices)
+plug in through `sof/image_manager.{h,cpp}`, not through scattered allocation
+sites.
+
+**Why:** The image manager already abstracts over two allocator kinds — CUDA
+device memory and plain C host buffers — by storing a pointer plus a tag of
+which allocator owns it. Call sites do not branch on allocator kind; they go
+through the manager. This is the extension point. Adding a third or fourth
+allocator kind (pinned host memory, unified memory, a non-CUDA accelerator
+buffer) is a localized change to the manager and its enum, not a global
+refactor.
+
+**What to avoid:**
+
+- Do not introduce a parallel pointer + kind pair in another library.
+- Do not branch on `cudaPointerGetAttributes(...)` at call sites; the
+  manager already knows.

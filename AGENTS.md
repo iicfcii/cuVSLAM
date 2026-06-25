@@ -50,6 +50,22 @@ Key test files: `python/test/test_api.py`, `test_bindings.py`, `test_tracking.py
 ./build_release.sh --modules_test --api_test
 ```
 
+### Accuracy regression and performance benchmarking
+
+Unit tests gate per-commit correctness, but the project's primary quality
+gates are two reporter-based workflows that run outside the unit-test
+infrastructure:
+
+- **Accuracy regression** — run `tools/cuvslam_app` (or the legacy reporter)
+  on the full dataset list before/after a change and compare the PDF outputs
+  side-by-side.
+- **Performance benchmarking** — manual, NVTX + Nsight Systems based, run
+  roughly monthly.
+
+See [DEVELOPMENT.md — Development workflow](DEVELOPMENT.md#development-workflow)
+for both procedures, the drift-interpretation rule, expected reference
+load numbers, and the CI cadence (unit per-commit, reporter nightly).
+
 ## Code Style
 
 **C++**: Google C++ Style with two project-specific exceptions:
@@ -132,6 +148,8 @@ Refer to these files when implementing new features or tests:
 | nanobind binding pattern | `python/cuvslam2.cpp` (see `nb::class_<>` usage) |
 | GTest unit test pattern | `libs/common/test/common_test.cpp` |
 | CMake library definition | any `libs/*/CMakeLists.txt` |
+| LK feature tracker tuning invariants | [`libs/sof/README.md`](libs/sof/README.md) |
+| Thread model (main / SBA / SLAM) | [`DESIGN_CONCEPTS.md`](DESIGN_CONCEPTS.md) §4 |
 
 ## Agent Permissions
 

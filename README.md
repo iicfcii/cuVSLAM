@@ -83,6 +83,11 @@ cuVSLAM is a highly optimized visual tracking library validated across numerous 
 
 <img src="examples/assets/cuvslam_performance.png" alt="cuVSLAM performance" width="800" />
 
+**Reference load** for a healthy stereo deployment at 60 FPS, VGA resolution:
+GPU ≈ 5 %, CPU ≈ 5 %; in pure-CPU mode on a Jetson Orin, less than one CPU
+core. Significantly higher load with an otherwise idle system usually points
+to misconfiguration before it points to a tuning problem.
+
 The accuracy and robustness of cuVSLAM can be influenced by several factors. If you experience performance issues, please check your system against these common causes:
 
 - **Hardware Overload**: Hardware overload can negatively impact visual tracking, resulting in dropped frames or insufficient computational resources for cuVSLAM. Disable intensive visualization or image-saving operations to improve performance. For expected performance metrics on Jetson embedded platforms, see our [technical report](https://arxiv.org/html/2506.04359v3#A1.F13)

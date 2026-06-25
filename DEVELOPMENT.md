@@ -1,5 +1,88 @@
 # Development
 
+## Development workflow
+
+### Accuracy regression workflow (reporter)
+
+The reporter is the primary tool for evaluating any change that may affect
+tracking accuracy. The development loop is:
+
+1. Implement the change behind a build flag, CLI flag, or branch.
+2. Run `tools/cuvslam_app` (Python reporter) — or the legacy C++ reporter — on
+   the full dataset list, once with the flag off and once with the flag on.
+   Each run produces a PDF with one page per sequence (trajectory + ground
+   truth + green dots for loop closures + per-sequence metrics).
+3. Open the two PDFs side-by-side and compare visually.
+
+Visual inspection matters because good metrics do not always mean good
+tracking, and a single bad sequence can be averaged out of a summary number.
+Use the **drift-interpretation rule** when reading per-sequence numbers:
+
+| Drift | What it means |
+|---|---|
+| < 2 % | Numeric value is trustworthy — comparisons like 1.5 % vs 1.8 % are real. |
+| 2 % – 20 % | Marginal — sanity-check the trajectory plot before drawing conclusions. |
+| > 20 % | The trajectory is broken or random. Do not compare 10 % vs 20 %; both are wrong. |
+
+A regression is anything that improves one dataset and breaks another. For
+multi-ODD changes (e.g. LK or feature-selector tuning), the side-by-side PDFs
+are the only reliable signal — never rely on the aggregate.
+
+### Performance benchmarking (manual)
+
+There is **no automated performance CI**. Frame-rate and latency are checked
+manually, roughly once a month, by running the tracker under NVIDIA Nsight
+Systems with NVTX labels enabled:
+
+```bash
+# Configure with NVTX
+cmake -S . -B build -DUSE_NVTX=ON
+cmake --build build --parallel $(nproc)
+
+# Run the tracker under Nsight with "Collect NVTX Trace" enabled
+# (see libs/profiler/README.md for the NVTX API the code uses).
+```
+
+The cuVSLAM code base has NVTX ranges around every main pipeline stage
+(feature selection, LK tracking, triangulation, SBA, SLAM message handling).
+In the Nsight timeline you will see them as named, colored bands.
+
+Reference loads on a healthy system (stereo, 60 FPS, VGA):
+- GPU: ≈ 5 %
+- CPU: ≈ 5 %
+- Pure-CPU mode on a Tegra Orin: < 1 core.
+
+If you measure significantly higher load with the same config, something is
+wrong before you start tuning.
+
+### Tracker execution modes
+
+`tools/tracker` (and the new `tools/cuvslam_api_launcher`) has two execution
+modes, intended for different purposes:
+
+| Mode | Selector | Use it for |
+|---|---|---|
+| Blocking (default) | no flag | Maximum-quality reference trajectory. Main thread waits for every background thread each frame. Throughput ≈ 20–30 FPS, low GPU/CPU load because most of the time is spent waiting. |
+| FPS simulation | `--max_fps <hz>` | Real-time benchmarking. Images are fed at the simulated rate; SBA and SLAM threads run as fast as they can and may skip work. Use this to measure whether the system keeps up at a target hardware FPS. |
+
+**IO warm-up trick.** The first run of a sequence pays the disk-read cost
+(TGA files page in). The second run reads from the OS page cache, so the
+per-frame time you measure is pure tracking time. Always run twice when
+benchmarking — discard the first.
+
+### CI cadence
+
+Two levels, with different cadences:
+
+| Level | Cadence | What runs |
+|---|---|---|
+| Unit tests (ctest in `libs/*/test/`, `python3 -m unittest` in `python/test/`) | Per commit | Fast — minutes. |
+| Reporter integration tests | Nightly | All datasets, full PDF output. Catches end-to-end regressions that unit tests miss. |
+
+Before opening a non-trivial MR, run the reporter locally on at least KITTI
+and EuRoC. The full nightly run will catch what you missed, but it is faster
+to find regressions before you push.
+
 ## Code Style
 
 cuVSLAM uses [Google C++ Code Style](https://google.github.io/styleguide/cppguide.html)
