@@ -6,6 +6,8 @@ DATASET_PREPARATION_ROOT="tools/python_tools/cuvslam_tools/dataset_preparation"
 
 EVAL_DATASET_NAMES=(
   kitti
+  euroc
+  tum
 )
 
 is_provisionable_dataset() {
