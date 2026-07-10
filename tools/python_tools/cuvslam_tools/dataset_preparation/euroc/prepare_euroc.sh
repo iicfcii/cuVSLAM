@@ -123,4 +123,14 @@ if [[ ! -s "${seq_dir}/gt_pose_tum.txt" ]]; then
 fi
 
 echo ""
+echo "Installing reporter configs …"
+for cfg in euroc-slam.cfg euroc-vio.cfg euroc-vio_slam.cfg; do
+    cp -f "${script_dir}/${cfg}" "${output_dir}/euroc/${cfg}"
+    if [[ ! -s "${output_dir}/euroc/${cfg}" ]]; then
+        echo "error: failed to install ${output_dir}/euroc/${cfg}" >&2
+        exit 1
+    fi
+done
+
+echo ""
 echo "done — edex written to ${edex_dir}"
