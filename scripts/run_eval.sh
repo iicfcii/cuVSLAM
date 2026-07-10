@@ -39,7 +39,7 @@ DATASETS=(
   # "TARTAN|tartanair|tartanV1hard_selected|tartanair/tartan-osmo-vo_slam.cfg|--odometry_mode=multicamera --rectified_stereo_camera=true --async_sba=false --multicam_mode=moderate --use_segments"
   # "M3ED_SPOT|m3ed_spot|m3ed_spot|m3ed_spot/m3ed_spot.cfg|--odometry_mode=multicamera --rectified_stereo_camera=false --async_sba=false --multicam_mode=moderate --use_segments"
   "EUROC|euroc|euroc|euroc/euroc-vio_slam.cfg|--odometry_mode=inertial --rectified_stereo_camera=false --async_sba=false --multicam_mode=moderate --use_segments"
-  "TUM_RGBD|tum-rgbd|tum|tum-rgbd/tum.cfg|--odometry_mode=rgbd --async_sba=false --use_segments"
+  # "TUM_RGBD|tum-rgbd|tum|tum-rgbd/tum.cfg|--odometry_mode=rgbd --async_sba=false --use_segments"
   # "AR_TABLE|ar_table|ar_table_edex|ar_table/ar_table.cfg|--odometry_mode=rgbd --async_sba=false --use_segments"
   # "ICL_NUIM|icl-nuim|icl_nuim_edex|icl_nuim_edex/icl-nuim.cfg|--odometry_mode=rgbd --async_sba=false --use_segments"
 )
@@ -80,6 +80,19 @@ for record in "${DATASETS[@]}"; do
   IFS='|' read -r label link_name subdir test_config app_flags <<< "$record"
 
   ln -sfn "$DATASETS_ROOT/$subdir" "/sequences/$link_name"
+
+  # Dataset tarballs do not yet ship the reporter config; deploy the repo copy
+  # into the staged dataset when it is absent. Tarball packaging is a follow-up.
+  cfg_dest="$CUVSLAM_DATASETS/$test_config"
+  if [ ! -f "$cfg_dest" ]; then
+    cfg_src="/cuvslam/tools/python_tools/cuvslam_tools/dataset_preparation/$subdir/$(basename "$test_config")"
+    if [ ! -f "$cfg_src" ]; then
+      echo "ERROR: reporter config not in dataset or repo: $cfg_dest / $cfg_src" >&2
+      exit 1
+    fi
+    echo "Reporter config not in dataset; deploying $cfg_src -> $cfg_dest"
+    cp -f "$cfg_src" "$cfg_dest"
+  fi
 
   echo "=== Running cuVSLAM eval on $label ($test_config) ==="
   # shellcheck disable=SC2086

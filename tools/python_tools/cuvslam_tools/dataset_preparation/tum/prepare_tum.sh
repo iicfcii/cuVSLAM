@@ -11,8 +11,9 @@
 #   --download-only      Download archives but skip dataset layout.
 #   -h, --help           Show this help.
 #
-# This extracts the archive, copies the rig calibration, and writes the minimal
-# edex metadata that cuvslam_app's reporter mode consumes.
+# This is a provisioning wrapper only: it extracts the archive and copies the
+# rig calibration file into place. It does not convert the dataset to the
+# cuVSLAM reporter format.
 
 set -euo pipefail
 
@@ -74,16 +75,6 @@ fi
 
 echo "Copying rig calibration …"
 cp -f "${script_dir}/freiburg3_rig.yaml" "${sequence_dir}/freiburg3_rig.yaml"
-
-echo "Generating reporter edex metadata …"
-python3 "${script_dir}/convert_tum_rgbd.py" "${sequence_dir}"
-
-echo "Installing reporter config …"
-cp -f "${script_dir}/tum.cfg" "${dataset_dir}/tum.cfg"
-if [[ ! -s "${dataset_dir}/tum.cfg" ]]; then
-    echo "error: failed to install ${dataset_dir}/tum.cfg" >&2
-    exit 1
-fi
 
 echo ""
 echo "done — dataset ready at ${sequence_dir}"
