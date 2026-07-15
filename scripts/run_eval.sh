@@ -86,11 +86,39 @@ for record in "${DATASETS[@]}"; do
   stage_dir="/sequences/$link_name"
   rm -rf "$stage_dir"
   mkdir -p "$stage_dir"
-  shopt -s dotglob nullglob
-  for entry in "$DATASETS_ROOT/$subdir"/*; do
-    ln -sfn "$entry" "$stage_dir/$(basename "$entry")"
-  done
-  shopt -u dotglob nullglob
+
+  if [ "$subdir" = "euroc" ]; then
+    # euroc_to_edex historically wrote absolute image symlinks; older S3 tarballs
+    # break when extracted on runners. Regenerate edex into writable staging with
+    # mav0 linked from the read-only dataset mount.
+    if ! python3 -c "import numpy, yaml" 2>/dev/null; then
+      pip install numpy pyyaml
+    fi
+    shopt -s nullglob
+    for seq_src in "$DATASETS_ROOT/$subdir"/MH_*; do
+      seq_name="$(basename "$seq_src")"
+      seq_stage="$stage_dir/$seq_name"
+      mkdir -p "$seq_stage"
+      ln -sfn "$seq_src/mav0" "$seq_stage/mav0"
+      if [ -f "$seq_src/gt_pose_tum.txt" ]; then
+        cp -f "$seq_src/gt_pose_tum.txt" "$seq_stage/gt_pose_tum.txt"
+      fi
+      echo "Regenerating edex for ${seq_name} (relative image symlinks) …"
+      python3 /cuvslam/tools/euroc_test/euroc_to_edex.py "$seq_stage" --output "$seq_stage/edex"
+    done
+    for entry in "$DATASETS_ROOT/$subdir"/*; do
+      base="$(basename "$entry")"
+      [[ "$base" == MH_* ]] && continue
+      ln -sfn "$entry" "$stage_dir/$base"
+    done
+    shopt -u nullglob
+  else
+    shopt -s dotglob nullglob
+    for entry in "$DATASETS_ROOT/$subdir"/*; do
+      ln -sfn "$entry" "$stage_dir/$(basename "$entry")"
+    done
+    shopt -u dotglob nullglob
+  fi
 
   # Dataset tarballs do not yet ship the reporter config; deploy the repo copy
   # into the writable staged dataset when it is absent. Packaging the config into

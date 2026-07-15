@@ -190,12 +190,14 @@ def convert_one(euroc_path, output_path):
             cam0_dst = f'images/cam0.{i:05d}.png'
             cam1_dst = f'images/cam1.{i:05d}.png'
 
-            # Create symlinks (overwrite if exist)
+            # Create symlinks (overwrite if exist). Use paths relative to the link so
+            # edex tarballs remain valid after extract to a different mount point.
             for src, dst_rel in [(cam0_src, cam0_dst), (cam1_src, cam1_dst)]:
                 dst_abs = os.path.join(output_path, dst_rel)
                 if os.path.islink(dst_abs) or os.path.exists(dst_abs):
                     os.remove(dst_abs)
-                os.symlink(os.path.abspath(src), dst_abs)
+                rel_src = os.path.relpath(src, os.path.dirname(dst_abs))
+                os.symlink(rel_src, dst_abs)
 
             entry = {
                 'frame_id': i,
