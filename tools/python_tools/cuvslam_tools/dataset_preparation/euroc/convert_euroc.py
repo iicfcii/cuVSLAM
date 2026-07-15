@@ -40,6 +40,7 @@ Usage:
   OUT_DIR  defaults to datasets/euroc/converted (relative to repo root)
 """
 
+import argparse
 import bisect, io, json, math, shutil, sys, tempfile, zipfile
 from pathlib import Path
 
@@ -352,12 +353,13 @@ def _write_configs(out_dir, seqs):
                     for e in (_seq_entry(s, "odom"), _seq_entry(s, "slam"))]
 
     configs = {
-        "euroc-slam.cfg":      _format_cfg(slam_only),
-        "euroc-vio.cfg":       _format_cfg(odom_only),
-        "euroc-vio_slam.cfg":  _format_cfg(odom_slam),
-        "euroc_v203_slam.cfg": _format_cfg([_seq_entry("V2_03_difficult", "slam")]),
-        "euroc_v203_vo.cfg":   _format_cfg([_seq_entry("V2_03_difficult", "odom")]),
+        "euroc-slam.cfg":     _format_cfg(slam_only),
+        "euroc-vio.cfg":      _format_cfg(odom_only),
+        "euroc-vio_slam.cfg": _format_cfg(odom_slam),
     }
+    if "V2_03_difficult" in seqs:
+        configs["euroc_v203_slam.cfg"] = _format_cfg([_seq_entry("V2_03_difficult", "slam")])
+        configs["euroc_v203_vo.cfg"] = _format_cfg([_seq_entry("V2_03_difficult", "odom")])
     for name, text in configs.items():
         (out_dir / name).write_text(text)
         print(f"  wrote {name}")
@@ -486,22 +488,32 @@ def _convert_sequence(seq_name, inner_zip_path, out_dir):
 # Main
 # ---------------------------------------------------------------------------
 
-def convert(raw_dir: Path, out_dir: Path):
+def convert(raw_dir: Path, out_dir: Path, sequences: list[str] | None = None):
+    selected = set(sequences) if sequences else set(ALL_SEQS)
+    unknown = selected - set(ALL_SEQS)
+    if unknown:
+        sys.exit(f"ERROR: unknown sequence(s): {', '.join(sorted(unknown))}")
+
     out_dir.mkdir(parents=True, exist_ok=True)
+    converted: list[str] = []
 
     with tempfile.TemporaryDirectory(prefix="euroc_convert_") as tmp:
         tmp_path = Path(tmp)
 
         for outer_name, seqs in _OUTER_ZIPS:
+            seqs_to_convert = [s for s in seqs if s in selected]
+            if not seqs_to_convert:
+                continue
+
             outer_path = raw_dir / outer_name
             if not outer_path.exists():
-                sys.exit(f"ERROR: {outer_path} not found")
+                sys.exit(f"ERROR: {outer_path} not found (needed for {', '.join(seqs_to_convert)})")
 
             group = outer_name.replace(".zip", "")
             print(f"\n=== Opening {outer_name} ===")
 
             with zipfile.ZipFile(outer_path) as outer_zip:
-                for seq in seqs:
+                for seq in seqs_to_convert:
                     inner_zip_entry = f"{group}/{seq}/{seq}.zip"
                     inner_zip_path  = tmp_path / f"{seq}.zip"
 
@@ -511,10 +523,14 @@ def convert(raw_dir: Path, out_dir: Path):
                         shutil.copyfileobj(src, dst)
 
                     _convert_sequence(seq, inner_zip_path, out_dir)
+                    converted.append(seq)
                     inner_zip_path.unlink()
 
+    if not converted:
+        sys.exit("ERROR: no sequences converted")
+
     print("\nGenerating config files …")
-    _write_configs(out_dir, ALL_SEQS)
+    _write_configs(out_dir, converted)
     print(f"\nDone.  Output written to: {out_dir}")
 
 
@@ -522,10 +538,34 @@ if __name__ == "__main__":
     _script_dir = Path(__file__).resolve().parent
     _repo_root  = _script_dir.parents[2]   # tools/datasets/euroc → repo root
 
-    args = sys.argv[1:]
-    raw = Path(args[0]) if args else _repo_root / "datasets" / "euroc" / "raw"
-    out = Path(args[1]) if len(args) >= 2 else _repo_root / "datasets" / "euroc" / "converted"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "raw_dir",
+        nargs="?",
+        default=str(_repo_root / "datasets" / "euroc" / "raw"),
+        help="directory containing EuRoC zip archives",
+    )
+    parser.add_argument(
+        "out_dir",
+        nargs="?",
+        default=str(_repo_root / "datasets" / "euroc" / "converted"),
+        help="directory for converted sequences and reporter configs",
+    )
+    parser.add_argument(
+        "--sequences",
+        nargs="+",
+        metavar="SEQ",
+        help=f"convert only these sequences (default: all). Known: {', '.join(ALL_SEQS)}",
+    )
+    args = parser.parse_args()
+
+    raw = Path(args.raw_dir)
+    out = Path(args.out_dir)
 
     print(f"RAW dir : {raw}")
-    print(f"OUT dir : {out}\n")
-    convert(raw, out)
+    print(f"OUT dir : {out}")
+    if args.sequences:
+        print(f"SEQ     : {', '.join(args.sequences)}")
+    print()
+
+    convert(raw, out, args.sequences)
