@@ -79,11 +79,23 @@ cd /cuvslam/tools/cuvslam_app
 for record in "${DATASETS[@]}"; do
   IFS='|' read -r label link_name subdir test_config app_flags <<< "$record"
 
-  ln -sfn "$DATASETS_ROOT/$subdir" "/sequences/$link_name"
+  # The dataset mount is read-only, so we cannot drop the reporter config into it
+  # directly. Stage the dataset as a writable directory of symlinks to the
+  # read-only sequence data; the app reads both the sequences and the config from
+  # $CUVSLAM_DATASETS/<link_name>/.
+  stage_dir="/sequences/$link_name"
+  rm -rf "$stage_dir"
+  mkdir -p "$stage_dir"
+  shopt -s dotglob nullglob
+  for entry in "$DATASETS_ROOT/$subdir"/*; do
+    ln -sfn "$entry" "$stage_dir/$(basename "$entry")"
+  done
+  shopt -u dotglob nullglob
 
   # Dataset tarballs do not yet ship the reporter config; deploy the repo copy
-  # into the staged dataset when it is absent. Tarball packaging is a follow-up.
-  cfg_dest="$CUVSLAM_DATASETS/$test_config"
+  # into the writable staged dataset when it is absent. Packaging the config into
+  # the tarball is a follow-up (separate PR).
+  cfg_dest="$stage_dir/$(basename "$test_config")"
   if [ ! -f "$cfg_dest" ]; then
     cfg_src="/cuvslam/tools/python_tools/cuvslam_tools/dataset_preparation/$subdir/$(basename "$test_config")"
     if [ ! -f "$cfg_src" ]; then
