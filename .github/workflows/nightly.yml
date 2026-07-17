@@ -17,6 +17,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TEST_RESULTS_ARTIFACT: test-results-staging
   EVAL_KPIS_ARTIFACT: eval-kpis-staging
   EVAL_REPORT_ARTIFACT: eval-reports-staging
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
@@ -309,12 +310,12 @@ jobs:
         if: always() && !matrix.skip_artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: test-results-${{ needs.check-changes.outputs.package_version }}-${{ matrix.platform }}-cuda${{ matrix.cuda }}-ubuntu${{ matrix.ubuntu }}
+          name: ${{ env.TEST_RESULTS_ARTIFACT }}-${{ needs.check-changes.outputs.package_version }}-${{ matrix.platform }}-cuda${{ matrix.cuda }}-ubuntu${{ matrix.ubuntu }}
           path: |
             output/cpp-test-results.xml
             output/python-test-output.txt
             output/test-summary.txt
-          retention-days: 30
+          retention-days: 1
           if-no-files-found: warn
 
       - name: Upload C++ distribution
@@ -349,7 +350,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
-          pattern: test-results-${{ needs.check-changes.outputs.package_version }}-*
+          pattern: ${{ env.TEST_RESULTS_ARTIFACT }}-${{ needs.check-changes.outputs.package_version }}-*
           path: artifacts/test-results
 
       - name: Download KPI staging artifacts
@@ -375,7 +376,7 @@ jobs:
           PACKAGE_VERSION: ${{ needs.check-changes.outputs.package_version }}
         run: |
           set -euo pipefail
-          mkdir -p consolidated/kpis consolidated/eval-reports
+          mkdir -p consolidated/test-results consolidated/kpis consolidated/eval-reports
           REPORT=consolidated/summary.md
 
           {
@@ -393,6 +394,7 @@ jobs:
               echo "The preflight job failed before the build decision could be made."
               echo ""
             } >> "$REPORT"
+            echo "has_test_results=false" >> "$GITHUB_OUTPUT"
             echo "has_reports=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -402,8 +404,24 @@ jobs:
               echo "Nightly skipped because there were no commits in the last 24 hours and the build was not forced."
               echo ""
             } >> "$REPORT"
+            echo "has_test_results=false" >> "$GITHUB_OUTPUT"
             echo "has_reports=false" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+
+          test_config_count=0
+          TEST_ARTIFACT_PREFIX="${TEST_RESULTS_ARTIFACT}-${PACKAGE_VERSION}-"
+          for testdir in artifacts/test-results/${TEST_ARTIFACT_PREFIX}*; do
+            [ -d "$testdir" ] || continue
+            CONFIG=${testdir#artifacts/test-results/${TEST_ARTIFACT_PREFIX}}
+            mkdir -p "consolidated/test-results/$CONFIG"
+            cp -a "$testdir"/. "consolidated/test-results/$CONFIG/"
+            test_config_count=$((test_config_count + 1))
+          done
+          if [ "$test_config_count" -gt 0 ]; then
+            echo "has_test_results=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_test_results=false" >> "$GITHUB_OUTPUT"
           fi
 
           {
@@ -413,7 +431,7 @@ jobs:
             echo "|:------:|---------------|----------|------:|-------:|-------:|-------:|--------:|"
           } >> "$REPORT"
 
-          for summary in artifacts/test-results/*/test-summary.txt; do
+          for summary in consolidated/test-results/*/test-summary.txt; do
             [ -f "$summary" ] || continue
             while IFS='|' read -r status config language total passed failed errors skipped _details; do
               case "$status" in
@@ -475,6 +493,10 @@ jobs:
           fi
 
           if [ "${{ needs.build-and-test.result }}" = "success" ]; then
+            if [ "$test_config_count" -eq 0 ]; then
+              echo "::error::Successful matrix produced no test result artifacts."
+              exit 1
+            fi
             if [ "$kpi_config_count" -eq 0 ]; then
               echo "::error::Successful matrix produced no KPI artifacts."
               exit 1
@@ -484,6 +506,16 @@ jobs:
               exit 1
             fi
           fi
+
+      - name: Upload consolidated test results
+        id: upload-tests
+        if: steps.aggregate.outputs.has_test_results == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ needs.check-changes.outputs.package_version }}
+          path: consolidated/test-results/
+          retention-days: 30
+          if-no-files-found: error
 
       - name: Package evaluation record
         if: steps.aggregate.outputs.has_reports == 'true'
@@ -520,11 +552,13 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Delete KPI and report staging artifacts
-        if: always() && steps.upload-evaluation.outcome == 'success'
+      - name: Delete staging artifacts
+        if: always()
         uses: actions/github-script@v7
         env:
           PACKAGE_VERSION: ${{ needs.check-changes.outputs.package_version }}
+          TESTS_RETAINED: ${{ steps.upload-tests.outcome == 'success' }}
+          EVALUATION_RETAINED: ${{ steps.upload-evaluation.outcome == 'success' }}
         with:
           script: |
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
@@ -533,10 +567,16 @@ jobs:
               run_id: context.runId,
               per_page: 100,
             });
-            const prefixes = [
-              `${process.env.EVAL_KPIS_ARTIFACT}-${process.env.PACKAGE_VERSION}-`,
-              `${process.env.EVAL_REPORT_ARTIFACT}-${process.env.PACKAGE_VERSION}-`,
-            ];
+            const prefixes = [];
+            if (process.env.TESTS_RETAINED === 'true') {
+              prefixes.push(`${process.env.TEST_RESULTS_ARTIFACT}-${process.env.PACKAGE_VERSION}-`);
+            }
+            if (process.env.EVALUATION_RETAINED === 'true') {
+              prefixes.push(
+                `${process.env.EVAL_KPIS_ARTIFACT}-${process.env.PACKAGE_VERSION}-`,
+                `${process.env.EVAL_REPORT_ARTIFACT}-${process.env.PACKAGE_VERSION}-`,
+              );
+            }
             for (const artifact of artifacts.filter(a => prefixes.some(prefix => a.name.startsWith(prefix)))) {
               await github.rest.actions.deleteArtifact({
                 owner: context.repo.owner,
