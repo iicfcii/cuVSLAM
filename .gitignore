@@ -8,7 +8,7 @@
 .cache/
 __pycache__/
 *.egg-info
-build/
+build*/
 compile_commands.json
 dataset/
 /datasets/
