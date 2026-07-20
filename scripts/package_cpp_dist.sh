@@ -18,7 +18,6 @@ declare -a sources=(
   "$REPO_ROOT/libs/cuvslam/cuvslam_gpu.h"
   "$REPO_ROOT/libs/cuvslam/ground_constraint2.h"
   "$REPO_ROOT/LICENSE"
-  "$REPO_ROOT/THIRD_PARTY_NOTICES.md"
 )
 
 for source in "${sources[@]}"; do
@@ -38,14 +37,12 @@ install -m 0644 "${sources[2]}" "$staging_dir/include/cuvslam/cuvslam2.h"
 install -m 0644 "${sources[3]}" "$staging_dir/include/cuvslam/cuvslam_gpu.h"
 install -m 0644 "${sources[4]}" "$staging_dir/include/cuvslam/ground_constraint2.h"
 install -m 0644 "${sources[5]}" "$staging_dir/LICENSE"
-install -m 0644 "${sources[6]}" "$staging_dir/THIRD_PARTY_NOTICES.md"
 
 tar -czf "$ARCHIVE_PATH" -C "$staging_dir" .
 
 expected_manifest=$(
   printf '%s\n' \
     LICENSE \
-    THIRD_PARTY_NOTICES.md \
     bin/cuvslam_api_launcher \
     bin/libcuvslam.so \
     include/cuvslam/cuvslam2.h \

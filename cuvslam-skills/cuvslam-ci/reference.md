@@ -79,9 +79,7 @@ Repository secrets, split read from write so fork-reachable jobs never hold a ke
 
 - `VERSION` is the single package-version source for scheduled, manual, and release runs. Release dispatch additionally requires the `release/vX.Y.Z` branch name to match `VERSION`.
 - Final distributables are packaged once by their producing job and uploaded directly, without an Actions ZIP wrapper: `cuvslam-cpp-<version>-<slug>.tar.gz`, the versioned Python wheels, `cuvslam-docs-<version>.tar.gz`, and `cuvslam-evaluation-<version>.tar.gz`.
-- Each C++ archive contains only `bin/{libcuvslam.so,cuvslam_api_launcher}`,
-  `include/cuvslam/{cuvslam2.h,cuvslam_gpu.h,ground_constraint2.h}`, `LICENSE`, and
-  `THIRD_PARTY_NOTICES.md`. `scripts/package_cpp_dist.sh` creates and validates this manifest.
+- Each C++ archive contains only `bin/{libcuvslam.so,cuvslam_api_launcher}`, `include/cuvslam/{cuvslam2.h,cuvslam_gpu.h,ground_constraint2.h}`, and `LICENSE`. `scripts/package_cpp_dist.sh` creates and validates this manifest.
 - A release job downloads the `cuvslam-*` distributables and promotes the same bytes to the draft Release. Test-result artifacts remain Actions-only.
 - The Actions summary contains CI test and KPI status. Release notes are generated separately from the evaluation summary, so permanent releases do not contain run metadata or expiring Actions links.
 

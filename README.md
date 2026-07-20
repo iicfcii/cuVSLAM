@@ -47,8 +47,7 @@ Notes:
 - IMU fusion is available in `Inertial` (always on) and `Multisensor` (auto-enabled when
   `Rig::imus` is non-empty).
 - For a runnable Multisensor walkthrough on a multi-RGB-D + IMU rig, see
-  [examples/multisensor/](examples/multisensor/README.md). For C++ construction and input sequencing, see
-  [the C++ Multisensor guide](doc/multisensor.md). For the full per-field API reference, see the
+  [examples/multisensor/](examples/multisensor/README.md). For the full per-field API reference, see the
   [C++](https://nvidia-isaac.github.io/cuVSLAM/cpp/) or
   [Python](https://nvidia-isaac.github.io/cuVSLAM/python/) docs.
 
@@ -115,7 +114,7 @@ for the following configurations:
 
 **Prerequisite**: [CUDA Toolkit 12 or 13](https://developer.nvidia.com/cuda/toolkit) must be installed separately (not included in the wheels).
 
-Official v17 wheels include cuNLS support for `Multisensor` mode; no separate cuNLS installation is required.
+Official wheels include cuNLS support for `Multisensor` mode; no separate cuNLS installation is required.
 
 To install (virtual environment is recommended):
 
@@ -210,8 +209,7 @@ is bundled into `libcuvslam`.
 
 cuNLS source and license information are published in the
 [nvidia-isaac/cuNLS repository](https://github.com/nvidia-isaac/cuNLS). Release wheels and C++ packages built with the
-default configuration include cuNLS support and do not require a separate runtime package. See
-[Third-party notices](THIRD_PARTY_NOTICES.md) for attribution and license links.
+default configuration include cuNLS support and do not require a separate runtime package.
 
 `USE_CUDA` must be `ON`. To build without cuNLS (and disable the multisensor odometry mode that
 depends on it), configure with `-DUSE_CUNLS=OFF`.

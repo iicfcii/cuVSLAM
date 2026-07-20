@@ -11,9 +11,8 @@ Tracking modes
 The tracker supports several odometry modes — see `cuvslam::Odometry::OdometryMode` for the enum
 and per-mode requirements. `Multisensor` accepts at least one RGB-D camera or one overlapping camera
 pair, with an optional IMU, and requires a cuNLS-enabled build. It is configured through
-`cuvslam::Odometry::MultisensorSettings`. See [Multisensor odometry](multisensor.md) for C++
-construction and input sequencing. A high-level mode chooser table lives in the top-level README's
-"Tracking modes" section.
+`cuvslam::Odometry::MultisensorSettings`. A high-level mode chooser table lives in the top-level
+README's "Tracking modes" section.
 
 For saving maps and relocalizing with `LocalizeInMap`, see [load_map.md](load_map.md).
 
