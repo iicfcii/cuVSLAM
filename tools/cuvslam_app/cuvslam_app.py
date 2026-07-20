@@ -547,16 +547,17 @@ def run_parallel_tracking(json_data, args, CUVSLAM_DATASETS, max_workers=None):
         max_workers = max(1, min(max_workers, multiprocessing.cpu_count()))
         print(f"Using max_workers={max_workers} (user specified)")
 
-    stats = []
     if 'dataset_folder' not in json_data:
         raise ValueError("Only reporter configs with dataset_folder are supported")
     _warn_unsupported_config_fields(json_data)
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        future_to_title = {}
-        for sequence in json_data['sequence_cfgs']:
-            if sequence["enable"] is False:
-                continue
+        enabled_sequences = [
+            sequence for sequence in json_data['sequence_cfgs'] if sequence["enable"] is not False
+        ]
+        ordered_stats = [None] * len(enabled_sequences)
+        future_to_sequence = {}
+        for index, sequence in enumerate(enabled_sequences):
             future = executor.submit(
                 process_sequence,
                 sequence,
@@ -564,18 +565,18 @@ def run_parallel_tracking(json_data, args, CUVSLAM_DATASETS, max_workers=None):
                 CUVSLAM_DATASETS,
                 json_data['dataset_folder']
             )
-            future_to_title[future] = sequence['sequence_title']
+            future_to_sequence[future] = (index, sequence['sequence_title'])
 
-        total = len(future_to_title)
+        total = len(future_to_sequence)
         print(f"Tracking {total} sequence(s) across {max_workers} worker(s)...", flush=True)
-        for done, future in enumerate(as_completed(future_to_title), start=1):
-            title = future_to_title[future]
+        for done, future in enumerate(as_completed(future_to_sequence), start=1):
+            index, title = future_to_sequence[future]
             stat = future.result()
             print(f"[{done}/{total}] finished: {title}", flush=True)
             if stat is not None:
-                stats.append(stat)
+                ordered_stats[index] = stat
 
-    return stats
+    return [stat for stat in ordered_stats if stat is not None]
 
 
 if __name__ == "__main__":
