@@ -62,11 +62,8 @@ struct TrackPerFrameSettings {
 //   * one or more plain RGB cameras
 //   * one or more RGB-D cameras (depth available per camera)
 //   * a single optional IMU
-// Concretely the four supported configurations are:
-//   1) multi-RGB,                  no IMU
-//   2) multi-RGB-D (any subset),   no IMU
-//   3) mixed RGB + RGB-D,          no IMU
-//   4) any of the above            +  single IMU
+// The minimum rig has at least one RGB-D camera or one overlapping camera pair. Any
+// valid visual configuration may additionally include one IMU.
 // Construction-time fields here describe which inputs the solver should expect.
 struct MultisensorSettings {
   // True if a single IMU is part of the rig and IMU measurements will be supplied via

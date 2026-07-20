@@ -223,7 +223,8 @@ struct ImuCalibration {
  * @note 1 to 32 cameras are supported now.
  * @note 0 or 1 IMU sensor is supported now.
  * @note An IMU sensor can be fused in Odometry::OdometryMode::Inertial (stereo + IMU) and in
- * Odometry::OdometryMode::Multisensor (multi-camera, optional RGBD subset, optional single IMU).
+ * Odometry::OdometryMode::Multisensor (one or more cameras, at least one RGB-D camera or overlapping pair, and an
+ * optional single IMU).
  */
 struct Rig {
   std::vector<Camera> cameras;       ///< Cameras; 1 to 32 cameras are supported now
@@ -380,6 +381,8 @@ public:
     RGBD,  ///< Uses RGB-D camera for tracking. A single RGB-D camera is supported. RGB & Depth images must be aligned.
     Mono,  ///< Uses a single camera, tracking is accurate up to scale.
 
+    /// @warning Experimental: tracking may be inaccurate or fail for some sensor configurations and scenes.
+    ///
     /// Unified multi-sensor mode (cuNLS-based). Supports any mix of plain RGB cameras,
     /// RGB-D cameras (any subset of the rig), with or without a single IMU. IMU fusion
     /// is enabled automatically when the rig contains an IMU; sba_mode is forced to the
@@ -388,9 +391,11 @@ public:
     ///
     /// @note Requirements (construction throws `std::invalid_argument` otherwise):
     ///  - Build must have cuNLS enabled (`-DUSE_CUNLS=ON`).
-    ///  - Same calibration requirement as Multicamera / Inertial: the rig must contain
-    ///    at least one camera pair with overlapping frustums (a stereo pair). Pure
-    ///    non-overlapping rigs are rejected even when depth is supplied.
+    ///  - The rig must provide at least one RGB-D camera through
+    ///    MultisensorSettings::depth_camera_ids, or at least one camera pair with
+    ///    overlapping frustums. A single RGB-D camera is valid, with or without an IMU.
+    ///  - The current cuNLS solver supports pinhole cameras. Other camera models emit a
+    ///    warning and are not supported in Multisensor mode.
     ///  - Depth images passed to `Track()` must use `Encoding::MONO` with
     ///    `DataType::UINT16` or `DataType::FLOAT32`; see `Track()` for the per-frame
     ///    matching rules against `MultisensorSettings::depth_camera_ids`.
@@ -399,6 +404,8 @@ public:
 
   /**
    * @brief Multisensor odometry settings
+   *
+   * @warning Experimental: tracking may be inaccurate or fail for some sensor configurations and scenes.
    *
    * Used only when Config::odometry_mode == OdometryMode::Multisensor.
    *
@@ -525,7 +532,7 @@ public:
     Pose delta;                      ///< Pose change since last keyframe
     bool keyframe;                   ///< Is this frame a keyframe?
     bool warming_up;                 ///< Is the tracker in warming up phase?
-    std::optional<Gravity> gravity;  ///< Optional gravity information. Only available in OdometryMode::Inertial mode.
+    std::optional<Gravity> gravity;  ///< Optional gravity. Available in Inertial or Multisensor mode with an IMU.
     std::vector<Observation> observations;  ///< Observations for this frame
     std::vector<Landmark> landmarks;        ///< Landmarks for this frame
     ContextMap context;                     ///< Opaque context information for this frame (used internally by Slam)
@@ -556,8 +563,8 @@ public:
    *
    * Track current frame synchronously: the function blocks until the tracker has computed a pose.
    * By default, this function uses visual odometry to compute a pose.
-   * If visual odometry tracker fails to compute a pose, in inertial mode the function returns the position
-   * calculated from a user-provided IMU data.
+   * If visual odometry tracker fails to compute a pose, in Inertial mode or Multisensor mode with an IMU the function
+   * returns the position calculated from user-provided IMU data.
    * If after several calls of Track() visual odometry is not able to recover,
    * then invalid pose will be returned.
    *
@@ -699,7 +706,7 @@ public:
    *
    * Note: `sba.async` and `sba.mode` are construction-time settings that determine whether the
    * SBA background thread is spawned and which bundler is used. They cannot be changed after the
-   * tracker is created. Set `Configuration::async_sba` and `Configuration::odometry_mode` before
+   * tracker is created. Set `Odometry::Config::async_sba` and `Odometry::Config::odometry_mode` before
    * constructing the Odometry object instead.
    *
    * StateMachine / IMU gravity estimation (Inertial mode only):

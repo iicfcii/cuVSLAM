@@ -35,7 +35,8 @@ def color_from_id(identifier):
     return [(identifier * 17) % 256, (identifier * 31) % 256, (identifier * 47) % 256]
 
 
-parser = argparse.ArgumentParser(description='Multisensor (multi RGB-D + IMU) tracking on TartanGround.')
+parser = argparse.ArgumentParser(
+    description='Multisensor (multi RGB-D + IMU) tracking on TartanGround.')
 parser.add_argument('--no-imu', action='store_true',
                     help='Disable the IMU: run Multisensor mode with only the two RGB-D cameras.')
 args = parser.parse_args()

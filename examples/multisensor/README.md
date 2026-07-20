@@ -1,10 +1,26 @@
-# Tutorial: Running PyCuVSLAM Multisensor Odometry (multi RGB-D + IMU)
+# Tutorial: PyCuVSLAM Multisensor Odometry (multi RGB-D + IMU)
+
+> **Experimental:** Tracking may be inaccurate or fail for some sensor configurations and scenes.
 
 This tutorial demonstrates how to run PyCuVSLAM in **Multisensor** odometry
 mode, which solves a single tightly-coupled cuNLS step over any mix of plain
 RGB cameras, RGB-D cameras, and one optional IMU. The example uses two
 RGB-D cameras (`lcam_front`, `lcam_back`) plus a synthetic IMU from the
 [TartanGround dataset](https://tartanair.org/tartanground/).
+
+## Requirements
+
+- Use an official v17 wheel or build with `USE_CUNLS=ON`.
+- Configure at least one RGB-D camera in `depth_camera_ids`, or provide at least one camera pair with overlapping
+  frustums. A single RGB-D camera is valid, with or without an IMU.
+- Use pinhole cameras. Other camera models are not supported by the current solver.
+- Align each depth image pixel-for-pixel with the RGB image at the same camera index. PyCuVSLAM accepts 2D `uint16`
+  depth; the C++ API accepts `UINT16` or `FLOAT32`.
+- Configure no more than one IMU. Serialize image and IMU calls in non-decreasing timestamp order.
+
+Construction raises `ValueError` when the rig or settings are invalid. A valid tracker may return a
+`PoseEstimate` with `world_from_rig=None` while initializing or after tracking loss. Configured depth streams may be
+omitted from an individual frame after a sensor drop, but every supplied depth must match a configured camera index.
 
 ## Set Up the PyCuVSLAM Environment
 

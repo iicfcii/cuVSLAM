@@ -7,6 +7,7 @@ Detailed setup for each public dataset supported by cuVSLAM examples.
 - [EuRoC MAV](#euroc-mav)
 - [TUM RGB-D](#tum-rgb-d)
 - [Multi-Camera Datasets](#multi-camera-datasets)
+- [Multisensor](#multisensor)
 - [Distortion Models](#distortion-models)
 - [EDEX File Format](#edex-file-format)
 - [Converting ROS Bags](#converting-ros-bags)
@@ -152,6 +153,23 @@ ros2 run isaac_ros_rosbag_utils extract_edex \
 ```
 3. Move extracted folder to `examples/multicamera_edex/dataset/r2b_galileo_edex`
 4. Run: `python3 track_multicamera_r2b.py`
+
+---
+
+## Multisensor
+
+The TartanGround example exercises multiple RGB-D cameras with an optional IMU:
+
+```bash
+cd examples/multisensor
+pip install tartanair    # x86_64 only; on Jetson, download on x86 and transfer
+python3 download_tartan.py
+python3 track_multisensor_tartan.py
+python3 track_multisensor_tartan.py --no-imu
+```
+
+Multisensor requires `USE_CUNLS=ON`, pinhole cameras, and at least one RGB-D camera or one overlapping camera pair.
+Multisensor tracking is experimental and may be inaccurate or fail for some sensor configurations and scenes.
 
 ---
 

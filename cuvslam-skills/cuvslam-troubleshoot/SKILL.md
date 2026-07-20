@@ -80,7 +80,10 @@ If the user has not provided a config, say:
 > "To root cause this accurately I need the cuVSLAM configuration you were using. Please share the parameters file (for Isaac ROS) or the relevant `OdometryConfig` / `CUVSLAM_Configuration` settings you had set when the issue occurred."
 
 Key parameters to note once you have the config:
-- `tracking_mode` (Isaac ROS) / `OdometryMode` (Python) — determines whether IMU is used (`0`/`Multicamera`=VO only, `1`/`Inertial`=VIO). Knowing this up front directs the diagnosis toward vision or IMU root causes.
+- `tracking_mode` (Isaac ROS) / `OdometryMode` (Python) — determines whether IMU is used
+  (`0`/`Multicamera`=VO only, `1`/`Inertial`=VIO). Python/C++ `Multisensor` may use RGB, RGB-D, and an optional IMU;
+  verify cuNLS availability, `depth_camera_ids`, pinhole calibration, and whether the rig contains an IMU.
+  Knowing this up front directs the diagnosis toward vision, depth, or IMU root causes.
 - `rectified_images` (Isaac ROS) / `rectified_stereo_camera` (C++ API) — wrong value flips the entire stereo pipeline
 - `image_jitter_threshold_ms` — tolerated timestamp jitter between left/right images; too tight a value causes frames to be dropped silently
 - `async_sba` / `sync_mode` — affects reproducibility

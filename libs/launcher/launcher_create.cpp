@@ -52,7 +52,7 @@ std::unique_ptr<BaseLauncher> CreateLauncher(ICameraRig& rig, const odom::Settin
 #ifdef USE_CUNLS
     return std::make_unique<MultisensorCameraLauncher>(rig, svo_settings);
 #else
-    throw std::invalid_argument{"Unsupported mode. The multisensor mode requires build with USE_CUDA and USE_CUNLS."};
+    throw std::invalid_argument{"Unsupported mode. Multisensor mode requires USE_CUNLS=ON."};
 #endif
   }
   throw std::invalid_argument{"Unsupported mode."};

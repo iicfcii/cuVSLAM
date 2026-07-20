@@ -11,7 +11,7 @@ odometry:
   # Multicamera mode: Performance, Precision, or Moderate
   multicam_mode: "Moderate"
 
-  # Odometry mode: Multicamera, Inertial, RGBD, or Mono
+  # Odometry mode: Multicamera, Inertial, RGBD, Mono, or Multisensor
   odometry_mode: "Multicamera"
 
   # Enable tracking using GPU (default: true)
@@ -62,6 +62,19 @@ odometry:
 
     # Enable stereo 2D tracking between depth-aligned camera and other cameras
     enable_depth_stereo_tracking: false
+
+  # Multisensor settings (only used when odometry_mode is Multisensor)
+  # Requires USE_CUNLS=ON and pinhole cameras. Configure at least one depth camera
+  # or provide at least one camera pair with overlapping frustums.
+  multisensor_settings:
+    # Camera ids whose EDEX streams provide pixel-aligned depth
+    depth_camera_ids: [0]
+
+    # Divide raw depth values by this factor to get meters
+    depth_scale_factor: 1000.0
+
+    # Keep cross-camera 2D tracking for depth-providing cameras
+    enable_depth_stereo_tracking: true
 
 # =============================================================================
 # SLAM Configuration (Slam::Config)

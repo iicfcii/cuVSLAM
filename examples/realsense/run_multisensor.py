@@ -12,6 +12,8 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+"""Multisensor RGB-D + IMU tracking on one RealSense camera."""
+
 import queue
 import threading
 from collections import deque

@@ -34,6 +34,7 @@ IMAGE_JITTER_THRESHOLD_NS = 35 * 1e6  # 35ms in nanoseconds
 IMU_JITTER_THRESHOLD_NS = 6 * 1e6  # 6ms in nanoseconds
 IMU_QUEUE_MAX_SIZE = IMU_FREQUENCY_ACCEL * 5
 SHOW_GRAVITY = False
+# Alternative mode: the stereo pair satisfies Multisensor's overlapping-camera minimum.
 USE_MULTISENSOR_MODE = False
 
 
@@ -288,6 +289,7 @@ def main() -> None:
         rectified_stereo_camera=True
     )
     if USE_MULTISENSOR_MODE:
+        # No depth ids are needed because this rig contains an overlapping stereo pair.
         cfg.odometry_mode = vslam.Tracker.OdometryMode.Multisensor
         cfg.multisensor_settings = vslam.Tracker.OdometryMultisensorSettings(
             depth_camera_ids=[]

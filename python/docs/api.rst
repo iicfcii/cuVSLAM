@@ -47,6 +47,9 @@ Data Structures
 .. autoclass:: cuvslam.core.Odometry.RGBDSettings
    :members:
 
+.. autoclass:: cuvslam.core.Odometry.MultisensorSettings
+   :members:
+
 .. autoclass:: cuvslam.core.Slam.Config
    :members:
 

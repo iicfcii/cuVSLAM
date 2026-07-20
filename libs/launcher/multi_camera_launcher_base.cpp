@@ -119,8 +119,8 @@ MultiCameraBaseLauncher::MultiCameraBaseLauncher(ICameraRig& cameraRig, const od
 
   if (!fig.is_valid()) {
     throw std::runtime_error(
-        "Bad calibration. cuVSLAM is supposed to work with at least"
-        " one stereo pair available.");
+        "Bad calibration. cuVSLAM needs at least one configured depth camera or one camera pair with overlapping "
+        "frustums.");
   }
 
   if (FLAGS_slam_camera != -1) {
@@ -132,7 +132,7 @@ MultiCameraBaseLauncher::MultiCameraBaseLauncher(ICameraRig& cameraRig, const od
         ss << static_cast<int>(cam_id) << " ";
       }
       ss << "}";
-      throw std::runtime_error("Bad calibration. cuVSLAM is supposed to work with at least one stereo pair available.");
+      throw std::runtime_error(ss.str());
     }
     assert(*it == FLAGS_slam_camera);
     const CameraId manual_selected_slam_camera = *it;

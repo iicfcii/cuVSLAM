@@ -28,6 +28,7 @@ class Tracker:
 
     This class automatically manages both the Odometry and SLAM instances,
     providing a simplified interface for common use cases.
+
     """
 
     # Expose inner classes of Odometry & Slam

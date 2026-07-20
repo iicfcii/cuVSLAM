@@ -29,7 +29,7 @@ cuVSLAM is the library by NVIDIA, providing various Visual Tracking Camera modes
 # Tracking modes
 
 cuVSLAM's tracker supports several odometry modes selected via `Odometry::Config::odometry_mode`
-(C++) / `cuvslam.Odometry.OdometryMode` (Python). Modes differ in which sensors they require, which
+(C++) / `cuvslam.Tracker.OdometryMode` (Python). Modes differ in which sensors they require, which
 ones they can additionally fuse, and how they handle scale. Pick the mode that matches the most
 informative sensor set on your rig:
 
@@ -39,17 +39,23 @@ informative sensor set on your rig:
 | `RGBD` | 1 RGB-D camera (aligned RGB + depth) | — | `RGBDSettings` | Single depth-aligned camera (e.g. RealSense, TUM RGB-D). |
 | `Multicamera` | ≥2 cameras with at least one overlapping pair (a stereo pair) | up to 32 cameras total | — | Stereo or multi-stereo rigs. Most accurate purely-visual mode. |
 | `Inertial` | 1 stereo pair + 1 IMU | — | — | Stereo VIO. Adds robustness to brief visual failures. |
-| `Multisensor` | At least one camera pair with overlapping frustums; cuNLS-enabled build | RGB-D cameras (any subset), 0 or 1 IMU | `MultisensorSettings` | Any-mix RGB / RGB-D rigs with optional IMU. Use when the legacy modes don't fit: ≥3 cameras of mixed RGB and RGB-D types; a multi-camera rig where only a subset provides depth; or RGB-D + IMU fusion (note that `Inertial` mode is stereo-only). |
+| `Multisensor` | ≥1 RGB-D camera **or** ≥1 overlapping camera pair; cuNLS-enabled build | Additional RGB/RGB-D cameras, 0 or 1 IMU | `MultisensorSettings` | Any-mix RGB / RGB-D rigs with optional IMU, including one RGB-D camera with IMU. |
 
 Notes:
 - `Multisensor` is the only mode that requires a cuNLS-enabled build — see
-  [Optional: cuNLS](#optional-cunls). All other modes work with the default build.
+  [cuNLS](#cunls). All other modes work with the default build.
 - IMU fusion is available in `Inertial` (always on) and `Multisensor` (auto-enabled when
   `Rig::imus` is non-empty).
 - For a runnable Multisensor walkthrough on a multi-RGB-D + IMU rig, see
-  [examples/multisensor/](examples/multisensor/README.md). For the full per-field API reference,
-  see the [C++](https://nvidia-isaac.github.io/cuVSLAM/cpp/) or
+  [examples/multisensor/](examples/multisensor/README.md). For C++ construction and input sequencing, see
+  [the C++ Multisensor guide](doc/multisensor.md). For the full per-field API reference, see the
+  [C++](https://nvidia-isaac.github.io/cuVSLAM/cpp/) or
   [Python](https://nvidia-isaac.github.io/cuVSLAM/python/) docs.
+
+## Multisensor mode
+
+Multisensor tracking is experimental: tracking may be inaccurate or fail for some sensor configurations and scenes.
+The current implementation supports pinhole cameras only.
 
 # Using cuVSLAM
 
@@ -108,6 +114,8 @@ for the following configurations:
 | 24.04+ | 3.12+ | 12, 13 | x86_64, aarch64 |
 
 **Prerequisite**: [CUDA Toolkit 12 or 13](https://developer.nvidia.com/cuda/toolkit) must be installed separately (not included in the wheels).
+
+Official v17 wheels include cuNLS support for `Multisensor` mode; no separate cuNLS installation is required.
 
 To install (virtual environment is recommended):
 
@@ -199,6 +207,11 @@ required. The source is pinned in `cmake/ext/cunls.cmake`; cuNLS downloads its o
 (spdlog is shared with cuVSLAM, cuDSS is fetched as a prebuilt archive) at configure time, so a
 network connection and the CUDA Toolkit are the only prerequisites. The resulting static archive
 is bundled into `libcuvslam`.
+
+cuNLS source and license information are published in the
+[nvidia-isaac/cuNLS repository](https://github.com/nvidia-isaac/cuNLS). Release wheels and C++ packages built with the
+default configuration include cuNLS support and do not require a separate runtime package. See
+[Third-party notices](THIRD_PARTY_NOTICES.md) for attribution and license links.
 
 `USE_CUDA` must be `ON`. To build without cuNLS (and disable the multisensor odometry mode that
 depends on it), configure with `-DUSE_CUNLS=OFF`.

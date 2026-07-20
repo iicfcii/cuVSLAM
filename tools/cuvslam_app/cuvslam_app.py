@@ -92,6 +92,15 @@ class Tracker:
         if rgbd_settings:
             self.odom_cfg.rgbd_settings = rgbd_settings
 
+        multisensor_settings = self._initialize_multisensor_settings(args)
+        if multisensor_settings:
+            self.odom_cfg.multisensor_settings = multisensor_settings
+
+        self.imu_enabled = (
+            self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Inertial or
+            (self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Multisensor and bool(rig.imus))
+        )
+
         # Configure SLAM if needed
         self.slam_cfg = None
         if getattr(args, 'use_slam', False):
@@ -184,6 +193,24 @@ class Tracker:
 
         return rgbd_settings
 
+    def _initialize_multisensor_settings(
+            self, args: argparse.Namespace) -> Optional[vslam.Tracker.OdometryMultisensorSettings]:
+        """Initialize Multisensor settings from EDEX-compatible depth arguments."""
+        if (not hasattr(args, 'odometry_mode') or
+                args.odometry_mode != vslam.Tracker.OdometryMode.Multisensor):
+            return None
+
+        settings = vslam.Tracker.OdometryMultisensorSettings()
+        depth_camera_id = getattr(args, 'depth_camera_id', None)
+        settings.depth_camera_ids = [] if depth_camera_id is None else [depth_camera_id]
+        settings.depth_scale_factor = getattr(args, 'depth_scale_factor', 1.0)
+        settings.enable_depth_stereo_tracking = getattr(args, 'enable_depth_stereo_tracking', True)
+
+        print(f"Multisensor settings initialized: depth_camera_ids={settings.depth_camera_ids}, "
+              f"depth_scale_factor={settings.depth_scale_factor}, "
+              f"enable_depth_stereo_tracking={settings.enable_depth_stereo_tracking}")
+        return settings
+
     def process_images(self, frame_id: int, timestamps: Sequence[int],
                        images: Sequence, masks: Sequence,
                        depths: Optional[Sequence] = None):
@@ -224,7 +251,7 @@ class Tracker:
 
         if self.visualizer and odom_world_from_rig:
             gravity = None
-            if self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Inertial:
+            if self.imu_enabled:
                 # Gravity estimation requires collecting sufficient number of keyframes
                 # with motion diversity
                 gravity_raw = self.tracker.get_last_gravity()
@@ -253,7 +280,7 @@ class Tracker:
 
     def process_imu(self, timestamp: int, linear_accelerations: Sequence[float],
                     angular_velocities: Sequence[float]):
-        if self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Inertial:
+        if self.imu_enabled:
             imu_measurement = vslam.ImuMeasurement()
             imu_measurement.timestamp_ns = timestamp
             imu_measurement.linear_accelerations = linear_accelerations
@@ -416,13 +443,17 @@ def track(args: argparse.Namespace,
                               num_loops=args.num_loops, repeat_type=args.repeat_type,
                               gt_path=getattr(args, 'gt_path', None))
     else:
-        rgbd_mode = args.odometry_mode == vslam.Tracker.OdometryMode.RGBD
+        rgbd_mode = args.odometry_mode in (
+            vslam.Tracker.OdometryMode.RGBD,
+            vslam.Tracker.OdometryMode.Multisensor,
+        )
         dataset = EdexReader(args.dataset, stereo_edex=args.config_path,
                              num_loops=args.num_loops, rgbd_mode=rgbd_mode,
                              repeat_type=args.repeat_type,
                              cache_uncompressed=getattr(args, 'cache_uncompressed', False),
                              gt_path=getattr(args, 'gt_path', None),
-                             camera_ids=getattr(args, 'camera_ids', None))
+                             camera_ids=getattr(args, 'camera_ids', None),
+                             depth_optional=args.odometry_mode == vslam.Tracker.OdometryMode.Multisensor)
 
     tracker_results = TrackerResults()
     if args.sequence_title:
@@ -622,7 +653,7 @@ if __name__ == "__main__":
                         help='Multicamera mode: performance, precision, or moderate')
     parser.add_argument('--odometry_mode', type=conv.str2odometry_mode,
                         default=default_cfg.odometry_mode,
-                        help='Odometry mode: mono, multicamera, inertial, rgbd')
+                        help='Odometry mode: mono, multicamera, inertial, rgbd, multisensor')
     parser.add_argument('--use_gpu', type=conv.str2bool, default=default_cfg.use_gpu,
                         help='Enable GPU acceleration')
     parser.add_argument('--async_sba', type=conv.str2bool, default=False,  # different from library default
@@ -655,9 +686,9 @@ if __name__ == "__main__":
     # RGBD-specific arguments
     # Note: depth_camera_id must be specified in stereo.edex file, not via command-line
     parser.add_argument('--depth_scale_factor', type=float, default=1.0,
-                        help='Depth scale factor for RGBD mode (e.g., 1000.0 for depth in mm)')
+                        help='Depth scale factor for RGBD or Multisensor mode')
     parser.add_argument('--enable_depth_stereo_tracking', type=conv.str2bool, default=False,
-                        help='Enable depth-stereo tracking in RGBD mode')
+                        help='Enable depth-stereo tracking in RGBD or Multisensor mode')
 
     args = parser.parse_args()
     stats = []

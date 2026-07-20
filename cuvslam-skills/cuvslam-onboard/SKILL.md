@@ -3,8 +3,8 @@ name: cuvslam-onboard
 description: >
   Build, install, and run NVIDIA cuVSLAM and PyCuVSLAM from source or wheels.
   Covers environment setup, dataset preparation, and running examples for all
-  tracking modes (stereo, mono, mono-depth, stereo-inertial, multi-camera) and
-  SLAM (mapping, localization, loop closure). Use when asked to: build cuVSLAM,
+  tracking modes (stereo, mono, mono-depth, stereo-inertial, multi-camera, and
+  Multisensor) and SLAM (mapping, localization, loop closure). Use when asked to: build cuVSLAM,
   install PyCuVSLAM, set up cuVSLAM environment, run cuVSLAM examples, prepare
   KITTI/EuRoC/TUM datasets, run visual odometry, set up live camera tracking
   (RealSense/ZED/OAK-D/Orbbec), run cuVSLAM in Docker, or use cuVSLAM C++ tools.
@@ -83,6 +83,7 @@ CMake options:
 - `-DUSE_RERUN=ON` — enable Rerun visualization for C++ tools
 - `-DCUVSLAM_BUILD_SHARED_LIB=TRUE` — build shared library (default)
 - `-DUSE_CUDA=ON` — use CUDA (default)
+- `-DUSE_CUNLS=ON` — enable Multisensor mode (default; requires CUDA)
 
 ### Install PyCuVSLAM from source
 
@@ -126,7 +127,7 @@ cuVSLAM supports these visual tracking modes:
 | Stereo-Inertial | `OdometryMode.Inertial` (1) | Stereo + IMU for robustness |
 | Mono-Depth (RGB-D) | `OdometryMode.RGBD` (2) | Monocular + depth image |
 | Monocular | `OdometryMode.Mono` (3) | Single camera (no scale) |
-| Multisensor | `OdometryMode.Multisensor` (4) | Any-mix RGB / RGB-D cameras with optional IMU. Requires cuNLS-enabled build. Configure via `MultisensorSettings`. See `examples/multisensor/`. |
+| Multisensor | `OdometryMode.Multisensor` (4) | At least one RGB-D camera or one overlapping camera pair, with optional IMU. Requires cuNLS and currently supports pinhole cameras only. Configure via `MultisensorSettings`. See `examples/multisensor/`. |
 
 ## 5. Run Examples — Public Datasets
 
@@ -196,16 +197,28 @@ python3 download_tartan.py
 python3 track_multicamera_tartan.py
 ```
 
+### Multisensor (Tartan Ground, RGB-D + optional IMU)
+
+Multisensor tracking is experimental and may be inaccurate or fail for some sensor configurations and scenes.
+
+```bash
+cd examples/multisensor
+pip install tartanair     # x86_64 only
+python3 download_tartan.py
+python3 track_multisensor_tartan.py
+python3 track_multisensor_tartan.py --no-imu
+```
+
 ## 6. Run Examples — Live Cameras
 
 See `references/live-cameras.md` for detailed setup per camera.
 
-| Camera | Stereo | VIO | RGB-D | Multi-cam |
-|--------|--------|-----|-------|-----------|
-| RealSense | `run_stereo.py` | `run_vio.py` | `run_rgbd.py` | `run_multicamera.py` |
-| ZED | `run_stereo.py` | — | `run_rgbd.py` | — |
-| OAK-D | `run_stereo.py` | — | — | — |
-| Orbbec | `run_stereo.py` | — | `run_rgbd.py` | — |
+| Camera | Stereo | VIO | RGB-D | Multi-cam | Multisensor |
+|--------|--------|-----|-------|-----------|--------------------------|
+| RealSense | `run_stereo.py` | `run_vio.py` | `run_rgbd.py` | `run_multicamera.py` | `run_multisensor.py` |
+| ZED | `run_stereo.py` | — | `run_rgbd.py` | — | — |
+| OAK-D | `run_stereo.py` | — | — | — | — |
+| Orbbec | `run_stereo.py` | — | `run_rgbd.py` | — | — |
 
 ## 7. C++ API
 

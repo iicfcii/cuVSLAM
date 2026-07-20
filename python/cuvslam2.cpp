@@ -411,13 +411,15 @@ NB_MODULE(pycuvslam, m) {
              "Uses RGB-D camera for tracking. A single RGB-D camera is supported. RGB & Depth images must be aligned.")
       .value("Mono", Odometry::OdometryMode::Mono, "Uses a single camera, tracking is accurate up to scale.")
       .value("Multisensor", Odometry::OdometryMode::Multisensor,
-             "Unified multi-sensor mode. Supports any mix of plain RGB cameras, RGB-D cameras (any subset of the rig), "
+             "EXPERIMENTAL unified multi-sensor mode. Tracking may be inaccurate or fail for some sensor "
+             "configurations and scenes. Supports any mix of plain RGB cameras, RGB-D cameras (any subset of the rig), "
              "and a single optional IMU. IMU fusion turns on automatically when the rig contains an IMU.\n\n"
              "Requirements (constructor raises ValueError otherwise):\n"
              " - Build must have cuNLS enabled (-DUSE_CUNLS=ON).\n"
-             " - Same calibration requirement as Multicamera / Inertial: the rig must contain at least one camera pair "
-             "with overlapping frustums (a stereo pair). Pure non-overlapping rigs are rejected even when depth is "
-             "supplied.\n"
+             " - The rig must contain at least one RGB-D camera listed in MultisensorSettings.depth_camera_ids, or at "
+             "least one camera pair with overlapping frustums. A single RGB-D camera is valid, with or without an "
+             "IMU.\n"
+             " - The current solver supports pinhole cameras; other camera models are not supported.\n"
              " - Depth images passed to track() must be 2D uint16 ndarrays (cuVSLAM's C++ contract also accepts "
              "FLOAT32, but the current PyCuVSLAM binding only exposes uint16); each depth image's camera_index must "
              "appear in MultisensorSettings.depth_camera_ids.")
@@ -426,7 +428,8 @@ NB_MODULE(pycuvslam, m) {
   // Multisensor Settings class — describes available sensors at construction time for OdometryMode::Multisensor.
   nb::class_<Odometry::MultisensorSettings>(
       odom_cls, "MultisensorSettings",
-      "Settings for the unified Multisensor odometry mode.\n\n"
+      "Settings for the EXPERIMENTAL unified Multisensor odometry mode. Tracking may be inaccurate or fail for some "
+      "sensor configurations and scenes.\n\n"
       "Multisensor supports any mix of plain RGB cameras, RGB-D cameras (any subset of the rig), and a single optional "
       "IMU. The fields here describe depth handling; IMU presence is auto-detected from `Rig.imus`.")
       .def(nb::init<std::vector<int32_t>, float, bool>(), nb::kw_only(),

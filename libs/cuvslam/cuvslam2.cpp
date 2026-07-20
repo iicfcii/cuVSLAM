@@ -503,6 +503,8 @@ Odometry::Odometry(const Rig& rig, const Config& cfg) {
     for (int32_t id : cfg.multisensor_settings.depth_camera_ids) {
       THROW_INVALID_ARG_IF(id < 0 || static_cast<size_t>(id) >= rig.cameras.size(),
                            "MultisensorSettings::depth_camera_ids contains out-of-range camera id");
+      THROW_INVALID_ARG_IF(std::find(depth_ids.begin(), depth_ids.end(), static_cast<CameraId>(id)) != depth_ids.end(),
+                           "MultisensorSettings::depth_camera_ids contains duplicate camera id");
       depth_ids.push_back(static_cast<CameraId>(id));
     }
     enable_depth_stereo_tracking_fig = cfg.multisensor_settings.enable_depth_stereo_tracking;
@@ -516,9 +518,15 @@ Odometry::Odometry(const Rig& rig, const Config& cfg) {
       /*.manual_setup=*/svo_settings.sof_settings.multicam_setup,
   };
   tracker->fig = camera::FrustumIntersectionGraph(tracker->rig, fig_settings);
-  THROW_INVALID_ARG_IF(!tracker->fig.is_valid(),
-                       "Bad calibration. cuVSLAM needs at least one stereo pair available for "
-                       "multicamera/inertial/multisensor modes.");
+  if (!tracker->fig.is_valid()) {
+    if (cfg.odometry_mode == OdometryMode::Multisensor) {
+      throw std::invalid_argument{
+          "Bad calibration. Multisensor mode needs at least one RGB-D camera configured in "
+          "MultisensorSettings::depth_camera_ids or one camera pair with overlapping frustums."};
+    }
+    throw std::invalid_argument{
+        "Bad calibration. cuVSLAM needs at least one stereo pair for Multicamera or Inertial mode."};
+  }
 
   switch (cfg.odometry_mode) {
     case OdometryMode::Multicamera: {

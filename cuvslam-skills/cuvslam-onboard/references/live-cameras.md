@@ -12,7 +12,7 @@ Detailed setup for each camera platform supported by PyCuVSLAM.
 
 ## RealSense
 
-**Supported modes:** Stereo, Stereo-Inertial (VIO), Mono-Depth (RGB-D), Multi-Camera
+**Supported modes:** Stereo, Stereo-Inertial (VIO), Mono-Depth (RGB-D), Multi-Camera, Multisensor
 
 ### Install librealsense
 
@@ -42,6 +42,7 @@ python3 run_stereo.py        # Stereo odometry
 python3 run_vio.py           # Stereo-inertial (requires IMU calibration)
 python3 run_rgbd.py          # Mono-depth (enable IR emitter, use RGB not IR for tracking)
 python3 run_multicamera.py   # Multi-camera (needs frame_nano_rig.yaml with your extrinsics)
+python3 run_multisensor.py   # Multisensor RGB-D + IMU (requires cuNLS; pinhole only)
 ```
 
 ### IMU calibration for VIO

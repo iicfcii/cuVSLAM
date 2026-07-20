@@ -73,6 +73,7 @@ def _apply_odometry_section(config: Odometry.Config, section: dict) -> None:
                 "inertial":    Odometry.OdometryMode.Inertial,
                 "rgbd":        Odometry.OdometryMode.RGBD,
                 "mono":        Odometry.OdometryMode.Mono,
+                "multisensor": Odometry.OdometryMode.Multisensor,
             }
             normalized = str(value).lower()
             resolved = mapping.get(normalized)
@@ -108,6 +109,17 @@ def _apply_odometry_section(config: Odometry.Config, section: dict) -> None:
                     config.rgbd_settings.depth_camera_id = int(value["depth_camera_id"])
                 if "enable_depth_stereo_tracking" in value:
                     config.rgbd_settings.enable_depth_stereo_tracking = _parse_bool(
+                        value["enable_depth_stereo_tracking"])
+        elif key == "multisensor_settings":
+            if isinstance(value, dict):
+                if "depth_camera_ids" in value:
+                    config.multisensor_settings.depth_camera_ids = [
+                        int(camera_id) for camera_id in value["depth_camera_ids"]
+                    ]
+                if "depth_scale_factor" in value:
+                    config.multisensor_settings.depth_scale_factor = float(value["depth_scale_factor"])
+                if "enable_depth_stereo_tracking" in value:
+                    config.multisensor_settings.enable_depth_stereo_tracking = _parse_bool(
                         value["enable_depth_stereo_tracking"])
         elif key == "debug_dump_directory":
             warnings.warn("'debug_dump_directory' cannot be loaded from YAML (string does not persist); "

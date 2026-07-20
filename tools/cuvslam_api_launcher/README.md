@@ -39,6 +39,27 @@ Hint file rows format: `timestamp x y z [optional quaternion]`
 Float timestamps in seconds and int timestamps in ns are supported. Hints must be sorted by timestamps.
 To localize, the util will use the latest hint not later than current frame.
 
+### Multisensor
+
+The launcher supports `OdometryMode::Multisensor` for EDEX datasets containing RGB/RGB-D streams and an optional IMU.
+Multisensor tracking is experimental: tracking may be inaccurate or fail for some sensor configurations and scenes. The
+mode requires a cuNLS-enabled build, pinhole cameras, and at least one configured RGB-D camera or one overlapping camera
+pair.
+
+Use YAML for mixed or multiple depth cameras:
+
+```yaml
+odometry:
+  odometry_mode: Multisensor
+  multisensor_settings:
+    depth_camera_ids: [0, 2]
+    depth_scale_factor: 1000.0
+    enable_depth_stereo_tracking: true
+```
+
+The launcher forwards depth only for the configured camera ids and registers EDEX IMU measurements automatically when
+the rig contains an IMU. For a single RGB-D camera, `--cfg_odom_mode=4 --cfg_depth_camera=0` is also supported.
+
 ## Configuration via YAML File
 
 You can specify optional per-frame `track_options` using a YAML config file with the `--config` flag:

@@ -126,6 +126,67 @@ class TestTracking(unittest.TestCase):
                             #     if gravity is not None:
                             #         self.assertAlmostEqual(gravity[1], 9.81, msg=f"iteration {i}")
 
+    def _create_multisensor_tracker(self, rig, config):
+        try:
+            return vslam.Tracker(rig, config)
+        except ValueError as error:
+            if "requires a build with cuNLS support" in str(error):
+                self.skipTest("PyCuVSLAM was built without Multisensor support")
+            raise
+
+    def test_multisensor_tracking_variants(self):
+        image = np.zeros((480, 640), dtype=np.uint8)
+        depth = np.full((480, 640), 1000, dtype=np.uint16)
+
+        with self.subTest(variant="single RGB-D"):
+            config = vslam.Tracker.OdometryConfig(
+                odometry_mode=vslam.Tracker.OdometryMode.Multisensor,
+                multisensor_settings=vslam.Tracker.OdometryMultisensorSettings(
+                    depth_camera_ids=[0], depth_scale_factor=1000.0))
+            rig = vslam.Rig([self.rig.cameras[0]])
+            tracker = self._create_multisensor_tracker(rig, config)
+            tracker.track(1000, [image], depths=[depth])
+            tracker.track(2000, [image], depths=[depth])
+
+        with self.subTest(variant="stereo without depth"):
+            config = vslam.Tracker.OdometryConfig(
+                odometry_mode=vslam.Tracker.OdometryMode.Multisensor)
+            rig = vslam.Rig(self.rig.cameras)
+            tracker = self._create_multisensor_tracker(rig, config)
+            tracker.track(1000, [image, image])
+            tracker.track(2000, [image, image])
+
+        with self.subTest(variant="single RGB-D with IMU"):
+            config = vslam.Tracker.OdometryConfig(
+                odometry_mode=vslam.Tracker.OdometryMode.Multisensor,
+                multisensor_settings=vslam.Tracker.OdometryMultisensorSettings(
+                    depth_camera_ids=[0], depth_scale_factor=1000.0))
+            rig = vslam.Rig([self.rig.cameras[0]], [vslam.ImuCalibration()])
+            tracker = self._create_multisensor_tracker(rig, config)
+            for frame in range(2):
+                for sample in range(10):
+                    imu = vslam.ImuMeasurement()
+                    imu.timestamp_ns = frame * 1000 + sample * 100
+                    imu.linear_accelerations = [0.0, 9.81, 0.0]
+                    imu.angular_velocities = [0.0, 0.0, 0.0]
+                    tracker.register_imu_measurement(0, imu)
+                tracker.track((frame + 1) * 1000, [image], depths=[depth])
+
+    def test_multisensor_requires_depth_or_overlap(self):
+        config = vslam.Tracker.OdometryConfig(
+            odometry_mode=vslam.Tracker.OdometryMode.Multisensor)
+        rig = vslam.Rig([self.rig.cameras[0]])
+        with self.assertRaisesRegex(ValueError, "at least one RGB-D camera.*or one camera pair"):
+            vslam.Tracker(rig, config)
+
+    def test_multisensor_rejects_duplicate_depth_camera_ids(self):
+        config = vslam.Tracker.OdometryConfig(
+            odometry_mode=vslam.Tracker.OdometryMode.Multisensor,
+            multisensor_settings=vslam.Tracker.OdometryMultisensorSettings(
+                depth_camera_ids=[0, 0]))
+        rig = vslam.Rig([self.rig.cameras[0]])
+        with self.assertRaisesRegex(ValueError, "duplicate camera id"):
+            vslam.Tracker(rig, config)
 
     def _run_keyframe_overrides(self, mode, overrides):
         """Track a fixed feature-rich frame repeatedly, applying a per-frame keyframe override.
