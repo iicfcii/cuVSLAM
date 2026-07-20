@@ -243,11 +243,32 @@ tracker = cuvslam.Tracker(cuvslam.Rig(...), odom_cfg, slam_cfg)
 odom_pose, slam_pose = tracker.track(...)
 
 # Save map
-tracker.save_map("map/")
+def map_saved(success):
+    print(f"Map save {'succeeded' if success else 'failed'}")
+
+tracker.save_map("map/", map_saved)
 
 # Later: localize
 loc_settings = cuvslam.Tracker.SlamLocalizationSettings()
-tracker.localize_in_map("map/", timestamp, pose_hint, loc_settings)
+
+def localization_started():
+    print("Localization started")
+
+def localization_finished(pose, error_message):
+    if pose is not None:
+        print(f"Localized pose: {pose}")
+    else:
+        print(f"Localization failed: {error_message}")
+
+tracker.localize_in_map(
+    "map/",
+    timestamp,
+    pose_hint,
+    images,
+    loc_settings,
+    localization_started,
+    localization_finished,
+)
 ```
 
 See `examples/kitti/track_kitti_slam.py` for the complete workflow.

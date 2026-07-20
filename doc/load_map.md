@@ -21,9 +21,14 @@ Users who call **LocalizeInMap** must provide:
  *                    otherwise should be nullptr.
  * @see `Odometry::Track`
  * @throws std::invalid_argument if `gt_pose` is passed incorrectly
- * @return On success, the returned `Pose` is the rig pose estimated by SLAM
  */
-Pose Track(const Odometry::State& state, const Pose* gt_pose = nullptr);
+void Track(const Odometry::State& state, const Pose* gt_pose = nullptr);
+
+/**
+ * Get the current rig pose estimated by SLAM.
+ * Call this after Track() when the current pose is needed.
+ */
+Pose GetPose() const;
 ```
 
 ```cpp
@@ -85,20 +90,19 @@ interrupting real-time processing.
 **Scenarios**
 
 1. The user creates a `cuVSLAM::Slam` instance.
-2. The user feeds images via `Track`. This is a low-latency, real-time path (e.g. ~100 fps) with all camera frames. The
-   user
-   receives a real-time SLAM pose; the background thread runs LC search and map building.
+2. The user feeds images to `Odometry::Track`, passes each successful odometry state to `Slam::Track`, and obtains the
+   current SLAM pose with `Slam::GetPose`. This is a low-latency, real-time path (e.g. ~100 fps); the background thread
+   runs LC search and map building.
 3. At some point the user calls `SaveMap` (possibly from another thread). The map is written to disk by the background
    path; `Track` is not blocked by that work.
 4. At some point the user calls `LocalizeInMap` with image(s), timestamp, and prior. The background thread matches the
    images to the on-disk map. On success it drops the current map and replaces it with the loaded one. After that, the
-   next `Track` returns a pose in the new map.
+   first `GetPose` following the next `Track` reports a pose in the new map.
 
 **Camera moves during startup, then a map load is requested — what behavior do we support?**
 
-During the load, the user keeps calling `Track` for every frame and keeps receiving a pose. After the map is applied,
-the next
-`Track` returns the real robot pose in the loaded map.
+During the load, the user keeps calling `Track` for every frame and reading the current pose with `GetPose`. After the
+map is applied, the first `GetPose` following the next `Track` returns the real robot pose in the loaded map.
 
 **Example: car at 80 km/h, cuVSLAM starts, then 3 minutes / ~4 km later a map load is requested — what is expected?**
 

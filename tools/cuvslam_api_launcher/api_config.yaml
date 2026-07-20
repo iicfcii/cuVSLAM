@@ -98,19 +98,20 @@ slam:
   throttling_time_ms: 0
 
 # =============================================================================
-# Per-frame Track Options (Odometry::TrackOptions), optional
+# Per-frame internal parameters (internal::Internals), optional
 # =============================================================================
-# Applied on every Odometry::Track() call; unset keys use TrackOptions defaults.
-# See src/examples/kitti/kitti_config.yaml for a fuller example.
+# Development-only, unstable parameters applied on every Odometry::Track() call.
+# Unset keys retain the built-in defaults.
 #
-track_options:
+internals:
   num_desired_tracks: 450
   kf_survivor_from_last: 41
 
 # =============================================================================
-# Expert SBA Parameters (ApplyExpertParameters), optional
+# Persistent internal parameters (ApplyPersistentInternalParameters), optional
 # =============================================================================
-# Applied once after tracker creation via ApplyExpertParameters().
+# Development-only parameters applied once after tracker creation via
+# Odometry::ApplyPersistentInternalParameters().
 # All values are forwarded as strings exactly as the API expects.
 # Command-line --expert_sba_* flags override these values.
 # mode and async are construction-time only; set them under odometry: above.
