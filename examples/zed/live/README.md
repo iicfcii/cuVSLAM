@@ -66,6 +66,10 @@ in [run_rgbd.py](run_rgbd.py).
 By default, the script uses the `sl.DEPTH_MODE.PERFORMANCE` depth mode of ZED SDK. For details on other depth modes and
 GPU acceleration, refer to the [official ZED documentation](https://www.stereolabs.com/docs/depth-sensing/using-depth).
 
+> **Tracking stability:** If the trajectory shows sudden jumps or the script reports frame drops at the default 30 FPS,
+> reduce `FPS` near the top of [run_rgbd.py](run_rgbd.py) from `30` to `15`. The lower frame rate can help the RGB-D
+> pipeline process frames consistently on systems that cannot keep up at 30 FPS.
+
 To run monocular-depth visual odometry, execute:
 
 ```bash
