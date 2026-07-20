@@ -341,6 +341,9 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [check-changes, build-and-test]
+    outputs:
+      release_cpp_count: ${{ steps.finalize-artifacts.outputs.cpp_count }}
+      release_wheel_count: ${{ steps.finalize-artifacts.outputs.wheel_count }}
     permissions:
       actions: write  # Required by github.rest.actions.deleteArtifact below.
       contents: read
@@ -553,6 +556,7 @@ jobs:
           if-no-files-found: error
 
       - name: Delete staging artifacts
+        id: finalize-artifacts
         if: always()
         uses: actions/github-script@v7
         env:
@@ -567,6 +571,16 @@ jobs:
               run_id: context.runId,
               per_page: 100,
             });
+            const cppCount = artifacts.filter(
+              artifact => artifact.name.startsWith(`cuvslam-cpp-${process.env.PACKAGE_VERSION}-`)
+                && artifact.name.endsWith('.tar.gz'),
+            ).length;
+            const wheelCount = artifacts.filter(
+              artifact => artifact.name.startsWith('cuvslam-') && artifact.name.endsWith('.whl'),
+            ).length;
+            core.setOutput('cpp_count', cppCount.toString());
+            core.setOutput('wheel_count', wheelCount.toString());
+
             const prefixes = [];
             if (process.env.TESTS_RETAINED === 'true') {
               prefixes.push(`${process.env.TEST_RESULTS_ARTIFACT}-${process.env.PACKAGE_VERSION}-`);
@@ -651,16 +665,30 @@ jobs:
       - name: Validate release assets and prepare notes
         env:
           PACKAGE_VERSION: ${{ needs.check-changes.outputs.package_version }}
+          EXPECTED_CPP_COUNT: ${{ needs.nightly-summary.outputs.release_cpp_count }}
+          EXPECTED_WHEEL_COUNT: ${{ needs.nightly-summary.outputs.release_wheel_count }}
         run: |
           set -euo pipefail
           shopt -s nullglob
+          WHEEL_VERSION=$(
+            python3 -c '
+          import sys
+          try:
+              from packaging.version import Version
+          except ModuleNotFoundError:
+              from pip._vendor.packaging.version import Version
+          print(Version(sys.argv[1]))
+          ' "$PACKAGE_VERSION"
+          )
           cpp_assets=(release-assets/cuvslam-cpp-"${PACKAGE_VERSION}"-*.tar.gz)
-          wheel_assets=(release-assets/cuvslam-"${PACKAGE_VERSION}"+cu*.whl)
+          wheel_assets=(release-assets/cuvslam-"${WHEEL_VERSION}"+cu*.whl)
           docs_asset="release-assets/cuvslam-docs-${PACKAGE_VERSION}.tar.gz"
           evaluation_asset="release-assets/cuvslam-evaluation-${PACKAGE_VERSION}.tar.gz"
 
-          if [ "${#cpp_assets[@]}" -ne 6 ] || [ "${#wheel_assets[@]}" -ne 6 ]; then
-            echo "::error::Expected 6 C++ archives and 6 Python wheels; got ${#cpp_assets[@]} and ${#wheel_assets[@]}."
+          if [[ ! "$EXPECTED_CPP_COUNT" =~ ^[1-9][0-9]*$ ]] || [[ ! "$EXPECTED_WHEEL_COUNT" =~ ^[1-9][0-9]*$ ]] ||
+             [ "${#cpp_assets[@]}" -ne "$EXPECTED_CPP_COUNT" ] ||
+             [ "${#wheel_assets[@]}" -ne "$EXPECTED_WHEEL_COUNT" ]; then
+            echo "::error::Expected $EXPECTED_CPP_COUNT C++ archives and $EXPECTED_WHEEL_COUNT Python wheels; got ${#cpp_assets[@]} and ${#wheel_assets[@]}."
             exit 1
           fi
           if [ ! -f "$docs_asset" ] || [ ! -f "$evaluation_asset" ]; then
@@ -674,8 +702,12 @@ jobs:
             exit 1
           fi
           for asset in "${assets[@]}"; do
-            if [[ "$(basename "$asset")" != *"$PACKAGE_VERSION"* ]]; then
-              echo "::error::Release asset does not contain version $PACKAGE_VERSION: $asset"
+            expected_version=$PACKAGE_VERSION
+            if [[ "$asset" == *.whl ]]; then
+              expected_version=$WHEEL_VERSION
+            fi
+            if [[ "$(basename "$asset")" != *"$expected_version"* ]]; then
+              echo "::error::Release asset does not contain version $expected_version: $asset"
               exit 1
             fi
           done
