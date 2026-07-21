@@ -272,6 +272,7 @@ jobs:
         with:
           path: output/dist/cuvslam-docs-${{ needs.check-changes.outputs.package_version }}.tar.gz
           archive: false
+          overwrite: true
           retention-days: 30
           if-no-files-found: error
 
@@ -294,6 +295,7 @@ jobs:
             output/eval/kpi_*.json
             output/eval/kpi_*.json.table
             output/eval/kpi_*.json.drift
+          overwrite: true
           retention-days: 1
           if-no-files-found: warn
 
@@ -303,6 +305,7 @@ jobs:
         with:
           name: ${{ env.EVAL_REPORT_ARTIFACT }}-${{ needs.check-changes.outputs.package_version }}-${{ matrix.platform }}-cuda${{ matrix.cuda }}-ubuntu${{ matrix.ubuntu }}
           path: output/eval/stats/**/report_*.pdf
+          overwrite: true
           retention-days: 1
           if-no-files-found: warn
 
@@ -315,6 +318,7 @@ jobs:
             output/cpp-test-results.xml
             output/python-test-output.txt
             output/test-summary.txt
+          overwrite: true
           retention-days: 1
           if-no-files-found: warn
 
@@ -324,6 +328,7 @@ jobs:
         with:
           path: output/dist/cuvslam-cpp-${{ needs.check-changes.outputs.package_version }}-${{ matrix.platform }}-cuda${{ matrix.cuda }}-ubuntu${{ matrix.ubuntu }}.tar.gz
           archive: false
+          overwrite: true
           retention-days: 30
           if-no-files-found: error
 
@@ -333,6 +338,7 @@ jobs:
         with:
           path: output/wheel/*.whl
           archive: false
+          overwrite: true
           retention-days: 30
           if-no-files-found: error
 
@@ -534,6 +540,7 @@ jobs:
         with:
           name: test-results-${{ needs.check-changes.outputs.package_version }}
           path: consolidated/test-results/
+          overwrite: true
           retention-days: 30
           if-no-files-found: error
 
@@ -569,6 +576,7 @@ jobs:
         with:
           path: consolidated/cuvslam-evaluation-${{ needs.check-changes.outputs.package_version }}.tar.gz
           archive: false
+          overwrite: true
           retention-days: 30
           if-no-files-found: error
 
