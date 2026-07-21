@@ -89,7 +89,7 @@ DEFINE_bool(localize_forever, false, "Run localization continuously (each time p
 // cuvslam configuration
 DEFINE_string(debug_dump, "", "Path to debug dump");
 DEFINE_int32(cfg_odom_mode, static_cast<int>(kDefaultOdomCfg.odometry_mode),
-             "Odometry mode: Multicamera (0), Inertial (1), RGBD (2), Mono (3), Multisensor (4)");
+             "Odometry mode: Multicamera (0), Inertial (1), RGBD (2), Mono (3)");
 DEFINE_int32(cfg_multicam_mode, static_cast<int>(kDefaultOdomCfg.multicam_mode),
              "Multicamera mode: performance (0), precision (1), or moderate (2)");
 DEFINE_bool(cfg_async_sba, false, "Enable asynchronous sparse bundle adjustment");
@@ -481,8 +481,7 @@ bool trackEdexDataSet(const std::string& edex_name, const Odometry::Config& odom
   }
 
   edex_rig->registerIMUCallback([&](const imu::ImuMeasurement& measurement) {
-    if (odom_cfg.odometry_mode != Odometry::OdometryMode::Inertial &&
-        odom_cfg.odometry_mode != Odometry::OdometryMode::Multisensor) {
+    if (odom_cfg.odometry_mode != Odometry::OdometryMode::Inertial) {
       return;
     }
     ImuMeasurement imu_measurement;
@@ -563,16 +562,10 @@ bool trackEdexDataSet(const std::string& edex_name, const Odometry::Config& odom
                   static_cast<uint32_t>(cam_id)});
       }
     }
-    if (odom_cfg.odometry_mode == Odometry::OdometryMode::RGBD ||
-        odom_cfg.odometry_mode == Odometry::OdometryMode::Multisensor) {
+    if (odom_cfg.odometry_mode == Odometry::OdometryMode::RGBD) {
       for (CameraId cam_id = 0; cam_id < depth_sources.size(); ++cam_id) {
         const auto& depth_src = depth_sources[cam_id];
-        const bool is_configured_multisensor_depth =
-            std::find(odom_cfg.multisensor_settings.depth_camera_ids.begin(),
-                      odom_cfg.multisensor_settings.depth_camera_ids.end(),
-                      static_cast<int32_t>(cam_id)) != odom_cfg.multisensor_settings.depth_camera_ids.end();
-        if (depth_src.data != nullptr &&
-            (odom_cfg.odometry_mode == Odometry::OdometryMode::RGBD || is_configured_multisensor_depth)) {
+        if (depth_src.data != nullptr) {
           const auto& meta = cur_meta[cam_id];
           const auto depth_data_type =
               depth_src.type == ImageSource::F32 ? ImageData::DataType::FLOAT32 : ImageData::DataType::UINT16;
@@ -807,8 +800,6 @@ int main(int arg_c, char** arg_v) {
       odom_cfg.odometry_mode = Odometry::OdometryMode::RGBD;
     } else if (FLAGS_cfg_odom_mode == 3) {
       odom_cfg.odometry_mode = Odometry::OdometryMode::Mono;
-    } else if (FLAGS_cfg_odom_mode == 4) {
-      odom_cfg.odometry_mode = Odometry::OdometryMode::Multisensor;
     } else {
       TraceError("Unsupported odometry mode");
       return EXIT_FAILURE;
@@ -823,16 +814,6 @@ int main(int arg_c, char** arg_v) {
       odom_cfg.rgbd_settings.depth_scale_factor = static_cast<float>(FLAGS_cfg_depth_scale_factor);
     if (flag_is_set("cfg_enable_depth_stereo_tracking"))
       odom_cfg.rgbd_settings.enable_depth_stereo_tracking = FLAGS_cfg_enable_depth_stereo_tracking;
-  } else if (odom_cfg.odometry_mode == Odometry::OdometryMode::Multisensor) {
-    if (flag_is_set("cfg_depth_camera")) {
-      odom_cfg.multisensor_settings.depth_camera_ids = {FLAGS_cfg_depth_camera};
-    }
-    if (flag_is_set("cfg_depth_scale_factor")) {
-      odom_cfg.multisensor_settings.depth_scale_factor = static_cast<float>(FLAGS_cfg_depth_scale_factor);
-    }
-    if (flag_is_set("cfg_enable_depth_stereo_tracking")) {
-      odom_cfg.multisensor_settings.enable_depth_stereo_tracking = FLAGS_cfg_enable_depth_stereo_tracking;
-    }
   }
 
   // Apply SLAM config from flags (only when explicitly set)

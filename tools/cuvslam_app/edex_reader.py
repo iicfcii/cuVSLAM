@@ -31,10 +31,9 @@ class EdexReader(DatasetReader):
     def __init__(self, edex_dir: str, stereo_edex: Optional[str] = None, num_loops: int = 0,
                  rgbd_mode: bool = False, repeat_type: str = "none",
                  cache_uncompressed: bool = False, gt_path: Optional[str] = None,
-                 camera_ids: Optional[List[int]] = None, depth_optional: bool = False):
+                 camera_ids: Optional[List[int]] = None):
         super().__init__(edex_dir, stereo_edex, num_loops, repeat_type, gt_path=gt_path)
         self.rgbd_mode = rgbd_mode
-        self.depth_optional = depth_optional
         self.cache_uncompressed = cache_uncompressed
         self.rgbd_settings = None
         self.depth_sequence = None
@@ -68,11 +67,10 @@ class EdexReader(DatasetReader):
             # Parse RGBD settings if in RGBD mode
             if self.rgbd_mode:
                 try:
-                    self.rgbd_settings = self._parse_rgbd_settings(
-                        config_data, required=not self.depth_optional)
+                    self.rgbd_settings = self._parse_rgbd_settings(config_data)
                     self._remap_rgbd_settings_for_filtered_cameras()
                 except ValueError as e:
-                    raise ValueError(f"Failed to initialize depth mode: {str(e)}") from e
+                    raise ValueError(f"Failed to initialize RGBD mode: {str(e)}") from e
 
             # Load IMU data if available
             imu_data_list = []
@@ -462,16 +460,14 @@ class EdexReader(DatasetReader):
         #     print(f"Available files in tar: {available_files[:10]}...")  # Show first 10 files
         #     raise FileNotFoundError(f"Image file {filename} not found in tar archive")
 
-    def _parse_rgbd_settings(self, config_data, required: bool = True):
-        """Parse depth settings from stereo.edex config.
+    def _parse_rgbd_settings(self, config_data):
+        """Parse RGBD settings from stereo.edex config.
 
         Args:
             config_data: Configuration data loaded from stereo.edex
-            required: Raise when no depth camera is configured. Multisensor sets this to false
-                because an overlapping camera pair is also a valid minimum input.
 
         Returns:
-            OdometryRGBDSettings object, or None when depth is optional and not configured
+            OdometryRGBDSettings object
 
         Raises:
             ValueError: If config_data structure is invalid or required fields are missing
@@ -540,8 +536,6 @@ class EdexReader(DatasetReader):
 
             # Validate that depth_camera_id was found
             if depth_camera_id is None:
-                if not required:
-                    return None
                 raise ValueError(
                     "RGBD mode is enabled but 'depth_id' not found in camera config in stereo.edex. "
                     "Please add 'depth_id' field to one of the cameras in the configuration."

@@ -18,7 +18,6 @@
 
 #include <fstream>
 #include <string>
-#include <vector>
 
 #include "common/include_gtest.h"
 #include "cuvslam/cuvslam2_internal.h"
@@ -38,27 +37,6 @@ TEST(CuvslamYamlConfig, LoadsPerFrameKeyframeOverrideInternals) {
 
   ASSERT_TRUE(internals.kf_override_frame_selection.has_value());
   EXPECT_TRUE(*internals.kf_override_frame_selection);
-}
-
-TEST(CuvslamYamlConfig, LoadsMultisensorSettings) {
-  const std::string path = ::testing::TempDir() + "/multisensor_odometry.yaml";
-  {
-    std::ofstream file(path);
-    file << "odometry:\n"
-         << "  odometry_mode: Multisensor\n"
-         << "  multisensor_settings:\n"
-         << "    depth_camera_ids: [0, 2]\n"
-         << "    depth_scale_factor: 1000.0\n"
-         << "    enable_depth_stereo_tracking: false\n";
-  }
-
-  cuvslam::Odometry::Config config;
-  ASSERT_TRUE(cuvslam::LoadOdometryConfigFromFile(path.c_str(), config));
-
-  EXPECT_EQ(config.odometry_mode, cuvslam::Odometry::OdometryMode::Multisensor);
-  EXPECT_EQ(config.multisensor_settings.depth_camera_ids, (std::vector<int32_t>{0, 2}));
-  EXPECT_FLOAT_EQ(config.multisensor_settings.depth_scale_factor, 1000.f);
-  EXPECT_FALSE(config.multisensor_settings.enable_depth_stereo_tracking);
 }
 
 }  // namespace test::utils
