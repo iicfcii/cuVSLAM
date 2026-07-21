@@ -10,13 +10,13 @@ RGB-D cameras (`lcam_front`, `lcam_back`) plus a synthetic IMU from the
 
 ## Requirements
 
-- Use an official v17 wheel or build with `USE_CUNLS=ON`.
+- Use an official wheel or build with `USE_CUNLS=ON`.
 - Configure at least one RGB-D camera in `depth_camera_ids`, or provide at least one camera pair with overlapping
   frustums. A single RGB-D camera is valid, with or without an IMU.
 - Use pinhole cameras. Other camera models are not supported by the current solver.
 - Align each depth image pixel-for-pixel with the RGB image at the same camera index. PyCuVSLAM accepts 2D `uint16`
   depth; the C++ API accepts `UINT16` or `FLOAT32`.
-- Configure no more than one IMU. Serialize image and IMU calls in non-decreasing timestamp order.
+- Configure no more than one IMU. Serialize image and IMU calls in strictly increasing timestamp order.
 
 Construction raises `ValueError` when the rig or settings are invalid. A valid tracker may return a
 `PoseEstimate` with `world_from_rig=None` while initializing or after tracking loss. Configured depth streams may be

@@ -212,6 +212,8 @@ python3 track_multisensor_tartan.py --no-imu
 ## 6. Run Examples — Live Cameras
 
 See `references/live-cameras.md` for detailed setup per camera.
+This table lists ready-made Python examples shipped in the repository. An em dash means no
+ready-made example exists; it does not mean the hardware integration is unsupported.
 
 | Camera | Stereo | VIO | RGB-D | Multi-cam | Multisensor |
 |--------|--------|-----|-------|-----------|--------------------------|

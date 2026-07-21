@@ -113,8 +113,11 @@ def _apply_odometry_section(config: Odometry.Config, section: dict) -> None:
         elif key == "multisensor_settings":
             if isinstance(value, dict):
                 if "depth_camera_ids" in value:
+                    depth_camera_ids = value["depth_camera_ids"]
+                    if not isinstance(depth_camera_ids, list):
+                        raise ValueError("multisensor_settings.depth_camera_ids must be a list")
                     config.multisensor_settings.depth_camera_ids = [
-                        int(camera_id) for camera_id in value["depth_camera_ids"]
+                        int(camera_id) for camera_id in depth_camera_ids
                     ]
                 if "depth_scale_factor" in value:
                     config.multisensor_settings.depth_scale_factor = float(value["depth_scale_factor"])

@@ -448,14 +448,16 @@ See [Isaac ROS cuVSLAM parameters][].
 
 Approximate accuracy ranking, least to most accurate:
 
-Mono → RGBD → Stereo Inertial → Stereo → Multicamera ≈ Multisensor
+Mono → RGBD → Stereo Inertial → Stereo → Multicamera; Multisensor depends on its sensor set
 
 Multisensor (see [examples/multisensor/](examples/multisensor/README.md)) does not slot at a fixed
 position — its accuracy scales with the sensor set it is given. It requires at least one RGB-D
 camera or one overlapping camera pair and currently supports pinhole cameras only. A single
-RGB-D + IMU rig is roughly RGBD-class, whereas a multi-stereo + RGB-D + IMU rig matches or exceeds
-Multicamera. Use Multisensor when you have a mixed-camera-type rig or want IMU fusion on a
-non-stereo configuration; otherwise prefer the mode that exactly matches your rig.
+RGB-D + IMU rig is roughly RGBD-class. A multi-stereo + RGB-D + IMU rig may approach or exceed
+Multicamera under favorable conditions, but this is an empirical expectation rather than a
+guarantee; benchmark the actual rig and environment. Use Multisensor when you have a
+mixed-camera-type rig or want IMU fusion on a non-stereo configuration; otherwise prefer the mode
+that exactly matches your rig.
 
 ### Adjust motion prediction
 

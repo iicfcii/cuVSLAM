@@ -126,14 +126,6 @@ class TestTracking(unittest.TestCase):
                             #     if gravity is not None:
                             #         self.assertAlmostEqual(gravity[1], 9.81, msg=f"iteration {i}")
 
-    def _create_multisensor_tracker(self, rig, config):
-        try:
-            return vslam.Tracker(rig, config)
-        except ValueError as error:
-            if "requires a build with cuNLS support" in str(error):
-                self.skipTest("PyCuVSLAM was built without Multisensor support")
-            raise
-
     def test_multisensor_tracking_variants(self):
         image = np.zeros((480, 640), dtype=np.uint8)
         depth = np.full((480, 640), 1000, dtype=np.uint16)
@@ -144,7 +136,7 @@ class TestTracking(unittest.TestCase):
                 multisensor_settings=vslam.Tracker.OdometryMultisensorSettings(
                     depth_camera_ids=[0], depth_scale_factor=1000.0))
             rig = vslam.Rig([self.rig.cameras[0]])
-            tracker = self._create_multisensor_tracker(rig, config)
+            tracker = vslam.Tracker(rig, config)
             tracker.track(1000, [image], depths=[depth])
             tracker.track(2000, [image], depths=[depth])
 
@@ -152,7 +144,7 @@ class TestTracking(unittest.TestCase):
             config = vslam.Tracker.OdometryConfig(
                 odometry_mode=vslam.Tracker.OdometryMode.Multisensor)
             rig = vslam.Rig(self.rig.cameras)
-            tracker = self._create_multisensor_tracker(rig, config)
+            tracker = vslam.Tracker(rig, config)
             stereo_images = [image.copy(), image.copy()]
             tracker.track(1000, stereo_images)
             tracker.track(2000, stereo_images)
@@ -163,15 +155,16 @@ class TestTracking(unittest.TestCase):
                 multisensor_settings=vslam.Tracker.OdometryMultisensorSettings(
                     depth_camera_ids=[0], depth_scale_factor=1000.0))
             rig = vslam.Rig([self.rig.cameras[0]], [vslam.ImuCalibration()])
-            tracker = self._create_multisensor_tracker(rig, config)
+            tracker = vslam.Tracker(rig, config)
             for frame in range(2):
+                frame_start_ns = frame * 1100
                 for sample in range(10):
                     imu = vslam.ImuMeasurement()
-                    imu.timestamp_ns = frame * 1000 + sample * 100
+                    imu.timestamp_ns = frame_start_ns + sample * 100
                     imu.linear_accelerations = [0.0, 9.81, 0.0]
                     imu.angular_velocities = [0.0, 0.0, 0.0]
                     tracker.register_imu_measurement(0, imu)
-                tracker.track((frame + 1) * 1000, [image], depths=[depth])
+                tracker.track(frame_start_ns + 1000, [image], depths=[depth])
 
     def test_multisensor_requires_depth_or_overlap(self):
         config = vslam.Tracker.OdometryConfig(
