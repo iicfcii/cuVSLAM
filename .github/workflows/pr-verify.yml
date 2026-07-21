@@ -67,6 +67,8 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [gpu]
     timeout-minutes: 120
+    env:
+      EXTRA_CMAKE_ARGS: "-DCMAKE_CUDA_ARCHITECTURES=native"
     steps:
       - name: Verify GPU
         run: nvidia-smi
@@ -229,6 +231,7 @@ jobs:
     env:
       BASE_IMAGE: "nvcr.io/nvidia/12.6.11-devel:12.6.11-devel-aarch64-ubuntu22.04"
       UBUNTU_VERSION: "22.04"
+      EXTRA_CMAKE_ARGS: "-DCMAKE_CUDA_ARCHITECTURES=87"
     steps:
       - name: System info
         run: |
@@ -305,6 +308,7 @@ jobs:
     env:
       CUDA_VERSION: "13.0.1"
       UBUNTU_VERSION: "24.04"
+      EXTRA_CMAKE_ARGS: "-DCMAKE_CUDA_ARCHITECTURES=110"
     steps:
       - name: System info
         run: |
@@ -409,9 +413,8 @@ jobs:
 
       - name: Build with USE_RERUN
         env:
-          # Build for the default (all) CUDA archs so the generated kernels match the
-          # runner GPU, which the C++ tests below require at runtime.
-          EXTRA_CMAKE_ARGS: "-DUSE_RERUN=ON"
+          # PR binaries are built and tested on the same GPU runner.
+          EXTRA_CMAKE_ARGS: "-DUSE_RERUN=ON -DCMAKE_CUDA_ARCHITECTURES=native"
         run: ./scripts/build_cuvslam_in_docker.sh Release ./output-rerun
 
       - name: Run C++ tests
