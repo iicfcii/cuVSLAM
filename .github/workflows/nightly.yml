@@ -349,7 +349,9 @@ jobs:
       contents: read
     steps:
       - name: Download test result artifacts
-        if: needs.check-changes.outputs.should_build == 'true'
+        if: >-
+          needs.check-changes.outputs.should_build == 'true' &&
+          needs.build-and-test.result == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -357,7 +359,9 @@ jobs:
           path: artifacts/test-results
 
       - name: Download KPI staging artifacts
-        if: needs.check-changes.outputs.should_build == 'true'
+        if: >-
+          needs.check-changes.outputs.should_build == 'true' &&
+          needs.build-and-test.result == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -365,7 +369,9 @@ jobs:
           path: artifacts/kpis
 
       - name: Download evaluation report staging artifacts
-        if: needs.check-changes.outputs.should_build == 'true'
+        if: >-
+          needs.check-changes.outputs.should_build == 'true' &&
+          needs.build-and-test.result == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
@@ -405,6 +411,17 @@ jobs:
           if [ "${{ needs.check-changes.outputs.should_build }}" != "true" ]; then
             {
               echo "Nightly skipped because there were no commits in the last 24 hours and the build was not forced."
+              echo ""
+            } >> "$REPORT"
+            echo "has_test_results=false" >> "$GITHUB_OUTPUT"
+            echo "has_reports=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ needs.build-and-test.result }}" != "success" ]; then
+            {
+              echo "Artifact consolidation is deferred until all matrix jobs succeed."
+              echo "Per-configuration staging artifacts are retained for selective job reruns."
               echo ""
             } >> "$REPORT"
             echo "has_test_results=false" >> "$GITHUB_OUTPUT"
@@ -557,7 +574,7 @@ jobs:
 
       - name: Delete staging artifacts
         id: finalize-artifacts
-        if: always()
+        if: always() && needs.build-and-test.result == 'success'
         uses: actions/github-script@v7
         env:
           PACKAGE_VERSION: ${{ needs.check-changes.outputs.package_version }}
