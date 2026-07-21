@@ -34,19 +34,6 @@ INSTALL_DIR="/output"
 DOCKER_VOLUMES="-v $(pwd):/cuvslam:ro -v $OUTPUT_DIR:$INSTALL_DIR"
 DOCKER_USER="--user $(id -u):$(id -g) --group-add video -e HOME=/tmp"
 
-case "${CUVSLAM_REQUIRE_CLEAN_SOURCE:-false}" in
-  1|true)
-    REQUIRE_CLEAN_SOURCE=true
-    ;;
-  0|false|"")
-    REQUIRE_CLEAN_SOURCE=false
-    ;;
-  *)
-    echo "Error: invalid CUVSLAM_REQUIRE_CLEAN_SOURCE='${CUVSLAM_REQUIRE_CLEAN_SOURCE}' (expected true/false or 1/0)" >&2
-    exit 1
-    ;;
-esac
-
 TTY_FLAG=""
 [ -t 0 ] && TTY_FLAG="-it"
 
@@ -76,17 +63,6 @@ fi
 docker run --runtime=nvidia --gpus all --rm $TTY_FLAG $DOCKER_USER $DOCKER_VOLUMES \
   -e CUVSLAM_SRC_DIR=/cuvslam \
   -e CUVSLAM_DST_DIR=$INSTALL_DIR/build \
-  -e CUVSLAM_REQUIRE_CLEAN_SOURCE="$REQUIRE_CLEAN_SOURCE" \
+  -e CUVSLAM_REQUIRE_CLEAN_SOURCE="${CUVSLAM_REQUIRE_CLEAN_SOURCE:-false}" \
   -e EXTRA_CMAKE_ARGS="${EXTRA_CMAKE_ARGS:-}" \
-  cuvslam:local bash -c '
-    set -euo pipefail
-    if [ "$CUVSLAM_REQUIRE_CLEAN_SOURCE" = "true" ]; then
-      git config --global --add safe.directory /cuvslam
-      if ! git -C /cuvslam diff --quiet HEAD --; then
-        echo "Error: this build requires a clean tracked source tree:" >&2
-        git -C /cuvslam status --short --untracked-files=no >&2
-        exit 1
-      fi
-    fi
-    exec /cuvslam/build_release.sh "$@"
-  ' bash --build_type="$BUILD_TYPE" "${JOBS_ARG[@]}"
+  cuvslam:local /cuvslam/build_release.sh --build_type="$BUILD_TYPE" "${JOBS_ARG[@]}"

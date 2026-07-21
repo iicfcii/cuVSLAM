@@ -20,6 +20,7 @@
 # Environment variables (optional):
 #   CUVSLAM_SRC_DIR      Source directory (default: /cuvslam/src)
 #   CUVSLAM_DST_DIR      Build directory (default: /cuvslam/build)
+#   CUVSLAM_REQUIRE_CLEAN_SOURCE  Fail if tracked source files differ from HEAD
 #   EXTRA_CMAKE_ARGS     Additional arguments passed to cmake
 #
 # Note: Boolean flags (--modules_test, --api_test, --build_lib, --build_docs)
@@ -98,6 +99,22 @@ if [ ! -d "$SRC" ]; then
   echo "Error: Source directory '$SRC' does not exist."
   exit 1
 fi
+
+case "${CUVSLAM_REQUIRE_CLEAN_SOURCE:-false}" in
+  1|true)
+    if ! git -c safe.directory="$SRC" -C "$SRC" diff --quiet HEAD --; then
+      echo "Error: this build requires a clean tracked source tree:" >&2
+      git -c safe.directory="$SRC" -C "$SRC" status --short --untracked-files=no >&2 || true
+      exit 1
+    fi
+    ;;
+  0|false|"")
+    ;;
+  *)
+    echo "Error: invalid CUVSLAM_REQUIRE_CLEAN_SOURCE='${CUVSLAM_REQUIRE_CLEAN_SOURCE}' (expected true/false or 1/0)" >&2
+    exit 1
+    ;;
+esac
 
 set -v # echo each command
 

@@ -13,17 +13,15 @@ RUN echo "Base image: ${BASE_IMAGE:-default}" && \
 ARG DEBIAN_FRONTEND=noninteractive
 ARG UBUNTU_PORTS_MIRROR=""
 
+COPY scripts/ubuntu-ports-mirror.conf /tmp/ubuntu-ports-mirror.conf
+
 RUN if [ -n "${UBUNTU_PORTS_MIRROR}" ]; then \
       set -eux; \
       find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
           -exec sed -Ei "s#https?://ports\\.ubuntu\\.com/ubuntu-ports#${UBUNTU_PORTS_MIRROR}#g" {} +; \
-      printf '%s\n' \
-          'Acquire::IndexTargets::deb::DEP-11::DefaultEnabled "false";' \
-          'Acquire::IndexTargets::deb::DEP-11-icons-small::DefaultEnabled "false";' \
-          'Acquire::IndexTargets::deb::DEP-11-icons::DefaultEnabled "false";' \
-          'Acquire::IndexTargets::deb::DEP-11-icons-hidpi::DefaultEnabled "false";' \
-          > /etc/apt/apt.conf.d/99-nvidia-ubuntu-ports-mirror; \
-    fi
+      install -m 0644 /tmp/ubuntu-ports-mirror.conf /etc/apt/apt.conf.d/99-nvidia-ubuntu-ports-mirror; \
+    fi && \
+    rm -f /tmp/ubuntu-ports-mirror.conf
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
        g++ gcc git git-lfs cmake ccache patch patchelf curl \
