@@ -153,8 +153,9 @@ class TestTracking(unittest.TestCase):
                 odometry_mode=vslam.Tracker.OdometryMode.Multisensor)
             rig = vslam.Rig(self.rig.cameras)
             tracker = self._create_multisensor_tracker(rig, config)
-            tracker.track(1000, [image, image])
-            tracker.track(2000, [image, image])
+            stereo_images = [image.copy(), image.copy()]
+            tracker.track(1000, stereo_images)
+            tracker.track(2000, stereo_images)
 
         with self.subTest(variant="single RGB-D with IMU"):
             config = vslam.Tracker.OdometryConfig(
