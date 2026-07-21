@@ -105,8 +105,8 @@ jobs:
 
           # Jetson configs (CUDA version must match host JetPack driver)
           # Orin uses base_image override; cuda value is not used for the Docker base but kept for artifact naming
-          - { name: "aarch64 / Orin (JP 6.1)",  runner: '["jetson-orin"]', cuda: "12.6.3", ubuntu: "22.04", archs: "87",  platform: "orin",  wheel: true, base_image: "nvcr.io/nvidia/12.6.11-devel:12.6.11-devel-aarch64-ubuntu22.04" }
-          - { name: "aarch64 / Thor (JP 7.1)",  runner: '["jetson-thor"]', cuda: "13.0.1", ubuntu: "24.04", archs: "110", platform: "thor",  wheel: true, retries: 3, build_timeout: 60, job_timeout: 180 }
+          - { name: "aarch64 / Orin (JP 6.1)",  runner: '["jetson-orin"]', cuda: "12.6.3", ubuntu: "22.04", archs: "87",  platform: "orin",  wheel: true, base_image: "nvcr.io/nvidia/12.6.11-devel:12.6.11-devel-aarch64-ubuntu22.04", ports_mirror: "http://mirrors.ocf.berkeley.edu/ubuntu-ports" }
+          - { name: "aarch64 / Thor (JP 7.1)",  runner: '["jetson-thor"]', cuda: "13.0.1", ubuntu: "24.04", archs: "110", platform: "thor",  wheel: true, retries: 3, build_timeout: 60, job_timeout: 180, ports_mirror: "http://mirrors.ocf.berkeley.edu/ubuntu-ports" }
     steps:
       - name: Verify GPU
         run: nvidia-smi
@@ -114,34 +114,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           lfs: false
-
-      - name: Configure Ubuntu Ports mirror
-        if: matrix.platform == 'orin' || matrix.platform == 'thor'
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          dockerfile = Path("scripts/Dockerfile")
-          marker = "ARG DEBIAN_FRONTEND=noninteractive\n"
-          mirror_setup = r"""ARG DEBIAN_FRONTEND=noninteractive
-
-          # NVIDIA ARM runner networks cannot reliably reach ports.ubuntu.com.
-          RUN set -eux; \
-              find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
-                  -exec sed -Ei 's#https?://ports\.ubuntu\.com/ubuntu-ports#http://mirrors.ocf.berkeley.edu/ubuntu-ports#g' {} +; \
-              printf '%s\n' \
-                  'Acquire::IndexTargets::deb::DEP-11::DefaultEnabled "false";' \
-                  'Acquire::IndexTargets::deb::DEP-11-icons-small::DefaultEnabled "false";' \
-                  'Acquire::IndexTargets::deb::DEP-11-icons::DefaultEnabled "false";' \
-                  'Acquire::IndexTargets::deb::DEP-11-icons-hidpi::DefaultEnabled "false";' \
-                  > /etc/apt/apt.conf.d/99-nvidia-ubuntu-ports-mirror
-          """
-
-          content = dockerfile.read_text()
-          if marker not in content:
-              raise SystemExit(f"{marker.strip()} not found in {dockerfile}")
-          dockerfile.write_text(content.replace(marker, mirror_setup, 1))
-          PY
 
       - name: Pull LFS test data
         run: git lfs pull --include="test_data/"
@@ -207,6 +179,8 @@ jobs:
             CUDA_VERSION=${{ matrix.cuda }} \
             UBUNTU_VERSION=${{ matrix.ubuntu }} \
             BASE_IMAGE="${{ matrix.base_image }}" \
+            UBUNTU_PORTS_MIRROR="${{ matrix.ports_mirror }}" \
+            CUVSLAM_REQUIRE_CLEAN_SOURCE=1 \
             EXTRA_CMAKE_ARGS="-DCMAKE_CUDA_ARCHITECTURES=${{ matrix.archs }} ${{ matrix.cmake_options }}" \
             ./scripts/build_cuvslam_in_docker.sh Release ./output
 
@@ -227,7 +201,11 @@ jobs:
 
       - name: Verify Python wheel installs
         if: matrix.wheel
-        run: ./scripts/verify_pycuvslam_wheel_in_docker.sh ./output
+        env:
+          PACKAGE_VERSION: ${{ needs.check-changes.outputs.package_version }}
+        run: |
+          ./scripts/verify_pycuvslam_wheel_in_docker.sh \
+            ./output "$PACKAGE_VERSION" "$(git rev-parse HEAD)"
 
       - name: Run Python tests
         uses: nick-fields/retry@v3
