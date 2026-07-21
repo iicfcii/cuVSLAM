@@ -11,12 +11,26 @@ RUN echo "Base image: ${BASE_IMAGE:-default}" && \
     echo "Actual CUDA:" && (nvcc --version 2>/dev/null || echo "nvcc not found")
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG UBUNTU_PORTS_MIRROR=""
+
+RUN if [ -n "${UBUNTU_PORTS_MIRROR}" ]; then \
+      set -eux; \
+      find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
+          -exec sed -Ei "s#https?://ports\\.ubuntu\\.com/ubuntu-ports#${UBUNTU_PORTS_MIRROR}#g" {} +; \
+      printf '%s\n' \
+          'Acquire::IndexTargets::deb::DEP-11::DefaultEnabled "false";' \
+          'Acquire::IndexTargets::deb::DEP-11-icons-small::DefaultEnabled "false";' \
+          'Acquire::IndexTargets::deb::DEP-11-icons::DefaultEnabled "false";' \
+          'Acquire::IndexTargets::deb::DEP-11-icons-hidpi::DefaultEnabled "false";' \
+          > /etc/apt/apt.conf.d/99-nvidia-ubuntu-ports-mirror; \
+    fi
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-       g++ gcc git cmake ccache patch patchelf curl \
+       g++ gcc git git-lfs cmake ccache patch patchelf curl \
        ca-certificates \
        python3 python3-pip python3-dev python3-venv \
        doxygen graphviz \
+    && git lfs install --system \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -32,6 +32,8 @@ CI scripts (`scripts/`):
 - `cuvslam_kpi_report.py` - KPI math, Markdown `.table`, soft drift check.
 - `kpi_baseline_ranges.json` - committed static drift ranges.
 - `package_cpp_dist.sh` - creates and validates the curated, versioned C++ SDK archive used by Actions and Releases.
+- `Dockerfile` / `build_cuvslam_in_docker.sh` - product build image and wrapper; preserve Git/LFS metadata used by
+  `get_version()`.
 
 Dataset tooling: `tools/datasets/<name>/` (download + `prepare_<name>.sh`), `tools/cuvslam_app/` (eval runner and `edex_reader.py`).
 
@@ -61,6 +63,23 @@ Do not reintroduce gzip: provisioning uses uncompressed `.tar` to cap memory on 
 - PR config: `pr-verify.yml` runs eval only on `build-test-x86` (fork-gated). `EVAL_CONFIG` is the static slug label for the PR table.
 - Active dataset set: `DATASETS[]` in `run_eval.sh` is global; PR and nightly run the same set. There is no per-pipeline dataset selection today. To run a different set in PR vs nightly, add an env-selected subset in `run_eval.sh` and have each workflow pass the selector.
 
+## Task: preserve nightly version provenance
+
+`VERSION` controls the package filename, while `get_version()` is generated independently as
+`MAJOR.MINOR.PATCH+<short-git-sha>[-modified]`. The `-modified` suffix means the build container's
+tracked worktree differs from `HEAD`.
+
+1. Keep `git-lfs` installed and configured system-wide in `scripts/Dockerfile`. Nightly pulls LFS objects on the host,
+   and Git without the LFS clean filter misidentifies the materialized files as source modifications.
+2. Do not edit tracked files before the C++ build. Pass runner-specific settings such as the Ubuntu Ports mirror
+   through Docker build arguments instead.
+3. Keep `CUVSLAM_REQUIRE_CLEAN_SOURCE=1` on nightly C++ builds. It checks the source using the same image and Git/LFS
+   configuration that generate the version header.
+4. Pass the expected package version and checked-out full Git SHA to `verify_pycuvslam_wheel_in_docker.sh`. The
+   verifier must reject `-modified` and a mismatched embedded revision before artifacts are uploaded.
+5. When changing checkout, LFS, Docker build, or version logic, test both an LFS-materialized clean checkout and an
+   intentional tracked edit.
+
 ## Hard rules
 
 Detail in [reference.md](reference.md). The load-bearing ones:
@@ -68,4 +87,5 @@ Detail in [reference.md](reference.md). The load-bearing ones:
 - Dataset and eval steps stay fork-gated (`if: ... head.repo == github.repository`); never run fork code on dataset runners.
 - Eval uses the read-only `AWS_S3_RO_*` secrets; only `provision-datasets.yml` uses the read-write `AWS_S3_*` pair.
 - KPI history directories and eval artifact names carry the `platform-cuda-ubuntu` slug so matrix configs never overwrite each other.
+- Nightly distributables must report `VERSION+<short-checked-out-sha>` without `-modified`.
 - Ruleset, CODEOWNERS, and `.github/workflows/**` changes go in their own `[infra]` MR (enforced by the `isolated-ruleset-change` pre-commit hook).

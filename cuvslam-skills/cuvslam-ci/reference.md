@@ -78,6 +78,9 @@ Repository secrets, split read from write so fork-reachable jobs never hold a ke
 ## Nightly artifacts and releases
 
 - `VERSION` is the single package-version source for scheduled, manual, and release runs. Release dispatch additionally requires the `release/vX.Y.Z` branch name to match `VERSION`.
+- The runtime library version is generated separately as `MAJOR.MINOR.PATCH+<short-git-sha>[-modified]`. Nightly
+  requires a clean tracked source tree and verifies that every wheel identifies the checked-out SHA without the
+  `-modified` suffix.
 - Final distributables are packaged once by their producing job and uploaded directly, without an Actions ZIP wrapper: `cuvslam-cpp-<version>-<slug>.tar.gz`, the versioned Python wheels, `cuvslam-docs-<version>.tar.gz`, and `cuvslam-evaluation-<version>.tar.gz`.
 - Each C++ archive contains only `bin/{libcuvslam.so,cuvslam_api_launcher}`, `include/cuvslam/{cuvslam2.h,cuvslam_gpu.h,ground_constraint2.h}`, and `LICENSE`. `scripts/package_cpp_dist.sh` creates and validates this manifest.
 - A release job downloads the `cuvslam-*` distributables and promotes the same bytes to the draft Release. Test-result artifacts remain Actions-only.
@@ -93,6 +96,9 @@ Repository secrets, split read from write so fork-reachable jobs never hold a ke
 - KPI history publish uses a direct copy: the S3-backed history mount does not implement `rename(2)`, so `run_eval.sh` copies the KPI JSON straight to the target rather than staging to `.tmp` and `mv`.
 - Fail-fast on `RUNNER_STORAGE_ROOT`: the nightly eval step errors if it is unset rather than building a filesystem-root path; `check_eval_prerequisites.sh` also requires it.
 - Runner requirements: every eval-enabled runner needs the `RUNNER_STORAGE_ROOT` mount and configured repository secrets/variables. The AWS CLI and `check_eval_prerequisites.sh` run in the CI tools image and read the mounted storage and credentials there.
+- Version provenance: `scripts/Dockerfile` keeps `git-lfs` filters configured system-wide because nightly materializes
+  LFS files before mounting the source read-only into the product build container. Runner-specific build configuration
+  must use Docker build arguments rather than rewriting tracked source files.
 - Change isolation: ruleset, CODEOWNERS, and `.github/workflows/**` changes go in their own MR, enforced by the `isolated-ruleset-change` pre-commit hook. Use the `[infra]` MR prefix.
 
 ## Learnings
@@ -100,3 +106,5 @@ Repository secrets, split read from write so fork-reachable jobs never hold a ke
 - Thor has surfaced a GitHub runner-agent `set_output` / node24 failure during checkout, independent of this wiring; watch the first Thor eval run.
 - `EVAL_CONFIG` in `pr-verify.yml` is a static label matching the build script defaults (CUDA 12.6.3 / Ubuntu 24.04). Update it if those defaults change, or pin the PR build's `CUDA_VERSION` / `UBUNTU_VERSION` so the label cannot drift.
 - The AWS CLI and the scripts read `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (standard names). The `AWS_S3_*` strings in script error messages name the repository secrets to configure, not env vars the scripts read.
+- Git LFS materializes pointer files as their binary contents. A build container without the LFS clean filter reports
+  those files as modified even when the checkout is clean, causing `get_version()` to gain `-modified`.
