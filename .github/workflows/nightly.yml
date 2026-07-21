@@ -683,13 +683,6 @@ jobs:
       actions: read
       contents: write  # Required by gh release create below.
     steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: cuvslam-*
-          path: release-assets
-          merge-multiple: true
-
       # Recheck after the matrix to catch a release or tag created since preflight.
       - name: Recheck release target is available
         env:
@@ -710,6 +703,13 @@ jobs:
             echo "::error::Git tag ${TAG} already exists. Refusing to move or replace it."
             exit 1
           fi
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cuvslam-*
+          path: release-assets
+          merge-multiple: true
 
       - name: Validate release assets and prepare notes
         env:
