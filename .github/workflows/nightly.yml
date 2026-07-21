@@ -100,7 +100,11 @@ jobs:
             echo "$existing_release"
             exit 1
           fi
-          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+          existing_tag=$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${TAG}" \
+              --jq ".[] | select(.ref == \"refs/tags/${TAG}\") | .ref"
+          )
+          if [ -n "$existing_tag" ]; then
             echo "::error::Git tag ${TAG} already exists. Refusing to move or replace it."
             exit 1
           fi
@@ -699,7 +703,11 @@ jobs:
             echo "$existing_release"
             exit 1
           fi
-          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+          existing_tag=$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${TAG}" \
+              --jq ".[] | select(.ref == \"refs/tags/${TAG}\") | .ref"
+          )
+          if [ -n "$existing_tag" ]; then
             echo "::error::Git tag ${TAG} already exists. Refusing to move or replace it."
             exit 1
           fi
