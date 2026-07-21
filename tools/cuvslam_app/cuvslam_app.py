@@ -185,7 +185,10 @@ class Tracker:
         rgbd_settings.depth_scale_factor = getattr(args, 'depth_scale_factor', 1.0)
 
         # Set enable_depth_stereo_tracking (default: False)
-        rgbd_settings.enable_depth_stereo_tracking = getattr(args, 'enable_depth_stereo_tracking', False)
+        enable_depth_stereo_tracking = getattr(args, 'enable_depth_stereo_tracking', None)
+        rgbd_settings.enable_depth_stereo_tracking = (
+            False if enable_depth_stereo_tracking is None else enable_depth_stereo_tracking
+        )
 
         print(f"RGBD settings initialized: depth_camera_id={rgbd_settings.depth_camera_id}, "
               f"depth_scale_factor={rgbd_settings.depth_scale_factor}, "
@@ -201,10 +204,12 @@ class Tracker:
             return None
 
         settings = vslam.Tracker.OdometryMultisensorSettings()
-        depth_camera_id = getattr(args, 'depth_camera_id', None)
-        settings.depth_camera_ids = [] if depth_camera_id is None else [depth_camera_id]
+        settings.depth_camera_ids = getattr(args, 'depth_camera_ids', [])
         settings.depth_scale_factor = getattr(args, 'depth_scale_factor', 1.0)
-        settings.enable_depth_stereo_tracking = getattr(args, 'enable_depth_stereo_tracking', True)
+        enable_depth_stereo_tracking = getattr(args, 'enable_depth_stereo_tracking', None)
+        settings.enable_depth_stereo_tracking = (
+            True if enable_depth_stereo_tracking is None else enable_depth_stereo_tracking
+        )
 
         print(f"Multisensor settings initialized: depth_camera_ids={settings.depth_camera_ids}, "
               f"depth_scale_factor={settings.depth_scale_factor}, "
@@ -443,17 +448,12 @@ def track(args: argparse.Namespace,
                               num_loops=args.num_loops, repeat_type=args.repeat_type,
                               gt_path=getattr(args, 'gt_path', None))
     else:
-        rgbd_mode = args.odometry_mode in (
-            vslam.Tracker.OdometryMode.RGBD,
-            vslam.Tracker.OdometryMode.Multisensor,
-        )
         dataset = EdexReader(args.dataset, stereo_edex=args.config_path,
-                             num_loops=args.num_loops, rgbd_mode=rgbd_mode,
+                             num_loops=args.num_loops, odometry_mode=args.odometry_mode,
                              repeat_type=args.repeat_type,
                              cache_uncompressed=getattr(args, 'cache_uncompressed', False),
                              gt_path=getattr(args, 'gt_path', None),
-                             camera_ids=getattr(args, 'camera_ids', None),
-                             depth_optional=args.odometry_mode == vslam.Tracker.OdometryMode.Multisensor)
+                             camera_ids=getattr(args, 'camera_ids', None))
 
     tracker_results = TrackerResults()
     if args.sequence_title:
@@ -467,17 +467,21 @@ def track(args: argparse.Namespace,
         dataset.rig.cameras[0].focal = refined_focal
         dataset.rig.cameras[0].principal = refined_principal
 
-    # If dataset has RGBD settings, transfer them to args
-    # depth_camera_id MUST come from stereo.edex
+    # Transfer EDEX depth configuration into mode-specific settings.
     if hasattr(dataset, 'rgbd_settings') and dataset.rgbd_settings:
-        # depth_camera_id always comes from stereo.edex
-        args.depth_camera_id = dataset.rgbd_settings.depth_camera_id
+        if args.odometry_mode == vslam.Tracker.OdometryMode.RGBD:
+            args.depth_camera_id = dataset.rgbd_settings.depth_camera_id
+        elif args.odometry_mode == vslam.Tracker.OdometryMode.Multisensor:
+            args.depth_camera_ids = dataset.depth_camera_ids
 
         # Use dataset settings if args don't have custom values (command-line can override these)
         if not hasattr(args, 'depth_scale_factor') or args.depth_scale_factor == 1.0:
             args.depth_scale_factor = dataset.rgbd_settings.depth_scale_factor
-        if not hasattr(args, 'enable_depth_stereo_tracking') or not args.enable_depth_stereo_tracking:
-            args.enable_depth_stereo_tracking = dataset.rgbd_settings.enable_depth_stereo_tracking
+        if (getattr(args, 'enable_depth_stereo_tracking', None) is None and
+                dataset.enable_depth_stereo_tracking is not None):
+            args.enable_depth_stereo_tracking = dataset.enable_depth_stereo_tracking
+    elif args.odometry_mode == vslam.Tracker.OdometryMode.Multisensor:
+        args.depth_camera_ids = []
 
     tracker = Tracker(dataset.rig, args)
     tracker_results.rig = dataset.rig
@@ -687,7 +691,7 @@ if __name__ == "__main__":
     # Note: depth_camera_id must be specified in stereo.edex file, not via command-line
     parser.add_argument('--depth_scale_factor', type=float, default=1.0,
                         help='Depth scale factor for RGBD or Multisensor mode')
-    parser.add_argument('--enable_depth_stereo_tracking', type=conv.str2bool, default=False,
+    parser.add_argument('--enable_depth_stereo_tracking', type=conv.str2bool, default=None,
                         help='Enable depth-stereo tracking in RGBD or Multisensor mode')
 
     args = parser.parse_args()

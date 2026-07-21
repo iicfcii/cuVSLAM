@@ -31,12 +31,20 @@ class EdexReader(DatasetReader):
     def __init__(self, edex_dir: str, stereo_edex: Optional[str] = None, num_loops: int = 0,
                  rgbd_mode: bool = False, repeat_type: str = "none",
                  cache_uncompressed: bool = False, gt_path: Optional[str] = None,
-                 camera_ids: Optional[List[int]] = None, depth_optional: bool = False):
+                 camera_ids: Optional[List[int]] = None,
+                 odometry_mode: Optional[vslam.Tracker.OdometryMode] = None):
         super().__init__(edex_dir, stereo_edex, num_loops, repeat_type, gt_path=gt_path)
-        self.rgbd_mode = rgbd_mode
-        self.depth_optional = depth_optional
+        if odometry_mode is None and rgbd_mode:
+            odometry_mode = vslam.Tracker.OdometryMode.RGBD
+        self.odometry_mode = odometry_mode
+        self.rgbd_mode = odometry_mode == vslam.Tracker.OdometryMode.RGBD
+        self.multisensor_mode = odometry_mode == vslam.Tracker.OdometryMode.Multisensor
+        self.depth_enabled = self.rgbd_mode or self.multisensor_mode
         self.cache_uncompressed = cache_uncompressed
         self.rgbd_settings = None
+        self.depth_camera_ids = []
+        self.depth_stream_to_camera_id = {}
+        self.enable_depth_stereo_tracking = None
         self.depth_sequence = None
         self.camera_ids = camera_ids
         if self.camera_ids:
@@ -65,12 +73,12 @@ class EdexReader(DatasetReader):
                     )
                 rig.cameras = [rig.cameras[cam_id] for cam_id in self.camera_ids]
 
-            # Parse RGBD settings if in RGBD mode
-            if self.rgbd_mode:
+            # Parse depth settings for RGBD or Multisensor mode.
+            if self.depth_enabled:
                 try:
                     self.rgbd_settings = self._parse_rgbd_settings(
-                        config_data, required=not self.depth_optional)
-                    self._remap_rgbd_settings_for_filtered_cameras()
+                        config_data, required=self.rgbd_mode)
+                    self._remap_depth_settings_for_filtered_cameras()
                 except ValueError as e:
                     raise ValueError(f"Failed to initialize depth mode: {str(e)}") from e
 
@@ -120,8 +128,8 @@ class EdexReader(DatasetReader):
             self.fps = metadata.get('fps', 30)
             self.interval_ns = int(1e9 / self.fps)
 
-            # Load depth sequence if in RGBD mode
-            if self.rgbd_mode and 'depth_sequence' in metadata:
+            # Load depth sequences for RGBD or Multisensor mode.
+            if self.depth_enabled and 'depth_sequence' in metadata:
                 self.depth_sequence = metadata['depth_sequence']
 
             self.frames = {}
@@ -129,6 +137,8 @@ class EdexReader(DatasetReader):
                 frame_metadata_file = metadata['frame_metadata']
                 self.frames = self.load_frame_metadata_edex(
                     os.path.join(edex_dir, frame_metadata_file))
+                if self.depth_enabled:
+                    self._map_frame_depth_streams_to_cameras()
                 if self.camera_id_map is not None:
                     self._filter_and_remap_frame_cameras()
             elif 'sequence' in metadata:
@@ -154,15 +164,15 @@ class EdexReader(DatasetReader):
                             f"Frame {frame_id} has no cameras after applying camera_ids {self.camera_ids}."
                         )
 
-                    # Add depth data if in RGBD mode
-                    if self.rgbd_mode and self.depth_sequence:
+                    # Add configured depth streams.
+                    if self.depth_enabled and self.depth_sequence:
                         self.frames[frame_id]["depth"] = []
-                        for depth_id, depth_paths in enumerate(self.depth_sequence):
-                            if self.camera_id_map is not None and depth_id not in self.camera_id_map:
+                        for depth_stream_id, depth_paths in enumerate(self.depth_sequence):
+                            depth_camera_id = self.depth_stream_to_camera_id.get(depth_stream_id)
+                            if depth_camera_id is None:
                                 continue
-                            output_depth_id = self.camera_id_map[depth_id] if self.camera_id_map is not None else depth_id
                             self.frames[frame_id]["depth"].append({
-                                'id': output_depth_id,
+                                'id': depth_camera_id,
                                 'filename': self.replace_last_digits(depth_paths[0], i),
                                 'timestamp': ts
                             })
@@ -192,17 +202,38 @@ class EdexReader(DatasetReader):
             self.tar_archives = {}
             self._detect_tar_archives()
 
-    def _remap_rgbd_settings_for_filtered_cameras(self) -> None:
-        """Keep RGBD depth camera id in the same camera-id space as the filtered rig."""
-        if self.camera_id_map is None or self.rgbd_settings is None:
+    def _remap_depth_settings_for_filtered_cameras(self) -> None:
+        """Keep all depth camera ids in the same camera-id space as the filtered rig."""
+        if self.camera_id_map is None:
             return
 
-        original_depth_camera_id = self.rgbd_settings.depth_camera_id
-        if original_depth_camera_id not in self.camera_id_map:
+        remapped_streams = {
+            depth_stream_id: self.camera_id_map[camera_id]
+            for depth_stream_id, camera_id in self.depth_stream_to_camera_id.items()
+            if camera_id in self.camera_id_map
+        }
+        if self.rgbd_mode and not remapped_streams:
             raise ValueError(
-                f"RGBD depth_camera_id {original_depth_camera_id} is not included in camera_ids {self.camera_ids}."
+                f"RGBD depth camera is not included in camera_ids {self.camera_ids}."
             )
-        self.rgbd_settings.depth_camera_id = self.camera_id_map[original_depth_camera_id]
+
+        self.depth_stream_to_camera_id = remapped_streams
+        self.depth_camera_ids = [
+            remapped_streams[depth_stream_id] for depth_stream_id in sorted(remapped_streams)
+        ]
+        if self.rgbd_settings is not None and self.depth_camera_ids:
+            self.rgbd_settings.depth_camera_id = self.depth_camera_ids[0]
+
+    def _map_frame_depth_streams_to_cameras(self) -> None:
+        """Replace frame-metadata depth stream ids with aligned camera ids."""
+        for frame_data in self.frames.values():
+            if "depth" not in frame_data:
+                continue
+            frame_data["depth"] = [
+                {**depth_data, "id": self.depth_stream_to_camera_id[depth_data["id"]]}
+                for depth_data in frame_data["depth"]
+                if depth_data["id"] in self.depth_stream_to_camera_id
+            ]
 
     def _filter_and_remap_frame_cameras(self):
         """Keep only requested cameras from frame metadata and remap them to contiguous ids."""
@@ -219,12 +250,6 @@ class EdexReader(DatasetReader):
                 )
             frame_data["cams_max_ts"] = max(cam_data["timestamp"] for cam_data in frame_data["cams"])
             frame_data["cams_min_ts"] = min(cam_data["timestamp"] for cam_data in frame_data["cams"])
-            if "depth" in frame_data:
-                frame_data["depth"] = [
-                    {**depth_data, "id": self.camera_id_map[depth_data["id"]]}
-                    for depth_data in frame_data["depth"]
-                    if depth_data["id"] in self.camera_id_map
-                ]
 
     def _detect_tar_archives(self):
         """Detect and cache tar archives for image folders.
@@ -239,8 +264,8 @@ class EdexReader(DatasetReader):
                 if folder_name:
                     folder_names.add(folder_name)
 
-            # Also check depth folders if in RGBD mode
-            if self.rgbd_mode and "depth" in frame_data:
+            # Also check depth folders when depth replay is enabled.
+            if self.depth_enabled and "depth" in frame_data:
                 for depth_data in frame_data["depth"]:
                     folder_name = os.path.dirname(depth_data['filename'])
                     if folder_name:
@@ -490,8 +515,9 @@ class EdexReader(DatasetReader):
             if not isinstance(config_data[1], dict):
                 raise ValueError("config_data[1] (metadata) must be a dictionary")
 
-            # Get depth_id from camera config
-            depth_camera_id = None
+            # Map each depth_sequence entry to the camera whose pixels it aligns with.
+            depth_camera_ids = []
+            depth_stream_to_camera_id = {}
             depth_scale_factor = 1.0
 
             # Validate and parse camera configuration
@@ -505,25 +531,30 @@ class EdexReader(DatasetReader):
             if len(cameras) == 0:
                 raise ValueError("'cameras' list is empty")
 
-            # Search for depth_id in camera configs
-            for cam in cameras:
+            # Search for depth stream ids in camera configs.
+            for camera_id, cam in enumerate(cameras):
                 if not isinstance(cam, dict):
                     continue  # Skip invalid camera entries
 
-                if 'depth_scale_factor' in cam:
+                if 'depth_id' not in cam:
+                    continue
+
+                try:
+                    depth_stream_id = int(cam['depth_id'])
+                except (ValueError, TypeError):
+                    raise ValueError(f"Invalid depth_id value: {cam['depth_id']!r}")
+                if depth_stream_id in depth_stream_to_camera_id:
+                    raise ValueError(f"Duplicate depth_id {depth_stream_id} in camera configuration")
+
+                depth_stream_to_camera_id[depth_stream_id] = camera_id
+                depth_camera_ids.append(camera_id)
+
+                if 'depth_scale_factor' in cam and len(depth_camera_ids) == 1:
                     try:
                         depth_scale_factor = float(cam['depth_scale_factor'])
                     except (ValueError, TypeError):
                         print(f"Warning: Invalid depth_scale_factor value, using default 1.0")
                         depth_scale_factor = 1.0
-
-                if 'depth_id' in cam:
-                    try:
-                        depth_camera_id = int(cam['depth_id'])
-                        break
-                    except (ValueError, TypeError):
-                        print(f"Warning: Invalid depth_id value: {cam['depth_id']}")
-                        continue
 
             # Check for depth_sequence and update scale factor if needed
             if 'depth_sequence' in config_data[1]:
@@ -538,8 +569,8 @@ class EdexReader(DatasetReader):
                                 depth_scale_factor = 1000.0
                                 break
 
-            # Validate that depth_camera_id was found
-            if depth_camera_id is None:
+            # Validate that at least one depth camera was found when depth is required.
+            if not depth_camera_ids:
                 if not required:
                     return None
                 raise ValueError(
@@ -548,15 +579,21 @@ class EdexReader(DatasetReader):
                 )
 
             # Get enable_depth_stereo_tracking if provided
-            enable_depth_stereo_tracking = config_data[0].get('enable_depth_stereo_tracking', False)
+            self.enable_depth_stereo_tracking = config_data[0].get('enable_depth_stereo_tracking')
+            enable_depth_stereo_tracking = (
+                False if self.enable_depth_stereo_tracking is None else self.enable_depth_stereo_tracking
+            )
 
-            # Create RGBDSettings
+            self.depth_camera_ids = depth_camera_ids
+            self.depth_stream_to_camera_id = depth_stream_to_camera_id
+
+            # Keep RGBDSettings for RGBD mode and shared scale metadata.
             rgbd_settings = vslam.Tracker.OdometryRGBDSettings()
-            rgbd_settings.depth_camera_id = depth_camera_id
+            rgbd_settings.depth_camera_id = depth_camera_ids[0]
             rgbd_settings.depth_scale_factor = depth_scale_factor
             rgbd_settings.enable_depth_stereo_tracking = enable_depth_stereo_tracking
 
-            print(f"RGBD settings parsed: depth_camera_id={depth_camera_id}, "
+            print(f"Depth settings parsed: depth_camera_ids={depth_camera_ids}, "
                   f"depth_scale_factor={depth_scale_factor}, "
                   f"enable_depth_stereo_tracking={enable_depth_stereo_tracking}")
 
@@ -564,7 +601,7 @@ class EdexReader(DatasetReader):
 
         except (KeyError, IndexError, TypeError) as e:
             raise ValueError(
-                f"Failed to parse RGBD settings from stereo.edex: {str(e)}. "
+                f"Failed to parse depth settings from stereo.edex: {str(e)}. "
                 "Please ensure the configuration file has the correct structure with 'cameras' "
                 "and 'depth_id' fields."
             ) from e
@@ -730,11 +767,13 @@ class EdexReader(DatasetReader):
         # Iterate over events sorted by timestamp
         images = [np.array([])] * len(self.rig.cameras)
         masks = [np.array([])] * len(self.rig.cameras)
-        depths = [np.array([])] * len(self.rig.cameras) if self.rgbd_mode else None
+        depths = [np.array([]) for _ in self.rig.cameras] if self.depth_enabled else None
         timestamps = [0] * len(self.rig.cameras)
         frame_id = self.current_frame
         while self.check_end_of_sequence():
             frame_data = self.frames[self.current_frame]
+            if depths is not None:
+                depths = [np.array([]) for _ in self.rig.cameras]
             for cam_data in frame_data["cams"]:
                 cam_id = cam_data['id']
                 assert cam_id < len(self.rig.cameras)
@@ -797,9 +836,9 @@ class EdexReader(DatasetReader):
 
                 timestamps[cam_id] = self.adjust_timestamp(cam_data['timestamp'])
 
-            # Load depth images if in RGBD mode
-            if self.rgbd_mode and "depth" in frame_data:
-                assert depths is not None  # guaranteed by rgbd_mode init at the top of replay
+            # Load every configured depth stream.
+            if self.depth_enabled and "depth" in frame_data:
+                assert depths is not None  # guaranteed by depth_enabled at the top of replay
                 depth_scale_factor = self.rgbd_settings.depth_scale_factor if self.rgbd_settings else 1.0
                 for depth_data in frame_data["depth"]:
                     depth_id = depth_data['id']
@@ -815,9 +854,9 @@ class EdexReader(DatasetReader):
                         # Load from regular file system
                         depth = self.load_depth_image(depth_path)
 
-                    # Store depth at the camera index corresponding to depth_id
-                    if self.rgbd_settings and depth_id == self.rgbd_settings.depth_camera_id:
-                        depths[self.rgbd_settings.depth_camera_id] = depth
+                    # Store depth at the aligned camera index.
+                    if depth_id in self.depth_camera_ids:
+                        depths[depth_id] = depth
 
             processor.process_images(frame_id, timestamps, images, masks, depths)
 

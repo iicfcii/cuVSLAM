@@ -93,7 +93,7 @@ Run tracking with depth images using RGBD odometry mode:
 
 **RGBD Requirements:**
 - The `stereo.edex` file must contain:
-  - `depth_id` in camera config (specifies which camera index corresponds to depth)
+  - `depth_id` in the aligned camera config (selects that camera's entry in `depth_sequence`)
   - `depth_sequence` array with paths to depth files (similar to image `sequence`)
   - `depth_scale_factor` - conversion factor for depth values (default: 1.0)
     - For PNG uint16: depth_meters = uint16_value * depth_scale_factor
@@ -109,8 +109,8 @@ Run tracking with depth images using RGBD odometry mode:
 
 ### Multisensor Mode
 
-Use `--odometry_mode=multisensor` with a cuNLS-enabled build. The app reuses EDEX `depth_id`,
-`depth_scale_factor`, and depth sequences when present; without depth, the rig must contain an
-overlapping camera pair. An EDEX IMU is fused automatically. Multisensor currently supports pinhole
-cameras only. Multisensor tracking is experimental and may be inaccurate or fail for some sensor
-configurations and scenes.
+Use `--odometry_mode=multisensor` with a cuNLS-enabled build. The app preserves every EDEX camera
+with a `depth_id` and forwards its corresponding depth sequence; without depth, the rig must contain
+an overlapping camera pair. An EDEX IMU is fused automatically. Multisensor currently supports
+pinhole cameras only. Multisensor tracking is experimental and may be inaccurate or fail for some
+sensor configurations and scenes.
