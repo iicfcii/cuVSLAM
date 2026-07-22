@@ -118,6 +118,12 @@ jobs:
       - name: Pull LFS test data
         run: git lfs pull --include="test_data/"
 
+      - name: Configure Git for read-only Docker mount
+        run: |
+          # Some runner filesystems normalize executable bits, and the LFS clean filter needs writable storage.
+          git config --local core.fileMode false
+          git config --local lfs.storage /tmp/cuvslam-lfs
+
       - name: Resolve runner storage root
         if: matrix.eval && vars.RUNNER_STORAGE_ROOT != ''
         run: echo "RUNNER_STORAGE_ROOT=${{ vars.RUNNER_STORAGE_ROOT }}" >> "$GITHUB_ENV"
