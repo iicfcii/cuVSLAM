@@ -15,7 +15,7 @@
 #   --build_docs       Build documentation
 #   --build_type=TYPE  Set CMake build type (Debug|Release[default]|RelWithDebInfo|MinSizeRel)
 #   --cuda_arch=ARCH   Set CUDA architecture target (e.g. 87 for Orin Nano, default: all)
-#   --jobs=N           Set number of parallel jobs (default: 8)
+#   --jobs=N           Set parallel jobs (default: ceil(nproc/2))
 #
 # Environment variables (optional):
 #   CUVSLAM_SRC_DIR      Source directory (default: /cuvslam/src)
@@ -46,7 +46,8 @@ USE_RERUN=OFF
 SRC=/cuvslam/src
 DST=/cuvslam/build
 
-MAKE_JOBS=$(nproc 2>/dev/null || echo 8)
+nproc_n=$(nproc 2>/dev/null || echo 8)
+MAKE_JOBS=$(( (nproc_n + 1) / 2 ))
 
 if [ ${CUVSLAM_SRC_DIR+x} ]; then
   echo "Using environment variable CUVSLAM_SRC_DIR='$CUVSLAM_SRC_DIR'."
