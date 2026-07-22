@@ -115,11 +115,9 @@ jobs:
         with:
           lfs: false
 
-      - name: Pull LFS test data
-        run: git lfs pull --include="test_data/"
-
-      - name: Configure Git for read-only Docker mount
+      - name: Prepare Git checkout for Docker build
         run: |
+          git lfs pull --include="test_data/"
           # Some runner filesystems normalize executable bits, and the LFS clean filter needs writable storage.
           git config --local core.fileMode false
           git config --local lfs.storage /tmp/cuvslam-lfs
