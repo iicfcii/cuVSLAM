@@ -40,7 +40,11 @@ cmake -S . -B build && cmake --build build --parallel $(nproc)
 ```
 
 ### PyCuVSLAM install
-Pre-built wheels: https://github.com/nvidia-isaac/cuVSLAM/releases
+Pre-built wheels: https://github.com/nvidia-isaac/cuVSLAM/releases/latest
+
+- x86_64: Ubuntu 22.04 / Python 3.10 has `cu12` and `cu13`; Ubuntu 24.04 / Python 3.12+ has `cu12` and `cu13`.
+- Jetson Orin: Ubuntu 22.04 / Python 3.10 / `cu12` only.
+- Jetson Thor: Ubuntu 24.04 / Python 3.12+ / `cu13` only.
 
 From source (after building C++ lib):
 ```bash
@@ -51,7 +55,7 @@ CUVSLAM_BUILD_DIR=<path-to-build> pip install python/
 - **Missing CUDA**: Set `CUDAToolkit_ROOT=/usr/local/cuda` or install CUDA Toolkit
 - **git-lfs not installed**: `apt install git-lfs && git lfs pull` (binary test data)
 - **CMake too old**: Need 3.19+
-- **Wheel ABI mismatch**: Match Python version (3.10 for Ubuntu 22.04, 3.12+ for 24.04)
+- **Wheel ABI mismatch**: Match the Python tag, CUDA major, architecture, and Jetson family using the matrix above.
 
 ## Tracking Issues
 

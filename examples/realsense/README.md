@@ -121,5 +121,6 @@ For a stereo + IMU multisensor smoke test using the same IR streams as the stere
 python3 run_vio.py
 ```
 
-> **Note:** Multisensor mode requires a cuNLS-enabled PyCuVSLAM build. The default source build enables cuNLS; if
-> cuVSLAM was configured with `-DUSE_CUNLS=OFF`, these multisensor examples are unavailable.
+> **Note:** Multisensor mode requires a cuNLS-enabled PyCuVSLAM build. Official release wheels include cuNLS, and the
+> default source build enables it. If cuVSLAM was configured with `-DUSE_CUNLS=OFF`, these multisensor examples are
+> unavailable.

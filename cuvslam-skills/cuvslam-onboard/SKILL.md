@@ -48,12 +48,17 @@ Once the user provides a path, use it consistently throughout all subsequent com
 
 ## 2. Install PyCuVSLAM (Quickest Path)
 
-Pre-built wheels from https://github.com/nvidia-isaac/cuVSLAM/releases:
+Pre-built wheels from https://github.com/nvidia-isaac/cuVSLAM/releases/latest:
 
-| Ubuntu | Python | CUDA | Arch |
-|--------|--------|------|------|
-| 22.04 | 3.10 | 12, 13 | x86_64, aarch64 |
-| 24.04+ | 3.12+ | 12, 13 | x86_64, aarch64 |
+| Target | Ubuntu | Python wheel tag | CUDA wheel tag | Arch |
+|--------|--------|------------------|----------------|------|
+| Desktop/server | 22.04 | `cp310` (Python 3.10) | `cu12`, `cu13` | x86_64 |
+| Desktop/server | 24.04 | `cp312-abi3` (Python 3.12+) | `cu12`, `cu13` | x86_64 |
+| Jetson Orin | 22.04 (JetPack 6.x) | `cp310` (Python 3.10) | `cu12` | aarch64 |
+| Jetson Thor | 24.04 (JetPack 7.x) | `cp312-abi3` (Python 3.12+) | `cu13` | aarch64 |
+
+Only these combinations are provided. The installed CUDA major must match the wheel's `cu12` or `cu13` tag; use a
+source build for other combinations.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate

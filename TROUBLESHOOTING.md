@@ -3,7 +3,8 @@
 ## Overview
 
 This document describes how to troubleshoot cuVSLAM when the system is installed and runs successfully but the computed
-pose is not sufficiently accurate. For installation or build issues, see the relevant sections of the documentation.
+pose is not sufficiently accurate. For installation or build issues, see
+[Install PyCuVSLAM](README.md#install-pycuvslam) and [Build cuVSLAM](README.md#build-cuvslam).
 
 ![Troubleshooting](doc/images/troubleshooting.png)
 
@@ -88,7 +89,7 @@ cuvslam::Odometry::Config::debug_dump_directory
 **Python API**
 
 ```python
-Odometry.Config.debug_dump_directory
+cuvslam.core.Odometry.Config.debug_dump_directory
 ```
 
 See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.debug_dump_directory).
@@ -360,7 +361,7 @@ cuvslam::Odometry::Config::rectified_stereo_camera
 **Python API**
 
 ```python
-cuvslam.Odometry.Config.rectified_stereo_camera
+cuvslam.core.Odometry.Config.rectified_stereo_camera
 ```
 
 See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.rectified_stereo_camera).
@@ -431,7 +432,7 @@ cuvslam::Odometry::Config::use_denoising
 **Python API**
 
 ```python
-Odometry.Config.use_denoising
+cuvslam.core.Odometry.Config.use_denoising
 ```
 
 See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.use_denoising).
@@ -452,12 +453,12 @@ Mono → RGBD → Stereo Inertial → Stereo → Multicamera; Multisensor depend
 
 Multisensor (see [examples/multisensor/](examples/multisensor/README.md)) does not slot at a fixed
 position — its accuracy scales with the sensor set it is given. It requires at least one RGB-D
-camera or one overlapping camera pair and currently supports pinhole cameras only. A single
-RGB-D + IMU rig is roughly RGBD-class. A multi-stereo + RGB-D + IMU rig may approach or exceed
-Multicamera under favorable conditions, but this is an empirical expectation rather than a
-guarantee; benchmark the actual rig and environment. Use Multisensor when you have a
-mixed-camera-type rig or want IMU fusion on a non-stereo configuration; otherwise prefer the mode
-that exactly matches your rig.
+camera or one overlapping camera pair, a cuNLS-enabled build, and currently supports pinhole cameras only. Official
+release wheels include cuNLS. Multisensor is experimental and may be inaccurate or fail for some sensor configurations
+and scenes. A single RGB-D + IMU rig is roughly RGBD-class. A multi-stereo + RGB-D + IMU rig may approach or exceed
+Multicamera under favorable conditions, but this is an empirical expectation rather than a guarantee; benchmark the
+actual rig and environment. Use Multisensor when you have a mixed-camera-type rig or want IMU fusion on a non-stereo
+configuration; otherwise prefer the mode that exactly matches your rig.
 
 ### Adjust motion prediction
 
@@ -476,7 +477,7 @@ cuvslam::Odometry::Config::use_motion_model
 **Python API**
 
 ```python
-Odometry.Config.use_motion_model
+cuvslam.core.Odometry.Config.use_motion_model
 ```
 
 See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.use_motion_model).

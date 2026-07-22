@@ -10,7 +10,7 @@ RGB-D cameras (`lcam_front`, `lcam_back`) plus a synthetic IMU from the
 
 ## Requirements
 
-- Use an official wheel or build with `USE_CUNLS=ON`.
+- Use an official release wheel, which includes cuNLS, or build from source with `USE_CUNLS=ON`.
 - Configure at least one RGB-D camera in `depth_camera_ids`, or provide at least one camera pair with overlapping
   frustums. A single RGB-D camera is valid, with or without an IMU.
 - Use pinhole cameras. Other camera models are not supported by the current solver.

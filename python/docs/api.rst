@@ -65,7 +65,7 @@ Tracker class
 .. autoclass:: Tracker
    :members:
    :undoc-members:
-   :exclude-members: save_map, localize_in_map, OdometryMode, MulticameraMode
+   :exclude-members: OdometryMode, MulticameraMode
 
 Functions
 ---------
