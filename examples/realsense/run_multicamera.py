@@ -212,7 +212,7 @@ def main() -> None:
 
     # Initialize tracker
     cfg = vslam.Tracker.OdometryConfig(
-        async_sba=False,
+        async_sba=True,
         enable_final_landmarks_export=True,
         rectified_stereo_camera=True
     )

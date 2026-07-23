@@ -206,7 +206,7 @@ def main() -> None:
         enable_depth_stereo_tracking=True
     )
     cfg = vslam.Tracker.OdometryConfig(
-        async_sba=False,
+        async_sba=True,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
         odometry_mode=vslam.Tracker.OdometryMode.Multisensor,
