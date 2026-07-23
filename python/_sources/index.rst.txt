@@ -1,7 +1,7 @@
 Welcome to PyCuVSLAM API documentation!
 =======================================
 
-PyCuVSLAM is a Python bindings for the cuVSLAM (CUDA-accelerated Visual SLAM) library.
+PyCuVSLAM provides Python bindings for the cuVSLAM (CUDA-accelerated Visual SLAM) library.
 
 .. toctree::
    :maxdepth: 2

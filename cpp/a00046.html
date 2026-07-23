@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: Member List</title>
+<title>cuVSLAM API Reference: cuvslam::Image Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -68,21 +68,86 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00049.html">ImuMeasurement</a></li>  </ul>
+<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00046.html">Image</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="a00043.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">cuvslam::ImuMeasurement Member List</div>  </div>
+<div class="title">cuvslam::Image Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="a00049.html">cuvslam::ImuMeasurement</a>, including all inherited members.</p>
-<table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="a00049.html#af51802131893bd836d5c7cfd64ffccc4">angular_velocities</a></td><td class="entry"><a class="el" href="a00049.html">cuvslam::ImuMeasurement</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00049.html#a816fc067ba6ee74904fc8ffe7907cd74">linear_accelerations</a></td><td class="entry"><a class="el" href="a00049.html">cuvslam::ImuMeasurement</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00049.html#ab05caae17f6dfbd978baf4bcf056b83a">timestamp_ns</a></td><td class="entry"><a class="el" href="a00049.html">cuvslam::ImuMeasurement</a></td><td class="entry"></td></tr>
-</table></div><!-- contents -->
+<p><a class="el" href="a00046.html" title="Image with timestamp and camera index.">Image</a> with timestamp and camera index.  
+ <a href="a00046.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ab3729633d6924d3770a5ed4eb6189caf"><td class="memItemLeft" align="right" valign="top"><a id="ab3729633d6924d3770a5ed4eb6189caf"></a>
+int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00046.html#ab3729633d6924d3770a5ed4eb6189caf">timestamp_ns</a></td></tr>
+<tr class="memdesc:ab3729633d6924d3770a5ed4eb6189caf"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="a00046.html" title="Image with timestamp and camera index.">Image</a> timestamp in nanoseconds. <br /></td></tr>
+<tr class="separator:ab3729633d6924d3770a5ed4eb6189caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04bb83d2bfbd196bc3155bfd9108cf27"><td class="memItemLeft" align="right" valign="top"><a id="a04bb83d2bfbd196bc3155bfd9108cf27"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00046.html#a04bb83d2bfbd196bc3155bfd9108cf27">camera_index</a></td></tr>
+<tr class="memdesc:a04bb83d2bfbd196bc3155bfd9108cf27"><td class="mdescLeft">&#160;</td><td class="mdescRight">index of the camera in the rig <br /></td></tr>
+<tr class="separator:a04bb83d2bfbd196bc3155bfd9108cf27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_attribs_a00042"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_a00042')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="a00042.html">cuvslam::ImageData</a></td></tr>
+<tr class="memitem:a95fd9d51af0eaa2f559b0c2119cce186 inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="a95fd9d51af0eaa2f559b0c2119cce186"></a>
+const void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a95fd9d51af0eaa2f559b0c2119cce186">pixels</a></td></tr>
+<tr class="memdesc:a95fd9d51af0eaa2f559b0c2119cce186 inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pixels must be stored row-wise (right to left, top to bottom) <br /></td></tr>
+<tr class="separator:a95fd9d51af0eaa2f559b0c2119cce186 inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add4386eb25331f368268e336b824eba5 inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="add4386eb25331f368268e336b824eba5"></a>
+int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#add4386eb25331f368268e336b824eba5">width</a></td></tr>
+<tr class="memdesc:add4386eb25331f368268e336b824eba5 inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">image width must match <a class="el" href="a00030.html#a2082d0fae7b6f832fd4626936d83a10b" title="image size in pixels (width, height)">Camera::size</a> <br /></td></tr>
+<tr class="separator:add4386eb25331f368268e336b824eba5 inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9209b1def59ee7c04f925df5485ba4f1 inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="a9209b1def59ee7c04f925df5485ba4f1"></a>
+int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a9209b1def59ee7c04f925df5485ba4f1">height</a></td></tr>
+<tr class="memdesc:a9209b1def59ee7c04f925df5485ba4f1 inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">image height must match <a class="el" href="a00030.html#a2082d0fae7b6f832fd4626936d83a10b" title="image size in pixels (width, height)">Camera::size</a> <br /></td></tr>
+<tr class="separator:a9209b1def59ee7c04f925df5485ba4f1 inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a726178e256e0e33aa92575b11eed45c8 inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="a726178e256e0e33aa92575b11eed45c8"></a>
+int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a726178e256e0e33aa92575b11eed45c8">pitch</a></td></tr>
+<tr class="memdesc:a726178e256e0e33aa92575b11eed45c8 inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">bytes per image row including padding for GPU memory images, ignored for CPU images <br /></td></tr>
+<tr class="separator:a726178e256e0e33aa92575b11eed45c8 inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a955acd221328ebe6a8e68b252a166afb inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="a955acd221328ebe6a8e68b252a166afb"></a>
+<a class="el" href="a00042.html#a83f0bd23f6a6ae35d0498edfd740df9c">Encoding</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a955acd221328ebe6a8e68b252a166afb">encoding</a></td></tr>
+<tr class="memdesc:a955acd221328ebe6a8e68b252a166afb inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">grayscale and RGB are supported now <br /></td></tr>
+<tr class="separator:a955acd221328ebe6a8e68b252a166afb inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1dcaffcd96f29bf9d496a1266f897f4 inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="ac1dcaffcd96f29bf9d496a1266f897f4"></a>
+<a class="el" href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0ee">DataType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#ac1dcaffcd96f29bf9d496a1266f897f4">data_type</a></td></tr>
+<tr class="memdesc:ac1dcaffcd96f29bf9d496a1266f897f4 inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">image data type <br /></td></tr>
+<tr class="separator:ac1dcaffcd96f29bf9d496a1266f897f4 inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a434a5e49ddbc1990555197df1d1612bc inherit pub_attribs_a00042"><td class="memItemLeft" align="right" valign="top"><a id="a434a5e49ddbc1990555197df1d1612bc"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a434a5e49ddbc1990555197df1d1612bc">is_gpu_mem</a></td></tr>
+<tr class="memdesc:a434a5e49ddbc1990555197df1d1612bc inherit pub_attribs_a00042"><td class="mdescLeft">&#160;</td><td class="mdescRight">is pixels pointer points to GPU or CPU memory buffer <br /></td></tr>
+<tr class="separator:a434a5e49ddbc1990555197df1d1612bc inherit pub_attribs_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_types_a00042"><td colspan="2" onclick="javascript:toggleInherit('pub_types_a00042')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="a00042.html">cuvslam::ImageData</a></td></tr>
+<tr class="memitem:a83f0bd23f6a6ae35d0498edfd740df9c inherit pub_types_a00042"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a83f0bd23f6a6ae35d0498edfd740df9c">Encoding</a> : uint8_t { <br />
+&#160;&#160;<a class="el" href="a00042.html#a83f0bd23f6a6ae35d0498edfd740df9caf5f75f1b95652443e4398974b82c3f7c">MONO</a>
+, <br />
+&#160;&#160;<a class="el" href="a00042.html#a83f0bd23f6a6ae35d0498edfd740df9ca889574aebacda6bfd3e534e2b49b8028">RGB</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:a83f0bd23f6a6ae35d0498edfd740df9c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="a00046.html" title="Image with timestamp and camera index.">Image</a> encoding.  <a href="a00042.html#a83f0bd23f6a6ae35d0498edfd740df9c">More...</a><br /></td></tr>
+<tr class="separator:a83f0bd23f6a6ae35d0498edfd740df9c inherit pub_types_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cf72cf3c447fdde5f239fc82746f0ee inherit pub_types_a00042"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0ee">DataType</a> : uint8_t { <br />
+&#160;&#160;<a class="el" href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0eeaecfc091ed2a607335524c8389cfa41b5">UINT8</a>
+, <br />
+&#160;&#160;<a class="el" href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0eea48d8f1a723d44ff4a87db1bb6c551c62">UINT16</a>
+, <br />
+&#160;&#160;<a class="el" href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0eea967d280b5c16d95f2947647dd2ca6cc2">FLOAT32</a>
+<br />
+ }</td></tr>
+<tr class="memdesc:a0cf72cf3c447fdde5f239fc82746f0ee"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="a00046.html" title="Image with timestamp and camera index.">Image</a> data type.  <a href="a00042.html#a0cf72cf3c447fdde5f239fc82746f0ee">More...</a><br /></td></tr>
+<tr class="separator:a0cf72cf3c447fdde5f239fc82746f0ee inherit pub_types_a00042"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><a class="el" href="a00046.html" title="Image with timestamp and camera index.">Image</a> with timestamp and camera index. </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

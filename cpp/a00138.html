@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: cuVSLAM: Load Map</title>
+<title>cuVSLAM API Reference: cuvslam::GroundConstraint Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -66,88 +66,200 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00138.html">GroundConstraint</a></li>  </ul>
+</div>
 </div><!-- top -->
-<div class="PageDoc"><div class="header">
+<div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="a00135.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">cuVSLAM: Load Map </div>  </div>
+<div class="title">cuvslam::GroundConstraint Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The only mode we currently support is <b>LocalizeInMap</b>. In this mode, we first localize against the map; if that succeeds, the current map is replaced by the loaded one. We do <b>not</b> support unlocalized loading (load now, localize later).</p>
-<p>Users who call <b>LocalizeInMap</b> must provide:</p>
-<ul>
-<li>Image(s)</li>
-<li>Timestamp (<code>timestamp_ns</code> on the call, aligned with the images)</li>
-<li>Prior 3D pose (<code>guess_pose</code>)</li>
-</ul>
-<h1><a class="anchor" id="autotoc_md2"></a>
-API</h1>
-<div class="fragment"><div class="line"> </div>
-<div class="line">Pose Track(<span class="keyword">const</span> Odometry::State&amp; state, <span class="keyword">const</span> Pose* gt_pose = <span class="keyword">nullptr</span>);</div>
-</div><!-- fragment --><div class="fragment"><div class="line"> </div>
-<div class="line"><span class="keywordtype">void</span> SaveMap(<span class="keyword">const</span> std::string_view&amp; folder_name,</div>
-<div class="line">             std::function&lt;<span class="keywordtype">void</span>(<span class="keywordtype">bool</span> success)&gt; callback) <span class="keyword">const</span>;</div>
-</div><!-- fragment --><div class="fragment"><div class="line"><span class="keyword">using</span> LocalizeStartCB = std::function&lt;void()&gt;;</div>
-<div class="line"><span class="keyword">using</span> LocalizeFinishCB = std::function&lt;void(<span class="keyword">const</span> Result&lt;Pose&gt;&amp; result)&gt;;</div>
-<div class="line"> </div>
-<div class="line"><span class="keywordtype">void</span> LocalizeInMap(<span class="keyword">const</span> std::string_view&amp; folder_name, int64_t timestamp_ns, <span class="keyword">const</span> Pose&amp; guess_pose,</div>
-<div class="line">                   <span class="keyword">const</span> ImageSet&amp; images, <span class="keyword">const</span> LocalizationSettings&amp; settings, LocalizeStartCB start_cb,</div>
-<div class="line">                   LocalizeFinishCB finish_cb);</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md3"></a>
-QA</h1>
-<p><b>Loading of maps — what do we want to support, and how should it work?</b></p>
-<p>Current functionality is minimal, solid, bug-free, and well-tested:</p>
-<ul>
-<li>No external GlobalLocalizer (no GPS, no <code>slam.SetPose</code>).</li>
-<li>No tracking-lost recovery support.</li>
-<li>No user-provided tracking-lost detection.</li>
-<li>Sensor fusion is limited to visual SBA only.</li>
-</ul>
-<p>There is a single cuVSLAM system that runs until the first tracking loss. Users can save and load maps without interrupting real-time processing.</p>
-<p><b>Scenarios</b></p>
-<ol type="1">
-<li>The user creates a <code>cuVSLAM::Slam</code> instance.</li>
-<li>The user feeds images via <code>Track</code>. This is a low-latency, real-time path (e.g. ~100 fps) with all camera frames. The user receives a real-time SLAM pose; the background thread runs LC search and map building.</li>
-<li>At some point the user calls <code>SaveMap</code> (possibly from another thread). The map is written to disk by the background path; <code>Track</code> is not blocked by that work.</li>
-<li>At some point the user calls <code>LocalizeInMap</code> with image(s), timestamp, and prior. The background thread matches the images to the on-disk map. On success it drops the current map and replaces it with the loaded one. After that, the next <code>Track</code> returns a pose in the new map.</li>
-</ol>
-<p><b>Camera moves during startup, then a map load is requested — what behavior do we support?</b></p>
-<p>During the load, the user keeps calling <code>Track</code> for every frame and keeps receiving a pose. After the map is applied, the next <code>Track</code> returns the real robot pose in the loaded map.</p>
-<p><b>Example: car at 80 km/h, cuVSLAM starts, then 3 minutes / ~4 km later a map load is requested — what is expected?</b></p>
-<p>The user supplies a localization image + timestamp + prior for the “current” moment (e.g. timestamp = 3 min). Even if loading takes time (e.g. 10 s), poses over that interval are reconciled to the localized pose at that timestamp. History before that timestamp is dropped.</p>
-<p><b>Ten minutes later another map load — what is expected?</b></p>
-<p>Same pattern: timestamp = 13 min (for example), current image and prior. As in step 3, previous history is replaced when localization succeeds.</p>
-<p><b>What if the map has nothing around the location?</b></p>
-<p><code>LocalizeInMap</code> fails (<code>finish_cb</code> with failure); cuVSLAM keeps the current map.</p>
-<p><b>What if the map is wrong (e.g. from a different session)?</b></p>
-<p>There is no automatic repair. If the user needs a full reset (for example, tracking was lost a minute ago), they must reinitialize cuVSLAM.</p>
-<p><b>What if the map is huge and load takes minutes?</b></p>
-<p>After the load, odometry since the localization timestamp is applied at the localized pose. cuVSLAM has <code>retention_time</code>—history older than that window cannot be used; localization with too-old timestamps fails.</p>
-<p>In “connected to database” setups, loading is often a quick reconnect and the map is ready immediately.</p>
-<h1><a class="anchor" id="autotoc_md4"></a>
-Load map under the hood</h1>
-<p>I'm a Robot: <a class="el" href="a00139.html">load_map_mermaid.md</a>.</p>
-<p><img src="load_map.png" alt="Load map under the hood" class="inline"/></p>
-<p>**<code>Slam::Track()</code>**</p>
-<ul>
-<li>Accumulate odometry between keyframes.</li>
-<li>Append new keyframe to the end of the tail.</li>
-</ul>
-<p>**<code>Slam::BackgroundThread::ProcessMessage</code>**</p>
-<ul>
-<li>Update state in the past if localize or find-FC runs.</li>
-<li>Recalculate poses from the updated segment to the latest.</li>
-</ul>
-<h1><a class="anchor" id="autotoc_md5"></a>
-Use cases</h1>
-<ol type="1">
-<li>The user calls localize with a timestamp <b>≥</b> the last pose in the tail. Odometry inputs with older timestamps are ignored until a newer timestamp arrives.</li>
-<li>The user calls localize with a timestamp <b>outside</b> the retention window. Localization returns failure.</li>
-<li>The user calls localize with a fresh timestamp <b>before</b> the last pose in the tail. The localized pose is injected at the correct place in the tail (same idea as FindLC).</li>
-</ol>
-<hr  />
-<p>Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved. </p>
-</div></div><!-- contents -->
-</div><!-- PageDoc -->
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a61a7f5c82b62bd034b74defd6a2e2657"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00138.html#a61a7f5c82b62bd034b74defd6a2e2657">GroundConstraint</a> (const <a class="el" href="a00022.html">Pose</a> &amp;world_from_ground, const <a class="el" href="a00022.html">Pose</a> &amp;initial_pose_on_ground, const <a class="el" href="a00022.html">Pose</a> &amp;initial_pose_in_space)</td></tr>
+<tr class="separator:a61a7f5c82b62bd034b74defd6a2e2657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9db74e3f0f297c0be388de5af73278d0"><td class="memItemLeft" align="right" valign="top"><a id="a9db74e3f0f297c0be388de5af73278d0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>GroundConstraint</b> (const <a class="el" href="a00138.html">GroundConstraint</a> &amp;)=delete</td></tr>
+<tr class="separator:a9db74e3f0f297c0be388de5af73278d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96f82ccc02843f92629661b214feaa84"><td class="memItemLeft" align="right" valign="top"><a id="a96f82ccc02843f92629661b214feaa84"></a>
+<a class="el" href="a00138.html">GroundConstraint</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="a00138.html">GroundConstraint</a> &amp;)=delete</td></tr>
+<tr class="separator:a96f82ccc02843f92629661b214feaa84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4f752a6deaca6ad0b020f06a355ae6a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00138.html#af4f752a6deaca6ad0b020f06a355ae6a">GroundConstraint</a> (<a class="el" href="a00138.html">GroundConstraint</a> &amp;&amp;other) noexcept</td></tr>
+<tr class="separator:af4f752a6deaca6ad0b020f06a355ae6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae35b2e2b61b84b1f936bb75555705549"><td class="memItemLeft" align="right" valign="top"><a class="el" href="a00138.html">GroundConstraint</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00138.html#ae35b2e2b61b84b1f936bb75555705549">operator=</a> (<a class="el" href="a00138.html">GroundConstraint</a> &amp;&amp;other) noexcept</td></tr>
+<tr class="separator:ae35b2e2b61b84b1f936bb75555705549"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2134013bde4364ae2d54ecbfbd92ca82"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00138.html#a2134013bde4364ae2d54ecbfbd92ca82">AddNextPose</a> (const <a class="el" href="a00022.html">Pose</a> &amp;next_pose_in_space)</td></tr>
+<tr class="separator:a2134013bde4364ae2d54ecbfbd92ca82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35baba3ee1ed6e919ab057fbd85a2017"><td class="memItemLeft" align="right" valign="top"><a class="el" href="a00022.html">Pose</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00138.html#a35baba3ee1ed6e919ab057fbd85a2017">GetPoseOnGround</a> () const</td></tr>
+<tr class="separator:a35baba3ee1ed6e919ab057fbd85a2017"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Ground constraint</p>
+<p>The ground constraint is a post-processing tool to constrain 3d poses from <a class="el" href="a00074.html" title="Visual Inertial Odometry (VIO) Tracker.">Odometry</a> on the ground plane. Because of the drifts or failures after some time, 3D poses from odometry will have roll and pitch, even if the robot moves on a flat surface. To resolve it, <a class="el" href="a00138.html">GroundConstraint</a> will integrate 2d deltas in each frame, removing roll and pitch angles on small deltas. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a61a7f5c82b62bd034b74defd6a2e2657"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61a7f5c82b62bd034b74defd6a2e2657">&#9670;&nbsp;</a></span>GroundConstraint() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">cuvslam::GroundConstraint::GroundConstraint </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="a00022.html">Pose</a> &amp;&#160;</td>
+          <td class="paramname"><em>world_from_ground</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="a00022.html">Pose</a> &amp;&#160;</td>
+          <td class="paramname"><em>initial_pose_on_ground</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="a00022.html">Pose</a> &amp;&#160;</td>
+          <td class="paramname"><em>initial_pose_in_space</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Construct a ground constraint integrator. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">world_from_ground</td><td>Ground plane pose in world frame </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">initial_pose_on_ground</td><td>Initial pose projected on ground in world frame </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">initial_pose_in_space</td><td>Initial unconstrained pose in world frame </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">std::runtime_error</td><td>on initialization failure </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af4f752a6deaca6ad0b020f06a355ae6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4f752a6deaca6ad0b020f06a355ae6a">&#9670;&nbsp;</a></span>GroundConstraint() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">cuvslam::GroundConstraint::GroundConstraint </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="a00138.html">GroundConstraint</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move constructor </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">other</td><td>other ground constraint </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="ae35b2e2b61b84b1f936bb75555705549"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae35b2e2b61b84b1f936bb75555705549">&#9670;&nbsp;</a></span>operator=()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="a00138.html">GroundConstraint</a>&amp; cuvslam::GroundConstraint::operator= </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="a00138.html">GroundConstraint</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Move assignment operator </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">other</td><td>other ground constraint </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>reference to this </dd></dl>
+
+</div>
+</div>
+<a id="a2134013bde4364ae2d54ecbfbd92ca82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2134013bde4364ae2d54ecbfbd92ca82">&#9670;&nbsp;</a></span>AddNextPose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cuvslam::GroundConstraint::AddNextPose </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="a00022.html">Pose</a> &amp;&#160;</td>
+          <td class="paramname"><em>next_pose_in_space</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Add next pose in space (3D) to the integrator. Removes roll and pitch after projecting to the ground plane. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">next_pose_in_space</td><td>Next pose in world frame </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a35baba3ee1ed6e919ab057fbd85a2017"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35baba3ee1ed6e919ab057fbd85a2017">&#9670;&nbsp;</a></span>GetPoseOnGround()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="a00022.html">Pose</a> cuvslam::GroundConstraint::GetPoseOnGround </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Get current pose constrained to the ground plane in world frame. </p><dl class="section return"><dt>Returns</dt><dd>pose on the ground plane in world frame </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

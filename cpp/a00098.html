@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: Member List</title>
+<title>cuVSLAM API Reference: cuvslam::Result&lt; T &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -68,36 +68,118 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00101.html">Slam</a></li>  </ul>
+<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00098.html">Result</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="a00095.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">cuvslam::Slam Member List</div>  </div>
+<div class="title">cuvslam::Result&lt; T &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="a00101.html">cuvslam::Slam</a>, including all inherited members.</p>
-<table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#aeddf36890061f059821304864d33b8f0">DataLayer</a> enum name</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#a1f3668315d67a7b3c8d59321c78c90c9">DisableReadingData</a>(DataLayer layer)</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#aae45268644ac11a1051c27f3112de803">EnableReadingData</a>(DataLayer layer, uint32_t max_items_count)</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#abf3dfdf85809f5d6f625dde40cd757b6">GetAllSlamPoses</a>(std::vector&lt; PoseStamped &gt; &amp;poses, uint32_t max_poses_count=0) const</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a066b0ded4496e05216537bb397821fa4">GetDefaultConfig</a>()</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#a170442166f1a6bad81d0fdfe041f1ae8">GetLoopClosurePoses</a>(std::vector&lt; PoseStamped &gt; &amp;poses) const</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#acd93fc69aee537208f0ceebb5a580ebe">GetSlamMetrics</a>(Metrics &amp;metrics) const</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#abe8fc88466f7f4459634c49ce75aee7e">ImageSet</a> typedef</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a683c87268afdf53ce70263391b37a6d3">LocalizeFinishCB</a> typedef</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#aca1271da3b2f00b46c32a276afffe112">LocalizeInMap</a>(const std::string_view &amp;folder_name, int64_t timestamp_ns, const Pose &amp;guess_pose, const ImageSet &amp;images, const LocalizationSettings &amp;settings, LocalizeStartCB start_cb, LocalizeFinishCB finish_cb)</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a2e24cc2247547c973059f3e908319068">LocalizeStartCB</a> typedef</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#aafc5d240948636064552eb7bdb51d7ab">ReadLandmarks</a>(DataLayer layer)</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a97cf163e72e32c16e547a954748bfd8d">ReadPoseGraph</a>()</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#ae6af24f1dbfa1ec33b3b9f933ac396e1">SaveMap</a>(const std::string_view &amp;folder_name, std::function&lt; void(bool success)&gt; callback) const</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a4d68089b5aeee7e719cd5050f7100235">Slam</a>(const Rig &amp;rig, const std::vector&lt; uint8_t &gt; &amp;primary_cameras, const Config &amp;config=GetDefaultConfig())</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#a2dcd0d252799e8f90a93d1900785669b">Slam</a>(Slam &amp;&amp;other) noexcept</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00101.html#a2a35b467c10255b5622fe0e9cb8deacf">Track</a>(const Odometry::State &amp;state, const Pose *gt_pose=nullptr)</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00101.html#a6c065232b6218d90cae810a2c8f483fc">~Slam</a>()</td><td class="entry"><a class="el" href="a00101.html">cuvslam::Slam</a></td><td class="entry"></td></tr>
-</table></div><!-- contents -->
+<p><a class="el" href="a00098.html" title="Result type that can hold either success data or error information.">Result</a> type that can hold either success data or error information.  
+ <a href="a00098.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a85839a2e8f7c821783b608729295fc3b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="a00098.html">Result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00098.html#a85839a2e8f7c821783b608729295fc3b">Success</a> (T &amp;&amp;value)</td></tr>
+<tr class="separator:a85839a2e8f7c821783b608729295fc3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f2d06598a301458884634bed3e03420"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="a00098.html">Result</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00098.html#a0f2d06598a301458884634bed3e03420">Error</a> (std::string_view message)</td></tr>
+<tr class="separator:a0f2d06598a301458884634bed3e03420"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a195c942ec8036e5351db6d4e8086674c"><td class="memItemLeft" align="right" valign="top"><a id="a195c942ec8036e5351db6d4e8086674c"></a>
+std::optional&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00098.html#a195c942ec8036e5351db6d4e8086674c">data</a></td></tr>
+<tr class="memdesc:a195c942ec8036e5351db6d4e8086674c"><td class="mdescLeft">&#160;</td><td class="mdescRight">data <br /></td></tr>
+<tr class="separator:a195c942ec8036e5351db6d4e8086674c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42fcb5a27dbadaf058b555a80c513e74"><td class="memItemLeft" align="right" valign="top"><a id="a42fcb5a27dbadaf058b555a80c513e74"></a>
+std::string_view&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00098.html#a42fcb5a27dbadaf058b555a80c513e74">error_message</a></td></tr>
+<tr class="memdesc:a42fcb5a27dbadaf058b555a80c513e74"><td class="mdescLeft">&#160;</td><td class="mdescRight">error message <br /></td></tr>
+<tr class="separator:a42fcb5a27dbadaf058b555a80c513e74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><h3>template&lt;typename T&gt;<br />
+struct cuvslam::Result&lt; T &gt;</h3>
+
+<p><a class="el" href="a00098.html" title="Result type that can hold either success data or error information.">Result</a> type that can hold either success data or error information. </p>
+<p>For use in callbacks. <a class="el" href="a00098.html#a42fcb5a27dbadaf058b555a80c513e74" title="error message">Result::error_message</a> should not outlive the callback scope. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a85839a2e8f7c821783b608729295fc3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85839a2e8f7c821783b608729295fc3b">&#9670;&nbsp;</a></span>Success()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="a00098.html">Result</a> <a class="el" href="a00098.html">cuvslam::Result</a>&lt; T &gt;::Success </td>
+          <td>(</td>
+          <td class="paramtype">T &amp;&amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Create a success result </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>data </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="a00098.html" title="Result type that can hold either success data or error information.">Result</a> </dd></dl>
+
+</div>
+</div>
+<a id="a0f2d06598a301458884634bed3e03420"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f2d06598a301458884634bed3e03420">&#9670;&nbsp;</a></span>Error()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="el" href="a00098.html">Result</a> <a class="el" href="a00098.html">cuvslam::Result</a>&lt; T &gt;::Error </td>
+          <td>(</td>
+          <td class="paramtype">std::string_view&#160;</td>
+          <td class="paramname"><em>message</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Create an error result </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">message</td><td>error message </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="a00098.html" title="Result type that can hold either success data or error information.">Result</a> </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

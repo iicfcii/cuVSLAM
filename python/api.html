@@ -122,6 +122,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.OdometryMode.Inertial"><code class="docutils literal notranslate"><span class="pre">OdometryMode.Inertial</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.OdometryMode.RGBD"><code class="docutils literal notranslate"><span class="pre">OdometryMode.RGBD</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.OdometryMode.Mono"><code class="docutils literal notranslate"><span class="pre">OdometryMode.Mono</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.OdometryMode.Multisensor"><code class="docutils literal notranslate"><span class="pre">OdometryMode.Multisensor</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#cuvslam.core.Odometry.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
@@ -133,6 +134,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.enable_observations_export"><code class="docutils literal notranslate"><span class="pre">Config.enable_observations_export</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.max_frame_delta_s"><code class="docutils literal notranslate"><span class="pre">Config.max_frame_delta_s</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.multicam_mode"><code class="docutils literal notranslate"><span class="pre">Config.multicam_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.multisensor_settings"><code class="docutils literal notranslate"><span class="pre">Config.multisensor_settings</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.odometry_mode"><code class="docutils literal notranslate"><span class="pre">Config.odometry_mode</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.rectified_stereo_camera"><code class="docutils literal notranslate"><span class="pre">Config.rectified_stereo_camera</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.Config.rgbd_settings"><code class="docutils literal notranslate"><span class="pre">Config.rgbd_settings</span></code></a></li>
@@ -145,6 +147,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.RGBDSettings.depth_camera_id"><code class="docutils literal notranslate"><span class="pre">RGBDSettings.depth_camera_id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.RGBDSettings.depth_scale_factor"><code class="docutils literal notranslate"><span class="pre">RGBDSettings.depth_scale_factor</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.RGBDSettings.enable_depth_stereo_tracking"><code class="docutils literal notranslate"><span class="pre">RGBDSettings.enable_depth_stereo_tracking</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cuvslam.core.Odometry.MultisensorSettings"><code class="docutils literal notranslate"><span class="pre">MultisensorSettings</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.MultisensorSettings.depth_camera_ids"><code class="docutils literal notranslate"><span class="pre">MultisensorSettings.depth_camera_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.MultisensorSettings.depth_scale_factor"><code class="docutils literal notranslate"><span class="pre">MultisensorSettings.depth_scale_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.core.Odometry.MultisensorSettings.enable_depth_stereo_tracking"><code class="docutils literal notranslate"><span class="pre">MultisensorSettings.enable_depth_stereo_tracking</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#cuvslam.core.Slam.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
@@ -185,7 +193,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#cuvslam.Tracker"><code class="docutils literal notranslate"><span class="pre">Tracker</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.OdometryConfig"><code class="docutils literal notranslate"><span class="pre">Tracker.OdometryConfig</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.OdometryRGBDSettings"><code class="docutils literal notranslate"><span class="pre">Tracker.OdometryRGBDSettings</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.TrackOptions"><code class="docutils literal notranslate"><span class="pre">Tracker.TrackOptions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.OdometryMultisensorSettings"><code class="docutils literal notranslate"><span class="pre">Tracker.OdometryMultisensorSettings</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.Internals"><code class="docutils literal notranslate"><span class="pre">Tracker.Internals</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.SlamConfig"><code class="docutils literal notranslate"><span class="pre">Tracker.SlamConfig</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.SlamMetrics"><code class="docutils literal notranslate"><span class="pre">Tracker.SlamMetrics</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.SlamLocalizationSettings"><code class="docutils literal notranslate"><span class="pre">Tracker.SlamLocalizationSettings</span></code></a></li>
@@ -202,6 +211,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_last_gravity"><code class="docutils literal notranslate"><span class="pre">Tracker.get_last_gravity()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_final_landmarks"><code class="docutils literal notranslate"><span class="pre">Tracker.get_final_landmarks()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_all_slam_poses"><code class="docutils literal notranslate"><span class="pre">Tracker.get_all_slam_poses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.save_map"><code class="docutils literal notranslate"><span class="pre">Tracker.save_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.localize_in_map"><code class="docutils literal notranslate"><span class="pre">Tracker.localize_in_map()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_slam_landmarks"><code class="docutils literal notranslate"><span class="pre">Tracker.get_slam_landmarks()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_pose_graph"><code class="docutils literal notranslate"><span class="pre">Tracker.get_pose_graph()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuvslam.Tracker.get_slam_metrics"><code class="docutils literal notranslate"><span class="pre">Tracker.get_slam_metrics()</span></code></a></li>
@@ -645,6 +656,11 @@ The world coordinate frame is an arbitrary 3D coordinate frame, corresponding to
 <span class="sig-name descname"><span class="pre">Mono</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#cuvslam.core.Odometry.OdometryMode.Mono" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.OdometryMode.Multisensor">
+<span class="sig-name descname"><span class="pre">Multisensor</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#cuvslam.core.Odometry.OdometryMode.Multisensor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -696,6 +712,12 @@ The world coordinate frame is an arbitrary 3D coordinate frame, corresponding to
 <dt class="sig sig-object py" id="cuvslam.core.Odometry.Config.multicam_mode">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multicam_mode</span></span><a class="headerlink" href="#cuvslam.core.Odometry.Config.multicam_mode" title="Link to this definition"></a></dt>
 <dd><p>See <code class="xref py py-class docutils literal notranslate"><span class="pre">Odometry.MulticameraMode</span></code></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.Config.multisensor_settings">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multisensor_settings</span></span><a class="headerlink" href="#cuvslam.core.Odometry.Config.multisensor_settings" title="Link to this definition"></a></dt>
+<dd><p>Settings for Multisensor odometry mode. See <code class="xref py py-class docutils literal notranslate"><span class="pre">Odometry.MultisensorSettings</span></code></p>
 </dd></dl>
 
 <dl class="py property">
@@ -756,6 +778,36 @@ The world coordinate frame is an arbitrary 3D coordinate frame, corresponding to
 <dt class="sig sig-object py" id="cuvslam.core.Odometry.RGBDSettings.enable_depth_stereo_tracking">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enable_depth_stereo_tracking</span></span><a class="headerlink" href="#cuvslam.core.Odometry.RGBDSettings.enable_depth_stereo_tracking" title="Link to this definition"></a></dt>
 <dd><p>Whether to enable stereo tracking between depth-aligned camera and other cameras</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.MultisensorSettings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cuvslam.core.Odometry.</span></span><span class="sig-name descname"><span class="pre">MultisensorSettings</span></span><a class="headerlink" href="#cuvslam.core.Odometry.MultisensorSettings" title="Link to this definition"></a></dt>
+<dd><p>Settings for the EXPERIMENTAL unified Multisensor odometry mode. Tracking may be inaccurate or fail for some sensor configurations and scenes.</p>
+<p>Multisensor supports any mix of plain RGB cameras, RGB-D cameras (any subset of the rig), and a single optional IMU. The fields here describe depth handling; IMU presence is auto-detected from <cite>Rig.imus</cite>.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.MultisensorSettings.depth_camera_ids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth_camera_ids</span></span><a class="headerlink" href="#cuvslam.core.Odometry.MultisensorSettings.depth_camera_ids" title="Link to this definition"></a></dt>
+<dd><p>Camera indices that supply depth images. Empty list = no depth (multi-RGB only).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.MultisensorSettings.depth_scale_factor">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth_scale_factor</span></span><a class="headerlink" href="#cuvslam.core.Odometry.MultisensorSettings.depth_scale_factor" title="Link to this definition"></a></dt>
+<dd><p>Scale factor for depth measurements (applied uniformly to every depth camera).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.core.Odometry.MultisensorSettings.enable_depth_stereo_tracking">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enable_depth_stereo_tracking</span></span><a class="headerlink" href="#cuvslam.core.Odometry.MultisensorSettings.enable_depth_stereo_tracking" title="Link to this definition"></a></dt>
+<dd><p>True (multisensor mode benefits from cross-camera 2D tracks).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Allow stereo 2D tracking between depth-aligned cameras and other cameras. Default</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -946,51 +998,189 @@ providing a simplified interface for common use cases.</p>
 <dd><p>alias of <a class="reference internal" href="#cuvslam.core.Odometry.RGBDSettings" title="cuvslam.pycuvslam.Odometry.RGBDSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">RGBDSettings</span></code></a></p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cuvslam.Tracker.OdometryMultisensorSettings">
+<span class="sig-name descname"><span class="pre">OdometryMultisensorSettings</span></span><a class="headerlink" href="#cuvslam.Tracker.OdometryMultisensorSettings" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#cuvslam.core.Odometry.MultisensorSettings" title="cuvslam.pycuvslam.Odometry.MultisensorSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultisensorSettings</span></code></a></p>
+</dd></dl>
+
 <dl class="py class">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TrackOptions</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Internals</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals" title="Link to this definition"></a></dt>
 <dd><p>Per-frame tracking options (stateless).</p>
 <p>These options apply only to the current track() call and do not affect subsequent frames.
-Instantiate with TrackOptions() and override only the fields you need.</p>
+Instantiate with Internals() and override only the fields you need.</p>
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.border_bottom">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_bottom</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.border_bottom" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.border_bottom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_bottom</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.border_bottom" title="Link to this definition"></a></dt>
 <dd><p>Bottom border to ignore in pixels</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.border_left">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_left</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.border_left" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.border_left">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_left</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.border_left" title="Link to this definition"></a></dt>
 <dd><p>Left border to ignore in pixels</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.border_right">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_right</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.border_right" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.border_right">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_right</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.border_right" title="Link to this definition"></a></dt>
 <dd><p>Right border to ignore in pixels</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.border_top">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_top</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.border_top" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.border_top">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">border_top</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.border_top" title="Link to this definition"></a></dt>
 <dd><p>Top border to ignore in pixels</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.box3_prefilter">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">box3_prefilter</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.box3_prefilter" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.box3_prefilter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">box3_prefilter</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.box3_prefilter" title="Link to this definition"></a></dt>
 <dd><p>Enable box filter preprocessing</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.kf_max_timedelta_between_kfs_s">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kf_max_timedelta_between_kfs_s</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.kf_max_timedelta_between_kfs_s" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_blending_alpha">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_blending_alpha</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_blending_alpha" title="Link to this definition"></a></dt>
+<dd><p>Blending weight between visual and depth ICP residuals</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_cost_thresh">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_cost_thresh</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_cost_thresh" title="Link to this definition"></a></dt>
+<dd><p>ICP convergence threshold</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_huber_depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_huber_depth</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_huber_depth" title="Link to this definition"></a></dt>
+<dd><p>ICP depth Huber robustifier scale</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_huber_vis">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_huber_vis</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_huber_vis" title="Link to this definition"></a></dt>
+<dd><p>ICP visual reprojection Huber robustifier scale</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_lambda">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_lambda</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_lambda" title="Link to this definition"></a></dt>
+<dd><p>ICP Levenberg-Marquardt damping factor</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_max_iteration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_max_iteration</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_max_iteration" title="Link to this definition"></a></dt>
+<dd><p>Maximum ICP solver iterations without depth pyramid</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_max_scale_level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_max_scale_level</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_max_scale_level" title="Link to this definition"></a></dt>
+<dd><p>Coarsest ICP pyramid level to start from</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_min_scale_level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_min_scale_level</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_min_scale_level" title="Link to this definition"></a></dt>
+<dd><p>Finest ICP pyramid level to process</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.icp_num_iters_per_scale">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">icp_num_iters_per_scale</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.icp_num_iters_per_scale" title="Link to this definition"></a></dt>
+<dd><p>ICP iterations per pyramid level</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.imu_pnp_max_iteration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imu_pnp_max_iteration</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.imu_pnp_max_iteration" title="Link to this definition"></a></dt>
+<dd><p>Maximum inertial PNP solver iterations</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.imu_pnp_min_observations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imu_pnp_min_observations</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.imu_pnp_min_observations" title="Link to this definition"></a></dt>
+<dd><p>Minimum observations required for inertial PNP</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.imu_pnp_robustifier_scale">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imu_pnp_robustifier_scale</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.imu_pnp_robustifier_scale" title="Link to this definition"></a></dt>
+<dd><p>Inertial PNP robustifier scale</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_cost_thresh">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_cost_thresh</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_cost_thresh" title="Link to this definition"></a></dt>
+<dd><p>Inertial-mode stereo fallback PNP convergence threshold</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_filter_new_observations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_filter_new_observations</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_filter_new_observations" title="Link to this definition"></a></dt>
+<dd><p>Whether inertial-mode stereo fallback PNP filters observations per camera</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_huber">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_huber</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_huber" title="Link to this definition"></a></dt>
+<dd><p>Inertial-mode stereo fallback PNP Huber robustifier scale</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_lambda">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_lambda</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_lambda" title="Link to this definition"></a></dt>
+<dd><p>Inertial-mode stereo fallback PNP Levenberg-Marquardt damping factor</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_max_iteration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_max_iteration</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_max_iteration" title="Link to this definition"></a></dt>
+<dd><p>Maximum inertial-mode stereo fallback PNP solver iterations</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_max_obs_per_camera">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_max_obs_per_camera</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_max_obs_per_camera" title="Link to this definition"></a></dt>
+<dd><p>Maximum inertial-mode stereo fallback PNP observations per camera</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_min_observations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_min_observations</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_min_observations" title="Link to this definition"></a></dt>
+<dd><p>Minimum observations required for inertial-mode stereo fallback PNP</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_point_z_thresh">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_point_z_thresh</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_point_z_thresh" title="Link to this definition"></a></dt>
+<dd><p>Minimum inertial-mode stereo fallback PNP landmark z-depth</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.inertial_stereo_pnp_recalculate_cov">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inertial_stereo_pnp_recalculate_cov</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.inertial_stereo_pnp_recalculate_cov" title="Link to this definition"></a></dt>
+<dd><p>Whether inertial-mode stereo fallback PNP recomputes covariance after a successful solve</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.kf_max_timedelta_between_kfs_s">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kf_max_timedelta_between_kfs_s</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.kf_max_timedelta_between_kfs_s" title="Link to this definition"></a></dt>
 <dd><p>Maximum time delta between consecutive keyframes (seconds)</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.kf_survivor_from_last">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kf_survivor_from_last</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.kf_survivor_from_last" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.kf_override_frame_selection">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kf_override_frame_selection</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.kf_override_frame_selection" title="Link to this definition"></a></dt>
+<dd><p>Optional per-frame keyframe decision. None uses automatic keyframe selection, True forces keyframe, False forces non-keyframe.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.kf_survivor_from_last">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kf_survivor_from_last</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.kf_survivor_from_last" title="Link to this definition"></a></dt>
 <dd><p>survivor tracks percentage (0-100)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -1000,15 +1190,69 @@ Instantiate with TrackOptions() and override only the fields you need.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.num_desired_tracks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_desired_tracks</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.num_desired_tracks" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.num_desired_tracks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_desired_tracks</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.num_desired_tracks" title="Link to this definition"></a></dt>
 <dd><p>Number of desired feature tracks for this frame</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="cuvslam.Tracker.TrackOptions.ransac_filter">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ransac_filter</span></span><a class="headerlink" href="#cuvslam.Tracker.TrackOptions.ransac_filter" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.ransac_filter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ransac_filter</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.ransac_filter" title="Link to this definition"></a></dt>
 <dd><p>Enable RANSAC filtering</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_cost_thresh">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_cost_thresh</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_cost_thresh" title="Link to this definition"></a></dt>
+<dd><p>Visual PNP convergence threshold</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_filter_new_observations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_filter_new_observations</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_filter_new_observations" title="Link to this definition"></a></dt>
+<dd><p>Whether visual PNP filters observations per camera</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_huber">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_huber</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_huber" title="Link to this definition"></a></dt>
+<dd><p>Visual PNP Huber robustifier scale</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_lambda">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_lambda</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_lambda" title="Link to this definition"></a></dt>
+<dd><p>Visual PNP Levenberg-Marquardt damping factor</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_max_iteration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_max_iteration</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_max_iteration" title="Link to this definition"></a></dt>
+<dd><p>Maximum visual PNP solver iterations</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_max_obs_per_camera">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_max_obs_per_camera</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_max_obs_per_camera" title="Link to this definition"></a></dt>
+<dd><p>Maximum visual PNP observations per camera</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_min_observations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_min_observations</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_min_observations" title="Link to this definition"></a></dt>
+<dd><p>Minimum observations required for visual PNP</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_point_z_thresh">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_point_z_thresh</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_point_z_thresh" title="Link to this definition"></a></dt>
+<dd><p>Minimum visual PNP landmark z-depth</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cuvslam.Tracker.Internals.vo_pnp_recalculate_cov">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vo_pnp_recalculate_cov</span></span><a class="headerlink" href="#cuvslam.Tracker.Internals.vo_pnp_recalculate_cov" title="Link to this definition"></a></dt>
+<dd><p>Whether visual PNP recomputes covariance after a successful solve</p>
 </dd></dl>
 
 </dd></dl>
@@ -1117,7 +1361,7 @@ Instantiate with TrackOptions() and override only the fields you need.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cuvslam.Tracker.track">
-<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.Tracker.TrackOptions" title="cuvslam.pycuvslam.Odometry.TrackOptions"><span class="pre">TrackOptions</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#cuvslam.PoseEstimate" title="cuvslam.pycuvslam.PoseEstimate"><span class="pre">PoseEstimate</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/cuvslam/tracker.html#Tracker.track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cuvslam.Tracker.track" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.Tracker.Internals" title="cuvslam.pycuvslam.Odometry.Internals"><span class="pre">Internals</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#cuvslam.PoseEstimate" title="cuvslam.pycuvslam.PoseEstimate"><span class="pre">PoseEstimate</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/cuvslam/tracker.html#Tracker.track"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cuvslam.Tracker.track" title="Link to this definition"></a></dt>
 <dd><p>Track a rig pose using current image frame.</p>
 <p>This method combines odometry and SLAM processing in a single call.</p>
 <p>In inertial mode, if visual odometry tracker fails to compute a pose, the function returns the position calculated from a user-provided IMU data.
@@ -1138,11 +1382,11 @@ If data for a camera is not available, pass empty array or tensor for that camer
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>timestamp</strong> (<em>int</em>) – Images timestamp in nanoseconds</p></li>
-<li><p><strong>images</strong> (<em>List</em><em>[</em><em>Any</em><em>]</em>) – List of numpy arrays or tensors containing the camera images</p></li>
-<li><p><strong>masks</strong> (<em>List</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Optional list of numpy arrays or tensors containing masks for the images</p></li>
-<li><p><strong>depths</strong> (<em>List</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Optional list of numpy arrays or tensors containing depth images</p></li>
+<li><p><strong>images</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>]</em>) – List of numpy arrays or tensors containing the camera images</p></li>
+<li><p><strong>masks</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Optional list of numpy arrays or tensors containing masks for the images</p></li>
+<li><p><strong>depths</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Optional list of numpy arrays or tensors containing depth images</p></li>
 <li><p><strong>gt_pose</strong> (<a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><em>Pose</em></a><em> | </em><em>None</em>) – Optional ground truth pose. Should be provided if <cite>gt_align_mode</cite> is enabled, otherwise should be None.</p></li>
-<li><p><strong>options</strong> (<a class="reference internal" href="#cuvslam.Tracker.TrackOptions" title="cuvslam.pycuvslam.Odometry.TrackOptions"><em>TrackOptions</em></a><em> | </em><em>None</em>) – Optional per-frame options that override default settings for this call only.</p></li>
+<li><p><strong>internals</strong> (<a class="reference internal" href="#cuvslam.Tracker.Internals" title="cuvslam.pycuvslam.Odometry.Internals"><em>Internals</em></a><em> | </em><em>None</em>) – Optional internal per-frame solver parameters (see cuvslam2_internal.h).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1162,7 +1406,7 @@ Pose: If SLAM is enabled, the computed pose estimate from SLAM, otherwise <cite>
 <dt class="sig sig-object py" id="cuvslam.Tracker.register_imu_measurement">
 <span class="sig-name descname"><span class="pre">register_imu_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imu_measurement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.ImuMeasurement" title="cuvslam.pycuvslam.ImuMeasurement"><span class="pre">ImuMeasurement</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cuvslam/tracker.html#Tracker.register_imu_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cuvslam.Tracker.register_imu_measurement" title="Link to this definition"></a></dt>
 <dd><p>Register an IMU measurement with the tracker.</p>
-<p>Requires Inertial odometry mode.</p>
+<p>Requires Inertial odometry mode, or Multisensor odometry mode with an IMU configured in the rig.</p>
 <p>If visual odometry loses camera position, it briefly continues execution
 using user-provided IMU measurements while trying to recover the position.
 <a class="reference internal" href="#cuvslam.Tracker.register_imu_measurement" title="cuvslam.Tracker.register_imu_measurement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_imu_measurement()</span></code></a> should be called in between image acquisitions
@@ -1178,7 +1422,7 @@ however many IMU measurements there are:</p>
 </ul>
 <p>Higher frequency IMU measurements are recommended.</p>
 <p>IMU sensors and cameras clocks must be synchronized. <a class="reference internal" href="#cuvslam.Tracker.track" title="cuvslam.Tracker.track"><code class="xref py py-meth docutils literal notranslate"><span class="pre">track()</span></code></a> and <a class="reference internal" href="#cuvslam.Tracker.register_imu_measurement" title="cuvslam.Tracker.register_imu_measurement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_imu_measurement()</span></code></a>
-must be called in strict ascending order of timestamps.</p>
+must be called in non-decreasing timestamp order; camera frame timestamps must be strictly increasing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1228,7 +1472,7 @@ Requires <cite>enable_landmarks_export=True</cite> in <a class="reference intern
 <dd><p>Get gravity acceleration (m/s²) in the rig / VO frame; +Y is down (OpenCV), so the vector is
 approximately <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">+g,</span> <span class="pre">0]</span></code> when the rig is upright.
 Returns <cite>None</cite> if gravity is not yet available.
-Requires Inertial mode (<cite>odometry_mode=OdometryMode.Inertial</cite> in <a class="reference internal" href="#cuvslam.Tracker.OdometryConfig" title="cuvslam.Tracker.OdometryConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OdometryConfig</span></code></a>)</p>
+Requires Inertial mode, or Multisensor mode with an IMU configured in the rig.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list[float] | None</p>
@@ -1265,6 +1509,57 @@ With this method, on the other hand, you will have smooth output because it reca
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>List</em>[<em>PoseStamped</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cuvslam.Tracker.save_map">
+<span class="sig-name descname"><span class="pre">save_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cuvslam/tracker.html#Tracker.save_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cuvslam.Tracker.save_map" title="Link to this definition"></a></dt>
+<dd><p>Save SLAM database (map) to a folder asynchronously.
+This folder will be created, if it does not exist.
+<strong>WARNING</strong>: <em>Contents of the folder will be overwritten.</em>
+This method can work asynchronously depending on the <cite>sync_mode</cite> parameter in <cite>Slam.Config</cite>.
+In both cases, the callback will be called with a flag indicating if the map was saved successfully.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder_name</strong> (<em>str</em>) – Folder name where SLAM database will be saved</p></li>
+<li><p><strong>callback</strong> (<em>Callable</em><em>[</em><em>[</em><em>bool</em><em>]</em><em>, </em><em>None</em><em>]</em>) – Function to be called when save is complete (takes bool success parameter)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cuvslam.Tracker.localize_in_map">
+<span class="sig-name descname"><span class="pre">localize_in_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess_pose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#cuvslam.core.Slam.LocalizationSettings" title="cuvslam.pycuvslam.Slam.LocalizationSettings"><span class="pre">LocalizationSettings</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_cb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finish_cb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><span class="pre">Pose</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cuvslam/tracker.html#Tracker.localize_in_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cuvslam.Tracker.localize_in_map" title="Link to this definition"></a></dt>
+<dd><p>Localize in the existing database (map) asynchronously.</p>
+<p>Finds the position of the camera in existing SLAM database.
+If successful, sets the SLAM pose to the found position.
+This method works asynchronously depending on the <cite>sync_mode</cite> parameter in <cite>Slam.Config</cite>.
+In both cases, the callback will be called with localization result or error message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder_name</strong> (<em>str</em>) – Folder name which stores saved SLAM database</p></li>
+<li><p><strong>timestamp</strong> (<em>int</em>) – Time in nanoseconds for the localized pose</p></li>
+<li><p><strong>guess_pose</strong> (<a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><em>Pose</em></a>) – Proposed pose where the robot might be</p></li>
+<li><p><strong>images</strong> (<em>Sequence</em><em>[</em><em>Any</em><em>]</em>) – List of numpy arrays or tensors containing the camera images</p></li>
+<li><p><strong>settings</strong> (<a class="reference internal" href="#cuvslam.core.Slam.LocalizationSettings" title="cuvslam.pycuvslam.Slam.LocalizationSettings"><em>LocalizationSettings</em></a>) – Localization settings</p></li>
+<li><p><strong>start_cb</strong> (<em>Callable</em><em>[</em><em>[</em><em>]</em><em>, </em><em>None</em><em>]</em>) – Function to be called when localization is started</p></li>
+<li><p><strong>finish_cb</strong> (<em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="#cuvslam.Pose" title="cuvslam.pycuvslam.Pose"><em>Pose</em></a><em> | </em><em>None</em><em>, </em><em>str</em><em>]</em><em>, </em><em>None</em><em>]</em>) – Function to be called when localization is complete (takes &lt;Pose | None&gt;
+result and error message parameters)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If SLAM is not enabled.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>

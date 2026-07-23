@@ -47,6 +47,9 @@ Data Structures
 .. autoclass:: cuvslam.core.Odometry.RGBDSettings
    :members:
 
+.. autoclass:: cuvslam.core.Odometry.MultisensorSettings
+   :members:
+
 .. autoclass:: cuvslam.core.Slam.Config
    :members:
 
@@ -62,7 +65,7 @@ Tracker class
 .. autoclass:: Tracker
    :members:
    :undoc-members:
-   :exclude-members: save_map, localize_in_map, OdometryMode, MulticameraMode
+   :exclude-members: OdometryMode, MulticameraMode
 
 Functions
 ---------

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: Load map under the hood (Mermaid)</title>
+<title>cuVSLAM API Reference: cuVSLAM: Load Map</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,60 +69,84 @@ $(function() {
 </div><!-- top -->
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">Load map under the hood (Mermaid) </div>  </div>
+<div class="title">cuVSLAM: Load Map </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Diagrams referenced from <a class="el" href="a00138.html">load_map.md</a>.</p>
-<h1><a class="anchor" id="autotoc_md8"></a>
-System overview</h1>
-<div class="fragment"><div class="line">flowchart LR</div>
-<div class="line">  subgraph RT[&quot;SLAM&quot;]</div>
-<div class="line">    direction TB</div>
-<div class="line">    SM[SaveMap]</div>
-<div class="line">    LC[Localize]</div>
-<div class="line">    TR[&quot;Track (realtime)&quot;]</div>
-<div class="line">  end</div>
+<div class="textblock"><p>The only mode we currently support is <b>LocalizeInMap</b>. In this mode, we first localize against the map; if that succeeds, the current map is replaced by the loaded one. We do <b>not</b> support unlocalized loading (load now, localize later).</p>
+<p>Users who call <b>LocalizeInMap</b> must provide:</p>
+<ul>
+<li>Image(s)</li>
+<li>Timestamp (<code>timestamp_ns</code> on the call, aligned with the images)</li>
+<li>Prior 3D pose (<code>guess_pose</code>)</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md3"></a>
+API</h1>
+<div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> Track(<span class="keyword">const</span> Odometry::State&amp; state, <span class="keyword">const</span> Pose* gt_pose = <span class="keyword">nullptr</span>);</div>
 <div class="line"> </div>
-<div class="line">  subgraph Q[&quot;ThreadSafeMessageQueue&quot;]</div>
-<div class="line">    direction LR</div>
-<div class="line">    m1[AddKF] --- m2[FindLC] --- m3[AddKF] --- m4[SaveMap] --- m5[&quot;...&quot;] --- m6[FindLC] --- m7[Localize] --- m8[AddKF]</div>
-<div class="line">  end</div>
+<div class="line">Pose GetPose() <span class="keyword">const</span>;</div>
+</div><!-- fragment --><div class="fragment"><div class="line"> </div>
+<div class="line"><span class="keywordtype">void</span> SaveMap(<span class="keyword">const</span> std::string_view&amp; folder_name,</div>
+<div class="line">             std::function&lt;<span class="keywordtype">void</span>(<span class="keywordtype">bool</span> success)&gt; callback) <span class="keyword">const</span>;</div>
+</div><!-- fragment --><div class="fragment"><div class="line"><span class="keyword">using</span> LocalizeStartCB = std::function&lt;void()&gt;;</div>
+<div class="line"><span class="keyword">using</span> LocalizeFinishCB = std::function&lt;void(<span class="keyword">const</span> Result&lt;Pose&gt;&amp; result)&gt;;</div>
 <div class="line"> </div>
-<div class="line">  subgraph BG[&quot;SLAM&quot;]</div>
-<div class="line">    direction TB</div>
-<div class="line">    BT[&quot;BackgroundThread (non-realtime)&lt;br/&gt;while true: process_message&quot;]</div>
-<div class="line">    MAP[(map)]</div>
-<div class="line">    BT --- MAP</div>
-<div class="line">  end</div>
-<div class="line"> </div>
-<div class="line">  TAIL[(ThreadSafe Tail)]</div>
-<div class="line"> </div>
-<div class="line">  RT --&gt; Q --&gt; BG</div>
-<div class="line">  TR &lt;--&gt; TAIL</div>
-<div class="line">  TAIL &lt;--&gt; BT</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md9"></a>
-ThreadSafe tail (keyframe chain)</h1>
-<div class="fragment"><div class="line">flowchart LR</div>
-<div class="line">  subgraph TAIL[&quot;ThreadSafe Tail (keyframe chain, time →)&quot;]</div>
-<div class="line">    direction LR</div>
-<div class="line">    KF1((KF1)) --&gt; KF2((KF2)) --&gt; KF3((KF3)) --&gt; KF4((KF4)) --&gt; KF5((KF5)) --&gt; KF6((KF6)) --&gt; KF7((KF7)) --&gt; KF8((KF8))</div>
-<div class="line">  end</div>
-<div class="line"> </div>
-<div class="line">  L1[&quot;Localized in map pose&lt;br/&gt;near the prior&quot;]</div>
-<div class="line">  L2[&quot;LC if found&lt;br/&gt;already applied&quot;]</div>
-<div class="line">  L3[&quot;Current KF processing&lt;br/&gt;in background thread&quot;]</div>
-<div class="line">  L4[&quot;In queue for AddKF&lt;br/&gt;and FindLC&quot;]</div>
-<div class="line">  L5[&quot;Current SlamPose&quot;]</div>
-<div class="line"> </div>
-<div class="line">  L1 -.-&gt; KF1</div>
-<div class="line">  L2 -.-&gt; KF2</div>
-<div class="line">  L2 -.-&gt; KF3</div>
-<div class="line">  L3 -.-&gt; KF4</div>
-<div class="line">  L4 -.-&gt; KF5</div>
-<div class="line">  L4 -.-&gt; KF6</div>
-<div class="line">  L4 -.-&gt; KF7</div>
-<div class="line">  L5 -.-&gt; KF8</div>
-</div><!-- fragment --><hr  />
+<div class="line"><span class="keywordtype">void</span> LocalizeInMap(<span class="keyword">const</span> std::string_view&amp; folder_name, int64_t timestamp_ns, <span class="keyword">const</span> Pose&amp; guess_pose,</div>
+<div class="line">                   <span class="keyword">const</span> ImageSet&amp; images, <span class="keyword">const</span> LocalizationSettings&amp; settings, LocalizeStartCB start_cb,</div>
+<div class="line">                   LocalizeFinishCB finish_cb);</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
+QA</h1>
+<p><b>Loading of maps — what do we want to support, and how should it work?</b></p>
+<p>Current functionality is minimal, solid, bug-free, and well-tested:</p>
+<ul>
+<li>No external GlobalLocalizer (no GPS, no <code>slam.SetPose</code>).</li>
+<li>No tracking-lost recovery support.</li>
+<li>No user-provided tracking-lost detection.</li>
+<li>Sensor fusion is limited to visual SBA only.</li>
+</ul>
+<p>There is a single cuVSLAM system that runs until the first tracking loss. Users can save and load maps without interrupting real-time processing.</p>
+<p><b>Scenarios</b></p>
+<ol type="1">
+<li>The user creates a <code>cuVSLAM::Slam</code> instance.</li>
+<li>The user feeds images to <code>Odometry::Track</code>, passes each successful odometry state to <code>Slam::Track</code>, and obtains the current SLAM pose with <code>Slam::GetPose</code>. This is a low-latency, real-time path (e.g. ~100 fps); the background thread runs LC search and map building.</li>
+<li>At some point the user calls <code>SaveMap</code> (possibly from another thread). The map is written to disk by the background path; <code>Track</code> is not blocked by that work.</li>
+<li>At some point the user calls <code>LocalizeInMap</code> with image(s), timestamp, and prior. The background thread matches the images to the on-disk map. On success it drops the current map and replaces it with the loaded one. After that, the first <code>GetPose</code> following the next <code>Track</code> reports a pose in the new map.</li>
+</ol>
+<p><b>Camera moves during startup, then a map load is requested — what behavior do we support?</b></p>
+<p>During the load, the user keeps calling <code>Track</code> for every frame and reading the current pose with <code>GetPose</code>. After the map is applied, the first <code>GetPose</code> following the next <code>Track</code> returns the real robot pose in the loaded map.</p>
+<p><b>Example: car at 80 km/h, cuVSLAM starts, then 3 minutes / ~4 km later a map load is requested — what is expected?</b></p>
+<p>The user supplies a localization image + timestamp + prior for the “current” moment (e.g. timestamp = 3 min). Even if loading takes time (e.g. 10 s), poses over that interval are reconciled to the localized pose at that timestamp. History before that timestamp is dropped.</p>
+<p><b>Ten minutes later another map load — what is expected?</b></p>
+<p>Same pattern: timestamp = 13 min (for example), current image and prior. As in step 3, previous history is replaced when localization succeeds.</p>
+<p><b>What if the map has nothing around the location?</b></p>
+<p><code>LocalizeInMap</code> fails (<code>finish_cb</code> with failure); cuVSLAM keeps the current map.</p>
+<p><b>What if the map is wrong (e.g. from a different session)?</b></p>
+<p>There is no automatic repair. If the user needs a full reset (for example, tracking was lost a minute ago), they must reinitialize cuVSLAM.</p>
+<p><b>What if the map is huge and load takes minutes?</b></p>
+<p>After the load, odometry since the localization timestamp is applied at the localized pose. cuVSLAM has <code>retention_time</code>—history older than that window cannot be used; localization with too-old timestamps fails.</p>
+<p>In “connected to database” setups, loading is often a quick reconnect and the map is ready immediately.</p>
+<h1><a class="anchor" id="autotoc_md5"></a>
+Load map under the hood</h1>
+<p>I'm a Robot: <a class="el" href="a00140.html">load_map_mermaid.md</a>.</p>
+<p><img src="load_map.png" alt="Load map under the hood" class="inline"/></p>
+<p>**<code>Slam::Track()</code>**</p>
+<ul>
+<li>Accumulate odometry between keyframes.</li>
+<li>Append new keyframe to the end of the tail.</li>
+</ul>
+<p>**<code>Slam::BackgroundThread::ProcessMessage</code>**</p>
+<ul>
+<li>Update state in the past if localize or find-FC runs.</li>
+<li>Recalculate poses from the updated segment to the latest.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md6"></a>
+Use cases</h1>
+<ol type="1">
+<li>The user calls localize with a timestamp <b>≥</b> the last pose in the tail. Odometry inputs with older timestamps are ignored until a newer timestamp arrives.</li>
+<li>The user calls localize with a timestamp <b>outside</b> the retention window. Localization returns failure.</li>
+<li>The user calls localize with a fresh timestamp <b>before</b> the last pose in the tail. The localized pose is injected at the correct place in the tail (same idea as FindLC).</li>
+</ol>
+<hr  />
 <p>Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

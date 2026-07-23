@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: Member List</title>
+<title>cuVSLAM API Reference: cuvslam::PoseEstimate Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -68,22 +68,69 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00065.html">Observation</a></li>  </ul>
+<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00062.html">PoseEstimate</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="a00059.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">cuvslam::Observation Member List</div>  </div>
+<div class="title">cuvslam::PoseEstimate Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="a00065.html">cuvslam::Observation</a>, including all inherited members.</p>
-<table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="a00065.html#a134ff72bb5f62f5c804793e18bbd693d">camera_index</a></td><td class="entry"><a class="el" href="a00065.html">cuvslam::Observation</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00065.html#a45b9d0240b2cf6aab35dedc5af4a1b14">id</a></td><td class="entry"><a class="el" href="a00065.html">cuvslam::Observation</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="a00065.html#a1d3ecaa86cb7da67746d4582187b9335">u</a></td><td class="entry"><a class="el" href="a00065.html">cuvslam::Observation</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00065.html#aabbb53d07f0de3c52b2a987a0929ea15">v</a></td><td class="entry"><a class="el" href="a00065.html">cuvslam::Observation</a></td><td class="entry"></td></tr>
-</table></div><!-- contents -->
+<p><a class="el" href="a00038.html" title="Rig consisting of cameras and IMU sensors.">Rig</a> pose estimate from the tracker.  
+ <a href="a00062.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a116da8c391843d6c84907c2981fc4337"><td class="memItemLeft" align="right" valign="top"><a id="a116da8c391843d6c84907c2981fc4337"></a>
+int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00062.html#a116da8c391843d6c84907c2981fc4337">timestamp_ns</a></td></tr>
+<tr class="memdesc:a116da8c391843d6c84907c2981fc4337"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="a00022.html">Pose</a> timestamp (in nanoseconds) will match image timestamp. <br /></td></tr>
+<tr class="separator:a116da8c391843d6c84907c2981fc4337"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa6a8c8ada7a46894c240c51647f07be"><td class="memItemLeft" align="right" valign="top"><a id="afa6a8c8ada7a46894c240c51647f07be"></a>
+std::optional&lt; <a class="el" href="a00058.html">PoseWithCovariance</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00062.html#afa6a8c8ada7a46894c240c51647f07be">world_from_rig</a></td></tr>
+<tr class="memdesc:afa6a8c8ada7a46894c240c51647f07be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transform from rig coordinate frame to world coordinate frame. <br /></td></tr>
+<tr class="separator:afa6a8c8ada7a46894c240c51647f07be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><a class="el" href="a00038.html" title="Rig consisting of cameras and IMU sensors.">Rig</a> pose estimate from the tracker. </p>
+<p>The rig coordinate frame is user-defined and depends on the extrinsic parameters of the cameras. The cameras' coordinate frames may not match the rig coordinate frame - depending on camers extrinsics. The world coordinate frame is an arbitrary 3D coordinate frame. It coincides with the rig coordinate frame at the first frame. </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a116da8c391843d6c84907c2981fc4337"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a116da8c391843d6c84907c2981fc4337">&#9670;&nbsp;</a></span>timestamp_ns</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int64_t cuvslam::PoseEstimate::timestamp_ns</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="a00022.html">Pose</a> timestamp (in nanoseconds) will match image timestamp. </p>
+
+</div>
+</div>
+<a id="afa6a8c8ada7a46894c240c51647f07be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa6a8c8ada7a46894c240c51647f07be">&#9670;&nbsp;</a></span>world_from_rig</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;<a class="el" href="a00058.html">PoseWithCovariance</a>&gt; cuvslam::PoseEstimate::world_from_rig</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Transform from rig coordinate frame to world coordinate frame. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

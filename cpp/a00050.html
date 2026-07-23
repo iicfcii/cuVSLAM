@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cuVSLAM API Reference: Member List</title>
+<title>cuVSLAM API Reference: cuvslam::ImuMeasurement Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -68,20 +68,88 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00053.html">PoseStamped</a></li>  </ul>
+<li class="navelem"><b>cuvslam</b></li><li class="navelem"><a class="el" href="a00050.html">ImuMeasurement</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="a00047.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">cuvslam::PoseStamped Member List</div>  </div>
+<div class="title">cuvslam::ImuMeasurement Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>This is the complete list of members for <a class="el" href="a00053.html">cuvslam::PoseStamped</a>, including all inherited members.</p>
-<table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="a00053.html#af20c7c1430b5b57bbe36d93a616547e8">pose</a></td><td class="entry"><a class="el" href="a00053.html">cuvslam::PoseStamped</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="a00053.html#a4779e9b73636ca30998be21f9fb0736f">timestamp_ns</a></td><td class="entry"><a class="el" href="a00053.html">cuvslam::PoseStamped</a></td><td class="entry"></td></tr>
-</table></div><!-- contents -->
+<p>IMU measurement.  
+ <a href="a00050.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ab05caae17f6dfbd978baf4bcf056b83a"><td class="memItemLeft" align="right" valign="top"><a id="ab05caae17f6dfbd978baf4bcf056b83a"></a>
+int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00050.html#ab05caae17f6dfbd978baf4bcf056b83a">timestamp_ns</a></td></tr>
+<tr class="memdesc:ab05caae17f6dfbd978baf4bcf056b83a"><td class="mdescLeft">&#160;</td><td class="mdescRight">IMU measurement timestamp in nanoseconds. <br /></td></tr>
+<tr class="separator:ab05caae17f6dfbd978baf4bcf056b83a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a816fc067ba6ee74904fc8ffe7907cd74"><td class="memItemLeft" align="right" valign="top"><a id="a816fc067ba6ee74904fc8ffe7907cd74"></a>
+Array&lt; 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00050.html#a816fc067ba6ee74904fc8ffe7907cd74">linear_accelerations</a></td></tr>
+<tr class="memdesc:a816fc067ba6ee74904fc8ffe7907cd74"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(m / s^2\) <br /></td></tr>
+<tr class="separator:a816fc067ba6ee74904fc8ffe7907cd74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af51802131893bd836d5c7cfd64ffccc4"><td class="memItemLeft" align="right" valign="top"><a id="af51802131893bd836d5c7cfd64ffccc4"></a>
+Array&lt; 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00050.html#af51802131893bd836d5c7cfd64ffccc4">angular_velocities</a></td></tr>
+<tr class="memdesc:af51802131893bd836d5c7cfd64ffccc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(rad / s\) <br /></td></tr>
+<tr class="separator:af51802131893bd836d5c7cfd64ffccc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>IMU measurement. </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="ab05caae17f6dfbd978baf4bcf056b83a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab05caae17f6dfbd978baf4bcf056b83a">&#9670;&nbsp;</a></span>timestamp_ns</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int64_t cuvslam::ImuMeasurement::timestamp_ns</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>IMU measurement timestamp in nanoseconds. </p>
+
+</div>
+</div>
+<a id="a816fc067ba6ee74904fc8ffe7907cd74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a816fc067ba6ee74904fc8ffe7907cd74">&#9670;&nbsp;</a></span>linear_accelerations</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Array&lt;3&gt; cuvslam::ImuMeasurement::linear_accelerations</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>\(m / s^2\) </p>
+
+</div>
+</div>
+<a id="af51802131893bd836d5c7cfd64ffccc4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af51802131893bd836d5c7cfd64ffccc4">&#9670;&nbsp;</a></span>angular_velocities</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Array&lt;3&gt; cuvslam::ImuMeasurement::angular_velocities</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>\(rad / s\) </p>
+
+</div>
+</div>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1

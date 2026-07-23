@@ -72,10 +72,13 @@ $(function() {
 <div class="title">cuVSLAM: CUDA-Accelerated Visual Odometry and Mapping </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md__cuvslam_cuvslam_doc_index"></a></p>
+<div class="textblock"><p><a class="anchor" id="md_doc_index"></a></p>
 <p>This page provides documentation for cuVSLAM C++ API.</p>
-<p>Two main classes are <code><a class="el" href="a00073.html" title="Visual Inertial Odometry (VIO) Tracker.">cuvslam::Odometry</a></code> and <code><a class="el" href="a00101.html">cuvslam::Slam</a></code>.</p>
-<p>For saving maps and relocalizing with <code>LocalizeInMap</code>, see <a class="el" href="a00138.html">load_map.md</a>.</p>
+<p>Two main classes are <code><a class="el" href="a00074.html" title="Visual Inertial Odometry (VIO) Tracker.">cuvslam::Odometry</a></code> and <code><a class="el" href="a00102.html">cuvslam::Slam</a></code>.</p>
+<h1><a class="anchor" id="autotoc_md0"></a>
+Tracking modes</h1>
+<p>The tracker supports several odometry modes — see <code><a class="el" href="a00074.html#a64cf4e7b6454d27f83ff6b999b746ecd" title="Odometry mode.">cuvslam::Odometry::OdometryMode</a></code> for the enum and per-mode requirements. <code>Multisensor</code> accepts at least one RGB-D camera or one overlapping camera pair, with an optional IMU, and requires a cuNLS-enabled build. It is configured through <code><a class="el" href="a00074.html#a00082" title="Multisensor odometry settings.">cuvslam::Odometry::MultisensorSettings</a></code>. A high-level mode chooser table lives in the top-level README's "Tracking modes" section.</p>
+<p>For saving maps and relocalizing with <code>LocalizeInMap</code>, see <a class="el" href="a00139.html">load_map.md</a>.</p>
 <hr  />
 <p>Copyright (c) 2026, NVIDIA CORPORATION. All rights reserved. </p>
 </div></div><!-- PageDoc -->

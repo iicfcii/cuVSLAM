@@ -119,19 +119,19 @@
       <li><a href="api.html#cuvslam.Camera.border_bottom">border_bottom (cuvslam.Camera property)</a>
 
       <ul>
-        <li><a href="api.html#cuvslam.Tracker.TrackOptions.border_bottom">(cuvslam.Tracker.TrackOptions property)</a>
+        <li><a href="api.html#cuvslam.Tracker.Internals.border_bottom">(cuvslam.Tracker.Internals property)</a>
 </li>
       </ul></li>
       <li><a href="api.html#cuvslam.Camera.border_left">border_left (cuvslam.Camera property)</a>
 
       <ul>
-        <li><a href="api.html#cuvslam.Tracker.TrackOptions.border_left">(cuvslam.Tracker.TrackOptions property)</a>
+        <li><a href="api.html#cuvslam.Tracker.Internals.border_left">(cuvslam.Tracker.Internals property)</a>
 </li>
       </ul></li>
       <li><a href="api.html#cuvslam.Camera.border_right">border_right (cuvslam.Camera property)</a>
 
       <ul>
-        <li><a href="api.html#cuvslam.Tracker.TrackOptions.border_right">(cuvslam.Tracker.TrackOptions property)</a>
+        <li><a href="api.html#cuvslam.Tracker.Internals.border_right">(cuvslam.Tracker.Internals property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -139,10 +139,10 @@
       <li><a href="api.html#cuvslam.Camera.border_top">border_top (cuvslam.Camera property)</a>
 
       <ul>
-        <li><a href="api.html#cuvslam.Tracker.TrackOptions.border_top">(cuvslam.Tracker.TrackOptions property)</a>
+        <li><a href="api.html#cuvslam.Tracker.Internals.border_top">(cuvslam.Tracker.Internals property)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions.box3_prefilter">box3_prefilter (cuvslam.Tracker.TrackOptions property)</a>
+      <li><a href="api.html#cuvslam.Tracker.Internals.box3_prefilter">box3_prefilter (cuvslam.Tracker.Internals property)</a>
 </li>
       <li><a href="api.html#cuvslam.Distortion.Brown">Brown (cuvslam.Distortion attribute)</a>
 
@@ -193,10 +193,16 @@
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.RGBDSettings.depth_camera_id">depth_camera_id (cuvslam.core.Odometry.RGBDSettings property)</a>
 </li>
+      <li><a href="api.html#cuvslam.core.Odometry.MultisensorSettings.depth_camera_ids">depth_camera_ids (cuvslam.core.Odometry.MultisensorSettings property)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cuvslam.core.Odometry.RGBDSettings.depth_scale_factor">depth_scale_factor (cuvslam.core.Odometry.RGBDSettings property)</a>
+      <li><a href="api.html#cuvslam.core.Odometry.MultisensorSettings.depth_scale_factor">depth_scale_factor (cuvslam.core.Odometry.MultisensorSettings property)</a>
+
+      <ul>
+        <li><a href="api.html#cuvslam.core.Odometry.RGBDSettings.depth_scale_factor">(cuvslam.core.Odometry.RGBDSettings property)</a>
 </li>
+      </ul></li>
       <li><a href="api.html#cuvslam.Distortion">Distortion (class in cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.Camera.distortion">distortion (cuvslam.Camera property)</a>
@@ -211,12 +217,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.Tracker.PoseGraph.edges">edges (cuvslam.Tracker.PoseGraph property)</a>
 </li>
-      <li><a href="api.html#cuvslam.core.Odometry.RGBDSettings.enable_depth_stereo_tracking">enable_depth_stereo_tracking (cuvslam.core.Odometry.RGBDSettings property)</a>
+      <li><a href="api.html#cuvslam.core.Odometry.MultisensorSettings.enable_depth_stereo_tracking">enable_depth_stereo_tracking (cuvslam.core.Odometry.MultisensorSettings property)</a>
+
+      <ul>
+        <li><a href="api.html#cuvslam.core.Odometry.RGBDSettings.enable_depth_stereo_tracking">(cuvslam.core.Odometry.RGBDSettings property)</a>
 </li>
-      <li><a href="api.html#cuvslam.core.Odometry.Config.enable_final_landmarks_export">enable_final_landmarks_export (cuvslam.core.Odometry.Config property)</a>
-</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.core.Odometry.Config.enable_final_landmarks_export">enable_final_landmarks_export (cuvslam.core.Odometry.Config property)</a>
+</li>
       <li><a href="api.html#cuvslam.core.Odometry.Config.enable_landmarks_export">enable_landmarks_export (cuvslam.core.Odometry.Config property)</a>
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.Config.enable_observations_export">enable_observations_export (cuvslam.core.Odometry.Config property)</a>
@@ -293,6 +303,24 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_blending_alpha">icp_blending_alpha (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_cost_thresh">icp_cost_thresh (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_huber_depth">icp_huber_depth (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_huber_vis">icp_huber_vis (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_lambda">icp_lambda (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_max_iteration">icp_max_iteration (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_max_scale_level">icp_max_scale_level (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_min_scale_level">icp_min_scale_level (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.icp_num_iters_per_scale">icp_num_iters_per_scale (cuvslam.Tracker.Internals property)</a>
+</li>
       <li><a href="api.html#cuvslam.Landmark.id">id (cuvslam.Landmark property)</a>
 
       <ul>
@@ -301,8 +329,14 @@
         <li><a href="api.html#cuvslam.Tracker.PoseGraphNode.id">(cuvslam.Tracker.PoseGraphNode property)</a>
 </li>
       </ul></li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.imu_pnp_max_iteration">imu_pnp_max_iteration (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.imu_pnp_min_observations">imu_pnp_min_observations (cuvslam.Tracker.Internals property)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.Tracker.Internals.imu_pnp_robustifier_scale">imu_pnp_robustifier_scale (cuvslam.Tracker.Internals property)</a>
+</li>
       <li><a href="api.html#cuvslam.ImuCalibration">ImuCalibration (class in cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.ImuMeasurement">ImuMeasurement (class in cuvslam)</a>
@@ -311,17 +345,37 @@
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.OdometryMode.Inertial">Inertial (cuvslam.core.Odometry.OdometryMode attribute)</a>
 </li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_cost_thresh">inertial_stereo_pnp_cost_thresh (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_filter_new_observations">inertial_stereo_pnp_filter_new_observations (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_huber">inertial_stereo_pnp_huber (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_lambda">inertial_stereo_pnp_lambda (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_max_iteration">inertial_stereo_pnp_max_iteration (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_max_obs_per_camera">inertial_stereo_pnp_max_obs_per_camera (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_min_observations">inertial_stereo_pnp_min_observations (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_point_z_thresh">inertial_stereo_pnp_point_z_thresh (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.inertial_stereo_pnp_recalculate_cov">inertial_stereo_pnp_recalculate_cov (cuvslam.Tracker.Internals property)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions.kf_max_timedelta_between_kfs_s">kf_max_timedelta_between_kfs_s (cuvslam.Tracker.TrackOptions property)</a>
+      <li><a href="api.html#cuvslam.Tracker.Internals.kf_max_timedelta_between_kfs_s">kf_max_timedelta_between_kfs_s (cuvslam.Tracker.Internals property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions.kf_survivor_from_last">kf_survivor_from_last (cuvslam.Tracker.TrackOptions property)</a>
+      <li><a href="api.html#cuvslam.Tracker.Internals.kf_override_frame_selection">kf_override_frame_selection (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.kf_survivor_from_last">kf_survivor_from_last (cuvslam.Tracker.Internals property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -347,6 +401,8 @@
 </li>
       <li><a href="api.html#cuvslam.core.Slam.LocalizationSettings">LocalizationSettings (class in cuvslam.core.Slam)</a>
 </li>
+      <li><a href="api.html#cuvslam.Tracker.localize_in_map">localize_in_map() (cuvslam.Tracker method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -367,10 +423,10 @@
 </li>
       <li><a href="api.html#cuvslam.Distortion.model">model (cuvslam.Distortion property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.core.Odometry.MulticameraMode.Moderate">Moderate (cuvslam.core.Odometry.MulticameraMode attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
@@ -385,6 +441,12 @@
       <li><a href="api.html#cuvslam.core.Odometry.OdometryMode.Multicamera">Multicamera (cuvslam.core.Odometry.OdometryMode attribute)</a>
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.MulticameraMode">MulticameraMode (class in cuvslam.core.Odometry)</a>
+</li>
+      <li><a href="api.html#cuvslam.core.Odometry.OdometryMode.Multisensor">Multisensor (cuvslam.core.Odometry.OdometryMode attribute)</a>
+</li>
+      <li><a href="api.html#cuvslam.core.Odometry.Config.multisensor_settings">multisensor_settings (cuvslam.core.Odometry.Config property)</a>
+</li>
+      <li><a href="api.html#cuvslam.core.Odometry.MultisensorSettings">MultisensorSettings (class in cuvslam.core.Odometry)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -402,7 +464,7 @@
 </li>
       <li><a href="api.html#cuvslam.Tracker.PoseGraph.nodes">nodes (cuvslam.Tracker.PoseGraph property)</a>
 </li>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions.num_desired_tracks">num_desired_tracks (cuvslam.Tracker.TrackOptions property)</a>
+      <li><a href="api.html#cuvslam.Tracker.Internals.num_desired_tracks">num_desired_tracks (cuvslam.Tracker.Internals property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -414,11 +476,13 @@
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.Config.odometry_mode">odometry_mode (cuvslam.core.Odometry.Config property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.Tracker.OdometryConfig">OdometryConfig (cuvslam.Tracker attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.core.Odometry.OdometryMode">OdometryMode (class in cuvslam.core.Odometry)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.OdometryMultisensorSettings">OdometryMultisensorSettings (cuvslam.Tracker attribute)</a>
 </li>
       <li><a href="api.html#cuvslam.Tracker.OdometryRGBDSettings">OdometryRGBDSettings (cuvslam.Tracker attribute)</a>
 </li>
@@ -464,7 +528,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions.ransac_filter">ransac_filter (cuvslam.Tracker.TrackOptions property)</a>
+      <li><a href="api.html#cuvslam.Tracker.Internals.ransac_filter">ransac_filter (cuvslam.Tracker.Internals property)</a>
 </li>
       <li><a href="api.html#cuvslam.core.Odometry.Config.rectified_stereo_camera">rectified_stereo_camera (cuvslam.core.Odometry.Config property)</a>
 </li>
@@ -494,6 +558,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.Tracker.save_map">save_map() (cuvslam.Tracker method)</a>
+</li>
       <li><a href="api.html#cuvslam.set_verbosity">set_verbosity() (in module cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.Camera.size">size (cuvslam.Camera property)</a>
@@ -536,13 +602,13 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.Tracker.Internals">Tracker.Internals (class in cuvslam)</a>
+</li>
       <li><a href="api.html#cuvslam.Tracker.PoseGraph">Tracker.PoseGraph (class in cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.Tracker.PoseGraphEdge">Tracker.PoseGraphEdge (class in cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.Tracker.PoseGraphNode">Tracker.PoseGraphNode (class in cuvslam)</a>
-</li>
-      <li><a href="api.html#cuvslam.Tracker.TrackOptions">Tracker.TrackOptions (class in cuvslam)</a>
 </li>
       <li><a href="api.html#cuvslam.Tracker.PoseGraphEdge.transform">transform (cuvslam.Tracker.PoseGraphEdge property)</a>
 </li>
@@ -576,11 +642,29 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.Observation.v">v (cuvslam.Observation property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cuvslam.core.Slam.LocalizationSettings.vertical_search_radius">vertical_search_radius (cuvslam.core.Slam.LocalizationSettings property)</a>
 </li>
       <li><a href="api.html#cuvslam.core.Slam.LocalizationSettings.vertical_step">vertical_step (cuvslam.core.Slam.LocalizationSettings property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_cost_thresh">vo_pnp_cost_thresh (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_filter_new_observations">vo_pnp_filter_new_observations (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_huber">vo_pnp_huber (cuvslam.Tracker.Internals property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_lambda">vo_pnp_lambda (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_max_iteration">vo_pnp_max_iteration (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_max_obs_per_camera">vo_pnp_max_obs_per_camera (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_min_observations">vo_pnp_min_observations (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_point_z_thresh">vo_pnp_point_z_thresh (cuvslam.Tracker.Internals property)</a>
+</li>
+      <li><a href="api.html#cuvslam.Tracker.Internals.vo_pnp_recalculate_cov">vo_pnp_recalculate_cov (cuvslam.Tracker.Internals property)</a>
 </li>
   </ul></td>
 </tr></table>
