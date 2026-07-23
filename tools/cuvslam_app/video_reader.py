@@ -25,8 +25,10 @@ from dataset_reader import DatasetReader, Processing
 class VideoReader(DatasetReader):
 
     def __init__(self, video_path: str, stereo_edex: Optional[str] = None, num_loops: int = 0,
-                 repeat_type: str = "none", gt_path: Optional[str] = None):
-        super().__init__(video_path, stereo_edex, num_loops, repeat_type, gt_path=gt_path)
+                 repeat_type: str = "none", gt_path: Optional[str] = None,
+                 target_fps: float = 0.0, drop_late_frames: bool = False):
+        super().__init__(video_path, stereo_edex, num_loops, repeat_type, gt_path=gt_path,
+                         target_fps=target_fps, drop_late_frames=drop_late_frames)
         self.replay_forward = True
         self.buffer = []  # Store frames in memory
 
@@ -69,7 +71,42 @@ class VideoReader(DatasetReader):
         timestamps = [0] * len(self.rig.cameras)
 
         frame_id = 0
+        scheduled_tick = 0
+        self.num_dropped_frames = 0
+        self.max_consecutive_dropped_frames = 0
+        if self.replay_scheduler is not None:
+            self.replay_scheduler.reset()
+
         while self.check_end_of_sequence():
+            if self.replay_scheduler is not None:
+                frames_to_drop, scheduled_tick = self.replay_scheduler.wait_for_frame()
+                first_dropped_tick = scheduled_tick - frames_to_drop
+                dropped_now = 0
+                for drop_offset in range(frames_to_drop):
+                    if drop_offset > 0 and not self.check_end_of_sequence():
+                        break
+                    if self.gt_from_shuttle and self.replay_forward and self.current_loop == 0:
+                        self.gt_transforms.append(None)
+                    if hasattr(processor, 'set_frame_metadata'):
+                        processor.set_frame_metadata(frame_id, {
+                            'loop': self.current_loop,
+                            'forward': self.replay_forward,
+                            'dropped': True,
+                            'scheduled_tick': first_dropped_tick + drop_offset,
+                            'source_frame': self.current_frame,
+                        })
+                    self.current_frame += 1 if self.replay_forward else -1
+                    frame_id += 1
+                    dropped_now += 1
+
+                self.num_dropped_frames += dropped_now
+                self.max_consecutive_dropped_frames = max(
+                    self.max_consecutive_dropped_frames, dropped_now)
+                if not self.check_end_of_sequence():
+                    break
+            else:
+                scheduled_tick = frame_id
+
             # Get frame from buffer
             images[0] = self.buffer[self.current_frame]
             raw_ts = self.current_frame * self.interval_ns
@@ -90,9 +127,17 @@ class VideoReader(DatasetReader):
             if hasattr(processor, 'set_frame_metadata'):
                 processor.set_frame_metadata(frame_id, {
                     'loop': self.current_loop,
-                    'forward': self.replay_forward
+                    'forward': self.replay_forward,
+                    'dropped': False,
+                    'scheduled_tick': scheduled_tick,
+                    'source_frame': self.current_frame,
                 })
 
             # Update frame counter based on direction
             self.current_frame = self.current_frame + (1 if self.replay_forward else -1)
             frame_id += 1
+
+        if self.replay_scheduler is not None:
+            print(
+                f"Real-time replay dropped {self.num_dropped_frames} whole frames "
+                f"(maximum consecutive: {self.max_consecutive_dropped_frames}).")

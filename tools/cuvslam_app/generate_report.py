@@ -46,6 +46,8 @@ def save_stats_to_json(stats, output_dir):
             'gt_n_error_segments': stat.gt_n_error_segments,
             'gt_simple_error': stat.gt_simple_error,
             'num_tracking_losts': stat.num_tracking_losts,
+            'num_dropped_frames': stat.num_dropped_frames,
+            'max_consecutive_dropped_frames': stat.max_consecutive_dropped_frames,
             'odometry_mode': stat.odometry_mode
         }
         stats_list.append(stat_dict)

@@ -13,7 +13,8 @@
 # of the software or derivative works thereof, you agree to be bound by this License.
 
 import os
-from typing import List, Sequence, Protocol, Optional, Dict
+import time
+from typing import Callable, Dict, List, Optional, Protocol, Sequence, Tuple
 import numpy as np
 
 import cuvslam as vslam
@@ -51,17 +52,69 @@ class Processing(Protocol):
         """Set metadata for a frame."""
         ...
 
+
+class ReplayScheduler:
+    """Pace replay against a monotonic clock and select the latest due frame."""
+
+    def __init__(self, target_fps: float, drop_late_frames: bool,
+                 clock: Callable[[], float] = time.monotonic,
+                 sleeper: Callable[[float], None] = time.sleep):
+        if target_fps <= 0:
+            raise ValueError("target_fps must be greater than zero")
+        self.period_s = 1.0 / target_fps
+        self.drop_late_frames = drop_late_frames
+        self.clock = clock
+        self.sleeper = sleeper
+        self.reset()
+
+    def reset(self) -> None:
+        self.start_time: Optional[float] = None
+        self.next_tick = 0
+
+    def wait_for_frame(self) -> Tuple[int, int]:
+        """Return (number of stale frames to drop, scheduled tick to process)."""
+        now = self.clock()
+        if self.start_time is None:
+            self.start_time = now
+
+        scheduled_tick = self.next_tick
+        deadline = self.start_time + scheduled_tick * self.period_s
+        if now < deadline:
+            self.sleeper(deadline - now)
+            now = self.clock()
+
+        dropped_frames = 0
+        if self.drop_late_frames:
+            due_tick = int(max(0.0, now - self.start_time) / self.period_s)
+            if due_tick > scheduled_tick:
+                dropped_frames = due_tick - scheduled_tick
+                scheduled_tick = due_tick
+
+        self.next_tick = scheduled_tick + 1
+        return dropped_frames, scheduled_tick
+
+
 class DatasetReader:
     def __init__(self, dataset_path: str, stereo_edex: Optional[str] = None,
                  num_loops: int = 0, repeat_type: str = "none",
-                 gt_path: Optional[str] = None):
+                 gt_path: Optional[str] = None, target_fps: float = 0.0,
+                 drop_late_frames: bool = False):
         repeat_type = (repeat_type or "none").lower()
         if repeat_type not in ("none", "repeat", "shuttle"):
             raise ValueError(f"Invalid repeat_type {repeat_type!r}; expected none|repeat|shuttle")
+        if target_fps < 0:
+            raise ValueError("target_fps must be non-negative")
+        if drop_late_frames and target_fps == 0:
+            raise ValueError("drop_late_frames requires target_fps to be greater than zero")
         self.dataset_path = dataset_path
         self.stereo_edex = stereo_edex
         self.num_loops = num_loops
         self.repeat_type = repeat_type
+        self.replay_scheduler = (
+            ReplayScheduler(target_fps, drop_late_frames) if target_fps > 0 else None
+        )
+        self.num_dropped_frames = 0
+        self.max_consecutive_dropped_frames = 0
         self.rig: Optional[vslam.Rig] = None
         self.total_frames = 0
         self.fps = 0
@@ -180,6 +233,10 @@ class DatasetReader:
         self.current_frame = 0
         self.current_loop = 0
         self.replay_forward = True
+        self.num_dropped_frames = 0
+        self.max_consecutive_dropped_frames = 0
+        if self.replay_scheduler is not None:
+            self.replay_scheduler.reset()
         if self.gt_from_shuttle:
             self.gt_transforms = []
 

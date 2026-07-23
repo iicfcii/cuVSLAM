@@ -114,3 +114,21 @@ with a `depth_id` and forwards its corresponding depth sequence; without depth, 
 an overlapping camera pair. An EDEX IMU is fused automatically. Multisensor currently supports
 pinhole cameras only. Multisensor tracking is experimental and may be inaccurate or fail for some
 sensor configurations and scenes.
+
+### Real-Time Replay with Frame Dropping
+
+Use wall-clock pacing to emulate a live camera. If processing falls behind, `--drop_late_frames`
+discards an entire synchronized camera frame (all RGB, mask, and depth inputs) before loading it.
+IMU measurements are never dropped.
+
+```bash
+./cuvslam_app.py \
+    --dataset=/path/to/edex_dataset \
+    --odometry_mode=multisensor \
+    --repeat_type=shuttle \
+    --num_loops=10 \
+    --target_fps=30 \
+    --drop_late_frames
+```
+
+Shuttle replay is not supported for Inertial mode or for Multisensor rigs containing an IMU.

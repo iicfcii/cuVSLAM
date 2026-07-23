@@ -62,6 +62,8 @@ class Stat:
     gt_n_error_segments: int = 0
     gt_simple_error: float = 0
     num_tracking_losts: int = 0
+    num_dropped_frames: int = 0
+    max_consecutive_dropped_frames: int = 0
     odometry_mode: str = ""
     # per-instance list of dicts {length, t_pct, r_deg_per_m}, populated by
     # metrics.calculate_sequence_errors in the segment branch.
@@ -301,6 +303,8 @@ class Tracker:
     def run_tracking_and_measure_performance(self, dataset, tracker_results: TrackerResults,
                                               processor=None):
         dataset.replay(processor if processor is not None else self)
+        self.stat.num_dropped_frames = dataset.num_dropped_frames
+        self.stat.max_consecutive_dropped_frames = dataset.max_consecutive_dropped_frames
 
         # if slam is enabled, overwrite all slam poses in the end after LCs and PGOs
         if self.slam_cfg:
@@ -446,14 +450,18 @@ def track(args: argparse.Namespace,
     if args.dataset.endswith('.mp4'):
         dataset = VideoReader(args.dataset, stereo_edex=args.config_path,
                               num_loops=args.num_loops, repeat_type=args.repeat_type,
-                              gt_path=getattr(args, 'gt_path', None))
+                              gt_path=getattr(args, 'gt_path', None),
+                              target_fps=getattr(args, 'target_fps', 0.0),
+                              drop_late_frames=getattr(args, 'drop_late_frames', False))
     else:
         dataset = EdexReader(args.dataset, stereo_edex=args.config_path,
                              num_loops=args.num_loops, odometry_mode=args.odometry_mode,
                              repeat_type=args.repeat_type,
                              cache_uncompressed=getattr(args, 'cache_uncompressed', False),
                              gt_path=getattr(args, 'gt_path', None),
-                             camera_ids=getattr(args, 'camera_ids', None))
+                             camera_ids=getattr(args, 'camera_ids', None),
+                             target_fps=getattr(args, 'target_fps', 0.0),
+                             drop_late_frames=getattr(args, 'drop_late_frames', False))
 
     tracker_results = TrackerResults()
     if args.sequence_title:
@@ -463,6 +471,10 @@ def track(args: argparse.Namespace,
         return tracker_results
 
     assert dataset.rig is not None
+    if (args.repeat_type == 'shuttle' and
+            args.odometry_mode == vslam.Tracker.OdometryMode.Multisensor and
+            dataset.rig.imus):
+        raise ValueError("Multisensor mode with IMU is not supported for shuttle mode")
     if refined_focal is not None and refined_principal is not None:
         dataset.rig.cameras[0].focal = refined_focal
         dataset.rig.cameras[0].principal = refined_principal
@@ -637,6 +649,10 @@ if __name__ == "__main__":
                         choices=['none', 'repeat', 'shuttle'],
                         help='Replay mode: none (single pass), repeat (forward N times), '
                              'shuttle (N forward+back cycles)', default='none')
+    parser.add_argument('--target_fps', type=float, default=0.0,
+                        help='Pace replay at this wall-clock frame rate; 0 disables pacing')
+    parser.add_argument('--drop_late_frames', action='store_true',
+                        help='With --target_fps, skip stale whole camera frames while preserving IMU samples')
     parser.add_argument('--blackout_period', type=int, default=0,
                         help='Blackout series period in frames (0 disables)')
     parser.add_argument('--blackout_duration', type=int, default=10,

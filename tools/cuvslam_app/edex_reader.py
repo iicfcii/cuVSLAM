@@ -32,8 +32,10 @@ class EdexReader(DatasetReader):
                  rgbd_mode: bool = False, repeat_type: str = "none",
                  cache_uncompressed: bool = False, gt_path: Optional[str] = None,
                  camera_ids: Optional[List[int]] = None,
-                 odometry_mode: Optional[vslam.Tracker.OdometryMode] = None):
-        super().__init__(edex_dir, stereo_edex, num_loops, repeat_type, gt_path=gt_path)
+                 odometry_mode: Optional[vslam.Tracker.OdometryMode] = None,
+                 target_fps: float = 0.0, drop_late_frames: bool = False):
+        super().__init__(edex_dir, stereo_edex, num_loops, repeat_type, gt_path=gt_path,
+                         target_fps=target_fps, drop_late_frames=drop_late_frames)
         if odometry_mode is None and rgbd_mode:
             odometry_mode = vslam.Tracker.OdometryMode.RGBD
         self.odometry_mode = odometry_mode
@@ -762,6 +764,58 @@ class EdexReader(DatasetReader):
         new_digits = f"{new_value:0{padding_length}d}"
         return re.sub(r"(\d+)(?=\D*$)", new_digits, input_str)
 
+    def _process_frame_imu(self, frame_data: dict, processor: Processing) -> None:
+        """Forward every IMU sample belonging to the current camera-frame interval."""
+        seam_skip_imu = (
+            self.repeat_type == "repeat"
+            and self.current_loop > 0
+            and self.current_frame == self.frame_id_start
+        )
+        in_repeat = self.repeat_type == "repeat"
+        if not frame_data["imu_data"] or seam_skip_imu:
+            return
+
+        for imu_measurement in frame_data["imu_data"]:
+            original_ts = self.normalize_timestamp_to_ns(imu_measurement['timestamp'])
+            if in_repeat and original_ts > self.max_ts:
+                continue
+            timestamp = self.adjust_timestamp(original_ts)
+            linear_accelerations = [
+                imu_measurement['LinearAccelerationX'],
+                -imu_measurement['LinearAccelerationY'],
+                -imu_measurement['LinearAccelerationZ']
+            ]
+            angular_velocities = [
+                imu_measurement['AngularVelocityX'],
+                -imu_measurement['AngularVelocityY'],
+                -imu_measurement['AngularVelocityZ']
+            ]
+            processor.process_imu(timestamp, linear_accelerations, angular_velocities)
+
+    def _store_frame_metadata(self, processor: Processing, frame_id: int,
+                              dropped: bool, scheduled_tick: int) -> None:
+        if hasattr(processor, 'set_frame_metadata'):
+            processor.set_frame_metadata(frame_id, {
+                'loop': self.current_loop,
+                'forward': self.replay_forward,
+                'dropped': dropped,
+                'scheduled_tick': scheduled_tick,
+                'source_frame': self.current_frame,
+            })
+
+    def _advance_frame(self) -> None:
+        self.current_frame += 1 if self.replay_forward else -1
+
+    def _drop_current_frame(self, processor: Processing, frame_id: int,
+                            scheduled_tick: int) -> None:
+        """Drop all camera/depth inputs while preserving IMU samples and timeline metadata."""
+        frame_data = self.frames[self.current_frame]
+        self._process_frame_imu(frame_data, processor)
+        if self.gt_from_shuttle and self.replay_forward and self.current_loop == 0:
+            self.gt_transforms.append(None)
+        self._store_frame_metadata(processor, frame_id, dropped=True, scheduled_tick=scheduled_tick)
+        self._advance_frame()
+
     def replay(self, processor: Processing):
         assert self.rig is not None
         # Iterate over events sorted by timestamp
@@ -770,7 +824,33 @@ class EdexReader(DatasetReader):
         depths = [np.array([]) for _ in self.rig.cameras] if self.depth_enabled else None
         timestamps = [0] * len(self.rig.cameras)
         frame_id = self.current_frame
+        scheduled_tick = 0
+        self.num_dropped_frames = 0
+        self.max_consecutive_dropped_frames = 0
+        if self.replay_scheduler is not None:
+            self.replay_scheduler.reset()
+
         while self.check_end_of_sequence():
+            if self.replay_scheduler is not None:
+                frames_to_drop, scheduled_tick = self.replay_scheduler.wait_for_frame()
+                first_dropped_tick = scheduled_tick - frames_to_drop
+                dropped_now = 0
+                for drop_offset in range(frames_to_drop):
+                    if drop_offset > 0 and not self.check_end_of_sequence():
+                        break
+                    self._drop_current_frame(
+                        processor, frame_id, first_dropped_tick + drop_offset)
+                    frame_id += 1
+                    dropped_now += 1
+
+                self.num_dropped_frames += dropped_now
+                self.max_consecutive_dropped_frames = max(
+                    self.max_consecutive_dropped_frames, dropped_now)
+                if not self.check_end_of_sequence():
+                    break
+            else:
+                scheduled_tick = frame_id
+
             frame_data = self.frames[self.current_frame]
             if depths is not None:
                 depths = [np.array([]) for _ in self.rig.cameras]
@@ -859,42 +939,7 @@ class EdexReader(DatasetReader):
                         depths[depth_id] = depth
 
             processor.process_images(frame_id, timestamps, images, masks, depths)
-
-            # In Repeat mode the IMU samples attached to frame 0 originally lived
-            # between "before-sequence" and frame 0; on loop wrap they would land
-            # immediately after the last frame of the previous loop and inject an
-            # impossible velocity at the seam. Skip them on every loop after the first.
-            seam_skip_imu = (
-                self.repeat_type == "repeat"
-                and self.current_loop > 0
-                and self.current_frame == self.frame_id_start
-            )
-            # Symmetric tail-skip: IMU samples whose original ts exceeds the last
-            # camera frame's ts (max_ts) sit AFTER the loop's last cam frame and
-            # would collide with the next loop's first cam frame on wrap.
-            in_repeat = self.repeat_type == "repeat"
-            if frame_data["imu_data"] and not seam_skip_imu:
-                imu_data = frame_data["imu_data"]
-                for imu_measurement in imu_data:
-                    # Normalize timestamp to integer nanoseconds (handles float/int and various scales).
-                    # adjust_timestamp() offsets by current_loop for Repeat mode; pass-through otherwise.
-                    # Shuttle blocks inertial mode upstream.
-                    original_ts = self.normalize_timestamp_to_ns(imu_measurement['timestamp'])
-                    if in_repeat and original_ts > self.max_ts:
-                        continue
-                    timestamp = self.adjust_timestamp(original_ts)
-                    # IMU data is stored in CUVSLAM coordinate system, convert it to Opencv coordinate system
-                    linear_accelerations = [
-                        imu_measurement['LinearAccelerationX'],
-                        -imu_measurement['LinearAccelerationY'],
-                        -imu_measurement['LinearAccelerationZ']
-                    ]
-                    angular_velocities = [
-                        imu_measurement['AngularVelocityX'],
-                        -imu_measurement['AngularVelocityY'],
-                        -imu_measurement['AngularVelocityZ']
-                    ]
-                    processor.process_imu(timestamp, linear_accelerations, angular_velocities)
+            self._process_frame_imu(frame_data, processor)
 
             # Store pose from first forward run as ground truth
             if self.gt_from_shuttle and self.replay_forward and self.current_loop == 0:
@@ -905,16 +950,15 @@ class EdexReader(DatasetReader):
                     else:
                         raise ValueError(f"Camera pose not found for frame {frame_id}")
 
-            # Store metadata about when this frame was processed
-            if hasattr(processor, 'set_frame_metadata'):
-                processor.set_frame_metadata(frame_id, {
-                    'loop': self.current_loop,
-                    'forward': self.replay_forward
-                })
-
-            # Update frame counter based on direction
-            self.current_frame = self.current_frame + (1 if self.replay_forward else -1)
+            self._store_frame_metadata(
+                processor, frame_id, dropped=False, scheduled_tick=scheduled_tick)
+            self._advance_frame()
             frame_id += 1
+
+        if self.replay_scheduler is not None:
+            print(
+                f"Real-time replay dropped {self.num_dropped_frames} whole frames "
+                f"(maximum consecutive: {self.max_consecutive_dropped_frames}).")
 
     def __del__(self):
         """Clean up tar archives when object is destroyed."""
