@@ -92,7 +92,7 @@ void run_sba(const UnifiedMap::SubMap& recent_map, const camera::Rig& rig, const
 
   // We will count observations for each point and will skip
   // points with insufficient number of observations.
-  std::unordered_map<LandmarkPtr, int> pointObservationCount;
+  std::unordered_map<LandmarkPtr, int> landmark_to_point_id;
   size_t total_observarions = 0;
 
   problem.points.reserve(1e4);
@@ -101,12 +101,15 @@ void run_sba(const UnifiedMap::SubMap& recent_map, const camera::Rig& rig, const
   {
     for (const auto& landmarks : recent_map.landmark_and_obs) {
       for (const auto& [landmark, obs] : landmarks) {
-        auto it = pointObservationCount.find(landmark);
-        if (it == pointObservationCount.end()) {
-          int point_id = static_cast<int>(problem.points.size());
-          pointObservationCount.insert(it, {landmark, point_id});
-          Vector3T point_w = *landmark->get_pose();
-          problem.points.push_back(point_w);
+        if (landmark_to_point_id.find(landmark) == landmark_to_point_id.end()) {
+          const std::optional<Vector3T> point_w = landmark->get_pose();
+          if (!point_w) {
+            continue;
+          }
+
+          const int point_id = static_cast<int>(problem.points.size());
+          landmark_to_point_id.emplace(landmark, point_id);
+          problem.points.push_back(*point_w);
         }
         total_observarions += obs.size();
       }
@@ -147,11 +150,12 @@ void run_sba(const UnifiedMap::SubMap& recent_map, const camera::Rig& rig, const
     const auto& landmarks = recent_map.landmark_and_obs[i];
     int pose_id = keyframe_to_pose_id.at(kf);
     for (const auto& [landmark, obs] : landmarks) {
-      if (!landmark->get_pose()) {
+      const auto point_it = landmark_to_point_id.find(landmark);
+      if (point_it == landmark_to_point_id.end()) {
         continue;
       }
 
-      int point_id = pointObservationCount.at(landmark);
+      const int point_id = point_it->second;
 
       for (const auto& o : obs) {
         problem.observation_xys.push_back(o.xy);
@@ -173,7 +177,7 @@ void run_sba(const UnifiedMap::SubMap& recent_map, const camera::Rig& rig, const
       kf->set_pose(problem.rig_from_world[pose_id]);
     }
 
-    for (auto& [l, point_id] : pointObservationCount) {
+    for (auto& [l, point_id] : landmark_to_point_id) {
       l->set_pose(problem.points[point_id]);
     }
   }
@@ -208,22 +212,22 @@ void run_imu_sba(const UnifiedMap::SubMap& recent_map, const Vector3T& gravity, 
 
   // We will count observations for each point and will skip
   // points with insufficient number of observations.
-  std::unordered_map<LandmarkPtr, int> pointObservationCount;
+  std::unordered_map<LandmarkPtr, int> landmark_to_point_id;
   size_t total_observarions = 0;
 
   // count observations for each 3D point
   {
     for (const auto& landmarks : recent_map.landmark_and_obs) {
       for (const auto& [landmark, obs] : landmarks) {
-        if (!landmark->get_pose()) {
-          continue;
-        }
-        auto it = pointObservationCount.find(landmark);
-        if (it == pointObservationCount.end()) {
-          int point_id = static_cast<int>(problem.points.size());
-          pointObservationCount.insert(it, {landmark, point_id});
-          Vector3T point_w = *landmark->get_pose();
-          problem.points.push_back(point_w);
+        if (landmark_to_point_id.find(landmark) == landmark_to_point_id.end()) {
+          const std::optional<Vector3T> point_w = landmark->get_pose();
+          if (!point_w) {
+            continue;
+          }
+
+          const int point_id = static_cast<int>(problem.points.size());
+          landmark_to_point_id.emplace(landmark, point_id);
+          problem.points.push_back(*point_w);
         }
         total_observarions += obs.size();
       }
@@ -254,11 +258,12 @@ void run_imu_sba(const UnifiedMap::SubMap& recent_map, const Vector3T& gravity, 
     const auto& landmarks = recent_map.landmark_and_obs[i];
     int pose_id = keyframe_to_pose_id.at(kf);
     for (const auto& [landmark, obs] : landmarks) {
-      if (!landmark->get_pose()) {
+      const auto point_it = landmark_to_point_id.find(landmark);
+      if (point_it == landmark_to_point_id.end()) {
         continue;
       }
 
-      int point_id = pointObservationCount.at(landmark);
+      const int point_id = point_it->second;
 
       for (const auto& o : obs) {
         problem.observation_xys.push_back(o.xy);
@@ -287,7 +292,7 @@ void run_imu_sba(const UnifiedMap::SubMap& recent_map, const Vector3T& gravity, 
       pose_id++;
     }
 
-    for (auto& [l, point_id] : pointObservationCount) {
+    for (auto& [l, point_id] : landmark_to_point_id) {
       l->set_pose(problem.points[point_id]);
     }
   }
