@@ -658,6 +658,7 @@ NB_MODULE(pycuvslam, m) {
                                               : Odometry::ImageSet();
             auto depth_set = depths.has_value() ? ImageSetFromNDArrays(depths.value(), timestamp, ArrayType::Depth)
                                                 : Odometry::ImageSet();
+            nb::gil_scoped_release release;
             return self.Track(image_set, mask_set, depth_set, internals.has_value() ? &*internals : nullptr);
           },
           nb::arg("timestamp"), nb::arg("images"), nb::arg("masks") = nb::none(), nb::arg("depths") = nb::none(),
