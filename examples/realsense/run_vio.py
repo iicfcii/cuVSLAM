@@ -14,6 +14,7 @@
 
 import queue
 import threading
+import time
 from collections import deque
 from dataclasses import dataclass
 from typing import Deque, List, Optional
@@ -32,6 +33,7 @@ IMU_FREQUENCY_ACCEL = 200
 IMU_FREQUENCY_GYRO = 200
 IMAGE_JITTER_THRESHOLD_NS = 35 * 1e6  # 35ms in nanoseconds
 IMU_JITTER_THRESHOLD_NS = 6 * 1e6  # 6ms in nanoseconds
+TRACKING_FRAME_BUDGET_S = 1.0 / FPS
 IMU_QUEUE_MAX_SIZE = IMU_FREQUENCY_ACCEL * 5
 SHOW_GRAVITY = False
 # Alternative mode: the stereo pair satisfies Multisensor's overlapping-camera minimum.
@@ -213,7 +215,15 @@ def camera_thread(
             last_tracker_timestamp = register_imu_until(
                 tracker, imu_queue, pending_imu, current_timestamp, last_tracker_timestamp
             )
+            tracking_start = time.perf_counter()
             odom_pose_estimate, _ = tracker.track(current_timestamp, images)
+            tracking_duration_s = time.perf_counter() - tracking_start
+            if tracking_duration_s > TRACKING_FRAME_BUDGET_S:
+                print(
+                    f"Warning: Tracking overrun at camera timestamp {current_timestamp}: "
+                    f"{tracking_duration_s * 1e3:.2f} ms exceeds "
+                    f"{TRACKING_FRAME_BUDGET_S * 1e3:.2f} ms frame budget"
+                )
             last_tracker_timestamp = current_timestamp
             odom_pose_with_cov = odom_pose_estimate.world_from_rig
             if odom_pose_with_cov is None:
@@ -281,7 +291,7 @@ def main() -> None:
 
     # Configure tracker
     cfg = vslam.Tracker.OdometryConfig(
-        async_sba=False,
+        async_sba=True,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
         debug_imu_mode=False,
