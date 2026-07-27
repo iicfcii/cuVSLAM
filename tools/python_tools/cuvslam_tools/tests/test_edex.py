@@ -28,6 +28,7 @@ class TestEdex(unittest.TestCase):
     def test_read_edex(self):
         edex = EDEXMetadata.read(DATA_DIR / "edex")
         self.assertEqual(edex.header.version, "0.9")
+        self.assertFalse(edex.header.rectified)
         self.assertEqual(edex.header.frame_start, 0)
         self.assertEqual(edex.header.frame_end, 1600)
         self.assertEqual(len(edex.header.cameras), 2)
@@ -111,6 +112,18 @@ class TestEdex(unittest.TestCase):
         edex = EDEXMetadata.read(DATA_DIR / "edex")
         with self.assertRaises(TypeError):
             EDEXMetadata(edex.header)
+
+    def test_rectified_round_trip(self):
+        edex = EDEXMetadata.read(DATA_DIR / "edex")
+        edex.header.rectified = True
+
+        with tempfile.NamedTemporaryFile(
+            mode="w+", delete=True, encoding="utf-8"
+        ) as temp_file:
+            edex.write(Path(temp_file.name))
+            round_trip = EDEXMetadata.read(Path(temp_file.name))
+
+        self.assertTrue(round_trip.header.rectified)
 
 
 if __name__ == "__main__":

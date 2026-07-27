@@ -46,6 +46,22 @@ class TestTrackerCli(unittest.TestCase):
         self.assertEqual(args.multicam_mode, "performance")
         self.assertEqual(args.odometry_mode, "multicamera")
 
+    def test_rectified_override_is_tristate(self):
+        parser = argparse.ArgumentParser(prog="cuvslam_tracker")
+        cli.add_tracker_arguments(parser)
+
+        self.assertIsNone(parser.parse_args([]).override_rectified_stereo_camera)
+        self.assertTrue(
+            parser.parse_args(
+                ["--override_rectified_stereo_camera=true"]
+            ).override_rectified_stereo_camera
+        )
+        self.assertFalse(
+            parser.parse_args(
+                ["--override_rectified_stereo_camera=false"]
+            ).override_rectified_stereo_camera
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
