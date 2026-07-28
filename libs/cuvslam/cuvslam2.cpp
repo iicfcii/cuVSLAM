@@ -482,6 +482,8 @@ Odometry::Odometry(const Rig& rig, const Config& cfg) {
   svo_settings.sof_settings.border_left = rig.cameras[0].border_left;
   svo_settings.sof_settings.border_right = rig.cameras[0].border_right;
   svo_settings.sof_settings.box3_prefilter = cfg.use_denoising;
+  svo_settings.sof_settings.min_depth = cfg.min_depth;
+  svo_settings.sof_settings.max_depth = cfg.max_depth;
   if (cfg.rectified_stereo_camera) {
     CheckRectifiedStereoCamera(rig);
     svo_settings.sof_settings.lr_tracker = sof::TrackerType::LKHorizontal;

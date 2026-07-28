@@ -495,6 +495,31 @@ See [Step 4: Mask static image areas](#step-4-mask-static-image-areas)
 - For stereo images, try to cut up to 10% from the left border of the left eye and up to 10% from the right border of
   the right eye to keep only the overlapped area.
 
+### Tune multicamera L2R depth range
+
+Applies only to Multicamera mode. cuVSLAM samples scene depth along each epipolar curve to seed initial guesses for
+the left-to-right (L2R) LK tracker. The sampled range must match the rig: too tight and near-camera features are
+dropped, too wide and the candidate list inflates and LK converges on decoys.
+
+Always set these to the actual near/far limits of your scene when you know them — the auto-detected defaults
+are a fallback for when the scene is unknown, not a target to leave in place. Tight bounds around the real depth
+range give shorter candidate lists, faster tracking, and fewer spurious matches.
+
+Auto-detected defaults (used only if you leave the values negative) are derived from the rig baseline:
+
+- Small stereo (~5–10 cm baseline, indoor / robot arm): `[0.1 m, 20 m]`.
+- KITTI-scale outdoor (~0.5 m baseline): `[7 m, 1000 m]`.
+
+Symptoms of a mismatched range: consistently low L2R success on near-camera or far-away features, or a quality
+drop after widening the range too much.
+
+**C++ API**
+
+```cpp
+cuvslam::Odometry::Config::min_depth  // meters; any negative value (e.g. -1) auto-detects
+cuvslam::Odometry::Config::max_depth  // meters; any negative value (e.g. -1) auto-detects
+```
+
 ## Step 9: IMU integration
 
 The cuVSLAM implementation of IMU fusion does not add extra accuracy in scenarios where visual input works, and the IMU can

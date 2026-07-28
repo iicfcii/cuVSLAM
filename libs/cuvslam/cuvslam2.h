@@ -509,6 +509,16 @@ public:
     RGBDSettings rgbd_settings;
     /// Multisensor odometry settings. Used only when odometry_mode == OdometryMode::Multisensor.
     MultisensorSettings multisensor_settings;
+    /// Minimum scene depth (meters) sampled along the epipolar curve when generating LK initial
+    /// guesses for left-to-right (L2R) tracking. ONLY used in Multicamera mode.
+    /// Any negative value (e.g. -1) auto-detects from the pair baseline: small stereo (~7 cm)
+    /// → 0.1 m, KITTI-scale (~0.5 m) → 7 m. Default: -1.f (auto).
+    float min_depth = -1.f;
+    /// Maximum scene depth (meters) sampled along the epipolar curve when generating LK initial
+    /// guesses for left-to-right (L2R) tracking. ONLY used in Multicamera mode.
+    /// Any negative value (e.g. -1) auto-detects from the pair baseline: small stereo (~7 cm)
+    /// → 20 m, KITTI-scale (~0.5 m) → 1000 m. Default: -1.f (auto).
+    float max_depth = -1.f;
   };
 
   // TODO(vikuznetsov): remove when https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165 is fixed
