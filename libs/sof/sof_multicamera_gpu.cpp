@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include "common/vector_2t.h"
@@ -54,6 +55,12 @@ MultiSOFGPU::MultiSOFGPU(const camera::Rig& rig, const camera::FrustumIntersecti
     auto& tracker_from_secondary_cam = secondary_from_primary_sof_[primary_cam_id];
     for (CameraId secondary_cam_id : secondary_cams) {
       auto tracker_ptr = CreateGPUTracker(sof_settings.lr_tracker);
+      // CreateGPUTracker returns nullptr for tracker types with no GPU implementation. Fail here
+      // rather than on the first Launch: asserts are compiled out in release builds, so the null
+      // would otherwise surface as a crash inside track_points.
+      if (tracker_ptr == nullptr) {
+        throw std::invalid_argument("MultiSOFGPU: lr_tracker type has no GPU implementation");
+      }
       tracker_from_secondary_cam[secondary_cam_id].tracker = std::move(tracker_ptr);
     }
   }
