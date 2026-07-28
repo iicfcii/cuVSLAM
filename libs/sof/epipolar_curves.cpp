@@ -39,17 +39,17 @@ constexpr float kAutoMinDepthLarge = 7.f;     // 7 m
 constexpr float kAutoMaxDepthSmall = 20.f;    // 20 m
 constexpr float kAutoMaxDepthLarge = 1000.f;  // 1 km
 
-// Fills any negative `min_depth` / `max_depth` with baseline-interpolated defaults, then throws
-// if the resulting range is not finite, strictly positive and monotonic. Only a negative value is
-// the "auto" trigger; 0 stays an explicit input and is rejected below rather than silently
-// replaced. The `!(x > 0)` / `!(x < y)` form rejects NaN; the isfinite checks add +inf, which
-// would otherwise reach `std::log` and turn every depth sample into NaN.
+// Fills any finite negative `min_depth` / `max_depth` with baseline-interpolated defaults, then
+// throws if the resulting range is not finite, strictly positive and monotonic. Only a finite
+// negative value is the "auto" trigger; 0 stays an explicit input, and every non-finite input
+// (NaN, ±inf) falls through to validation rather than being silently replaced. Left unchecked,
+// +inf would reach `std::log` and turn every depth sample into NaN.
 void AutoDetectDepthRange(const float baseline, float& min_depth, float& max_depth) {
   const float t = std::clamp((baseline - kAutoBaselineSmall) / (kAutoBaselineLarge - kAutoBaselineSmall), 0.f, 1.f);
-  if (min_depth < 0.f) {
+  if (std::isfinite(min_depth) && min_depth < 0.f) {
     min_depth = kAutoMinDepthSmall + t * (kAutoMinDepthLarge - kAutoMinDepthSmall);
   }
-  if (max_depth < 0.f) {
+  if (std::isfinite(max_depth) && max_depth < 0.f) {
     max_depth = kAutoMaxDepthSmall + t * (kAutoMaxDepthLarge - kAutoMaxDepthSmall);
   }
   if (!std::isfinite(min_depth) || !std::isfinite(max_depth) || !(min_depth > 0.f) || !(min_depth < max_depth)) {
