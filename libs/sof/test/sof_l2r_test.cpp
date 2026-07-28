@@ -87,7 +87,10 @@ size_t TrackL2R(sof::Implementation implementation, [[maybe_unused]] const std::
   const bool use_gpu = implementation == sof::Implementation::kGPU;
 
   camera_rig_edex::CameraRigEdex edex_rig(std::string(CUVSLAM_TEST_ASSETS) + "sof/lr_test/stereo.edex");
-  EXPECT_TRUE(static_cast<bool>(edex_rig.start()));
+  if (const ErrorCode err = edex_rig.start(); !err) {
+    ADD_FAILURE() << "CameraRigEdex::start failed: " << err.str();
+    return 0;
+  }
 
   camera::Rig rig;
   rig.num_cameras = static_cast<int32_t>(edex_rig.getCamerasNum());
@@ -111,7 +114,10 @@ size_t TrackL2R(sof::Implementation implementation, [[maybe_unused]] const std::
   Sources masks;
   Metas metas;
   DepthSources depths;
-  EXPECT_EQ(edex_rig.getFrame(sources, metas, masks, depths), ErrorCode::S_True);
+  if (const ErrorCode err = edex_rig.getFrame(sources, metas, masks, depths); err != ErrorCode::S_True) {
+    ADD_FAILURE() << "CameraRigEdex::getFrame failed: " << err.str();
+    return 0;
+  }
 
   sof::ImageManager image_manager;
   image_manager.init(metas[0].shape, sources.size(), use_gpu);
