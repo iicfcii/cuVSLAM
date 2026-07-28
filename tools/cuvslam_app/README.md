@@ -4,10 +4,41 @@ A Python application for visual odometry using cuVSLAM library.
 
 ## Requirements
 
-Before running the application, set up the environment:
-```bash
-./create_env.sh
-```
+1. Create the virtual environment and install the third-party dependencies:
+   ```bash
+   ./create_env.sh
+   ```
+   The script creates `.env` in this directory and installs `requirements.txt` into it.
+
+2. Activate the environment in your shell (`create_env.sh` runs in a subshell, so its activation
+   does not persist):
+   ```bash
+   source .env/bin/activate
+   ```
+
+3. Install PyCuVSLAM **inside** the environment — it is not part of `requirements.txt`, and the
+   application will fail with `ModuleNotFoundError: No module named 'cuvslam'` without it.
+
+   From a pre-built wheel (see the [releases page](https://github.com/nvidia-isaac/cuVSLAM/releases/latest)
+   for the wheel matching your Python, CUDA, and architecture):
+   ```bash
+   pip install cuvslam-*.whl
+   ```
+
+   Or from this repository, after [building cuVSLAM](../../README.md#build-cuvslam):
+   ```bash
+   CUVSLAM_BUILD_DIR=<path-to-cuvslam-build> pip install ../../python/
+   ```
+   `CUVSLAM_BUILD_DIR` lets the build script find `libcuvslam.so`. Due to scikit-build-core
+   limitations, reinstall the bindings after every rebuild of `libcuvslam`.
+
+4. Verify the installation:
+   ```bash
+   python3 -c "import cuvslam; print(cuvslam.__version__)"
+   ```
+
+See the [installation section of the main README](../../README.md#install-pycuvslam) for the full
+wheel compatibility matrix and CUDA prerequisites.
 
 ## Usage Examples
 
