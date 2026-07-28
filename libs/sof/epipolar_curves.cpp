@@ -26,7 +26,7 @@
 
 namespace cuvslam::sof {
 namespace {
-constexpr int kNumDepthSamples = 10000;
+constexpr int kNumDepthSamples = 50;
 
 // Auto-detect anchors mapping stereo baseline (m) → sensible (min_depth, max_depth) range (m).
 // Small stereo (7.5 cm avg baseline) is set for close-range indoor use; large stereo (KITTI-
@@ -66,8 +66,8 @@ void EpipolarCurves::Candidates(const Vector2T& uv_l_base, std::vector<Vector2T>
   if (!(v_f >= 0.f) || !(u_f >= 0.f)) {
     return;
   }
-  const size_t v0 = static_cast<size_t>(v_f);
-  const size_t u0 = static_cast<size_t>(u_f);
+  const auto v0 = static_cast<size_t>(v_f);
+  const auto u0 = static_cast<size_t>(u_f);
   const size_t v1 = v0 + 1;
   const size_t u1 = u0 + 1;
   // Need four corners around (u_f, v_f); bail if either right/bottom corner is out of range.
@@ -98,7 +98,7 @@ EpipolarCurves::EpipolarCurves(const camera::ICameraModel& cam_l, const camera::
                                const size_t top_height, float min_depth, float max_depth)
     : inv_scale_(1.0f / static_cast<float>(1u << top_level)),
       curves_(top_height + 1, std::vector<std::vector<Vector2T>>(top_width + 1)) {
-  const float scale = static_cast<float>(1u << top_level);
+  const auto scale = static_cast<float>(1u << top_level);
 
   AutoDetectDepthRange(right_from_left.translation().norm(), min_depth, max_depth);
 
