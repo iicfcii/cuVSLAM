@@ -116,8 +116,6 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
                             const sof::Images& images, const Isometry3T& delta) {
   TRACE_EVENT ev = profiler_domain_.trace_event("AsyncSlam::TrackResult()", profiler_color_);
 
-  assert(track_data_.from_keyframe.matrix().allFinite());
-
   // extract telemetry
   {
     std::shared_ptr<AsyncSlamLCTelemetry> async_slam_telemetry;
@@ -130,14 +128,20 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
 
   bool is_keyframe = stat.keyframe;
 
-  // first frame
-  if (is_first_frame_) {
-    VO_ResetFrameData(frameId, timestamp_ns, track_data_);
-    tail_.Clear();
-    is_first_frame_ = false;
-  }
+  VOTrackData track_data_snapshot;
+  {
+    std::lock_guard pose_state_guard(pose_state_mutex_);
+    assert(track_data_.from_keyframe.matrix().allFinite());
 
-  VO_IncrementFrameData(frameId, timestamp_ns, delta, track_data_);
+    if (is_first_frame_) {
+      VO_ResetFrameData(frameId, timestamp_ns, track_data_);
+      tail_.Clear();
+      is_first_frame_ = false;
+    }
+
+    VO_IncrementFrameData(frameId, timestamp_ns, delta, track_data_);
+    track_data_snapshot = track_data_;
+  }
 
   const bool has_images = std::any_of(images.begin(), images.end(), [](const auto& image) { return image != nullptr; });
   if (is_keyframe && has_images) {
@@ -145,7 +149,7 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
     const Isometry3T current_pose = GetSlamPose();
 
     vo_keyframe->vo_pose_at_this_frame = current_pose;
-    vo_keyframe->track_data = track_data_;
+    vo_keyframe->track_data = track_data_snapshot;
     vo_keyframe->frame_data.frame_id = frameId;
     vo_keyframe->frame_data.timestamp_ns = timestamp_ns;
     vo_keyframe->frame_data.frame_information = FrameInformationString(images);
@@ -194,10 +198,16 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
     if (tail_.UpdateTimeByOdometry(timestamp_ns, current_pose)) {
       input_queue_.Push(vo_keyframe);
     }
-    VO_ResetFrameData(frameId, timestamp_ns, track_data_);
+
+    {
+      std::lock_guard pose_state_guard(pose_state_mutex_);
+      VO_ResetFrameData(frameId, timestamp_ns, track_data_);
+      track_data_snapshot = track_data_;
+    }
   }
   if (options_.pose_for_frame_required) {
-    trajectory_[frameId] = track_data_;
+    std::lock_guard pose_state_guard(pose_state_mutex_);
+    trajectory_[frameId] = track_data_snapshot;
   }
 
 #ifdef USE_RERUN
@@ -211,13 +221,18 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
 }
 
 Isometry3T AsyncSlam::GetSlamPose() const {
-  std::lock_guard slam_guard(slam_mutex_);
+  Isometry3T from_keyframe = Isometry3T::Identity();
+  {
+    std::lock_guard pose_state_guard(pose_state_mutex_);
+    from_keyframe = track_data_.from_keyframe;
+  }
+
   const auto may_be_tip = tail_.GetTip();
   if (!may_be_tip) {
     return Isometry3T::Identity();
   }
   const Isometry3T& tail_tip = may_be_tip->second;
-  Isometry3T slam_pose = tail_tip * track_data_.from_keyframe;
+  Isometry3T slam_pose = tail_tip * from_keyframe;
 
   if (options_.planar_constraints) {
     slam_pose.translation().y() = 0;
@@ -244,12 +259,16 @@ bool AsyncSlam::GetPoseForFrame(FrameId frameId, Isometry3T& pose) const {
     return false;
   }
 
-  auto it = trajectory_.find(frameId);
-  if (it == trajectory_.end()) {
-    SlamStderr("Pose not found for frame %zd.\n", static_cast<uint64_t>(frameId));
-    return false;
+  VOTrackData track_data;
+  {
+    std::lock_guard pose_state_guard(pose_state_mutex_);
+    auto it = trajectory_.find(frameId);
+    if (it == trajectory_.end()) {
+      SlamStderr("Pose not found for frame %zd.\n", static_cast<uint64_t>(frameId));
+      return false;
+    }
+    track_data = it->second;
   }
-  auto& track_data = it->second;
   assert(track_data.from_keyframe.matrix().allFinite());
 
   Isometry3T m;
@@ -268,8 +287,14 @@ bool AsyncSlam::GetPosesForAllFrames(std::map<uint64_t, storage::Isometry3<float
     return false;
   }
 
+  std::map<FrameId, VOTrackData> trajectory_snapshot;
+  {
+    std::lock_guard pose_state_guard(pose_state_mutex_);
+    trajectory_snapshot = trajectory_;
+  }
+
   std::lock_guard slam_guard(slam_mutex_);
-  for (auto it : trajectory_) {
+  for (const auto& it : trajectory_snapshot) {
     auto& track_data = it.second;
     uint64_t timestamp_ns = it.second.timestamp_ns;
     assert(track_data.from_keyframe.matrix().allFinite());

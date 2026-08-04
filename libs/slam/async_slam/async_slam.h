@@ -119,12 +119,13 @@ private:
   std::unique_ptr<LocalizerAndMapper> slam_;                 // should be protected by slam_mutex_
   Tail tail_;                                                // thread-safe
   std::unique_ptr<ILoopClosureSolver> loop_closure_solver_;  // should be accessed from slam thread only
-  std::map<FrameId, VOTrackData> trajectory_;
+  mutable std::mutex pose_state_mutex_;
+  std::map<FrameId, VOTrackData> trajectory_;  // guarded by pose_state_mutex_
 
   std::thread thread_;
 
   bool is_first_frame_ = true;
-  VOTrackData track_data_;
+  VOTrackData track_data_;  // guarded by pose_state_mutex_
 
   // profiler
   profiler::SLAMProfiler::DomainHelper profiler_domain_ = profiler::SLAMProfiler::DomainHelper("SLAM");
