@@ -50,8 +50,10 @@ class ConversionError(ValueError):
     """Raised when EuRoC input cannot be converted safely and unambiguously."""
 
 
-# Recalibrated VI-Sensor values from the legacy EuRoC reporter data. Camera transforms
-# are cam0-relative, and the distortion model is the calibrated equidistant/fisheye model.
+# Benchmark calibration provenance: these values are derived from the checked-in
+# examples/euroc/sensor_{cam0,cam1,imu0}.yaml recalibration and serialized to match
+# the legacy EuRoC reporter corpus. They intentionally do not use the original
+# body-relative Brown calibration in each source archive.
 _EDEX_TEMPLATE = """\
 [
     {
@@ -187,7 +189,8 @@ def _make_edex(frame_end: int) -> str:
     return _EDEX_TEMPLATE.replace("___FRAME_END___", str(frame_end))
 
 
-# cam0 sensor-to-body transform (T_BS) from the official EuRoC calibration.
+# This is separate from the reporter calibration above: the official EuRoC cam0
+# sensor-to-body transform is used only to express body-frame GT in the cam0 frame.
 _T_BS_DATA = [
     0.0148655429818,
     -0.999880929698,
@@ -586,6 +589,18 @@ def _convert_sequence(
                     f"{sequence}: no associated cam0/cam1 frames within the ground-truth range"
                 )
 
+            # Preserve legacy benchmark semantics: camera frames include the GT
+            # boundaries, while IMU samples must lie strictly inside them.
+            filtered_imu_entries = [
+                entry
+                for entry in imu_entries
+                if ground_truth_start < entry[0] < ground_truth_end
+            ]
+            if not filtered_imu_entries:
+                raise ConversionError(
+                    f"{sequence}: no IMU samples inside the ground-truth range"
+                )
+
             image_members = []
             for _, cam0_filename, cam1_filename in pairs:
                 image_members.append(f"mav0/cam0/data/{cam0_filename}")
@@ -638,9 +653,7 @@ def _convert_sequence(
             )
 
             output_imu = []
-            for timestamp, values in imu_entries:
-                if not ground_truth_start < timestamp < ground_truth_end:
-                    continue
+            for timestamp, values in filtered_imu_entries:
                 wx, wy, wz, ax, ay, az = values
                 output_imu.append(
                     json.dumps(

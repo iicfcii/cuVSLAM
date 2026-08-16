@@ -83,6 +83,7 @@ def _inner_archive_bytes(
     cam0_entries=None,
     cam1_entries=None,
     cam0_csv=None,
+    imu_csv=None,
     omit_member=None,
     omit_image=None,
 ):
@@ -92,7 +93,7 @@ def _inner_archive_bytes(
     members = {
         "mav0/cam0/data.csv": _camera_csv(cam0_entries) if cam0_csv is None else cam0_csv,
         "mav0/cam1/data.csv": _camera_csv(cam1_entries),
-        "mav0/imu0/data.csv": _default_imu(),
+        "mav0/imu0/data.csv": _default_imu() if imu_csv is None else imu_csv,
         "mav0/state_groundtruth_estimate0/data.csv": _default_ground_truth(),
     }
     stream = io.BytesIO()
@@ -459,6 +460,25 @@ class TestEurocConversionFailures(unittest.TestCase):
         )
         with self.assertRaisesRegex(convert_euroc.ConversionError, "no associated cam0/cam1 frames"):
             convert_euroc.convert(self.raw, self.output, ["MH_01_easy"])
+
+    def test_no_imu_inside_ground_truth_range_fails_before_writing_sequence(self):
+        boundary_only_imu = (
+            "#timestamp,w_x,w_y,w_z,a_x,a_y,a_z\n"
+            "100,1,2,3,4,5,6\n"
+            "300,2,3,4,5,6,7\n"
+        )
+        _write_outer_archive(
+            self.raw,
+            "machine_hall.zip",
+            {
+                "MH_01_easy": _inner_archive_bytes(
+                    imu_csv=boundary_only_imu,
+                )
+            },
+        )
+        with self.assertRaisesRegex(convert_euroc.ConversionError, "no IMU samples inside"):
+            convert_euroc.convert(self.raw, self.output, ["MH_01_easy"])
+        self.assertFalse((self.output / "MH_01_easy").exists())
 
     def test_unsafe_outer_archive_member_paths_are_rejected(self):
         unsafe_paths = [
