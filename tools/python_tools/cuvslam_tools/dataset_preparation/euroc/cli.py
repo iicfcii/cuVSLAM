@@ -17,7 +17,7 @@
 import argparse
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from cuvslam_tools.dataset_preparation.common import (
     installed_output_dir,
@@ -26,13 +26,13 @@ from cuvslam_tools.dataset_preparation.common import (
 )
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """Run the EuRoC preparation shell workflow from the console script."""
     prepare_script, is_source_checkout = resolve_prepare_script(__file__, "euroc", "prepare_euroc.sh")
 
     parser = argparse.ArgumentParser(
         prog="prepare_euroc",
-        description="Download the EuRoC MAV Machine Hall bundle and convert MH_01_easy to cuVSLAM EDEX format.",
+        description="Download and convert the 11 official EuRoC MAV sequences to portable cuVSLAM EDEX data.",
     )
     parser.add_argument(
         "--raw-dir",
@@ -52,6 +52,12 @@ def main(argv: Optional[list[str]] = None) -> int:
             "In an installed package, defaults to ./datasets/converted."
         ),
     )
+    parser.add_argument(
+        "--sequences",
+        nargs="+",
+        metavar="SEQUENCE",
+        help="Convert an explicit sequence subset, such as MH_01_easy. The default is all 11 sequences.",
+    )
     parser.add_argument("--force-download", action="store_true", help="Re-download archives even when they exist.")
     parser.add_argument("--download-only", action="store_true", help="Download archives but skip conversion.")
     args = parser.parse_args(argv)
@@ -67,6 +73,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         command.extend(["--raw-dir", str(raw_dir)])
     if output_dir is not None:
         command.extend(["--output-dir", str(output_dir)])
+    if args.sequences:
+        command.extend(["--sequences", *args.sequences])
     if args.force_download:
         command.append("--force-download")
     if args.download_only:
