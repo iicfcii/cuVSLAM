@@ -139,14 +139,14 @@ prepare_euroc \
     --sequences MH_01_easy
 ```
 
-The prepared root is `/path/to/datasets/converted/euroc`. It contains `euroc-smoke.cfg`, `euroc-full.cfg`,
-mode-specific reporter configs, and `dataset_metadata.json`. Every sequence contains `stereo.edex`,
-`frame_metadata.jsonl`, `IMU.jsonl`, camera-aligned `gt.txt`, and copied `00/` and `01/` media directories.
-Run the full inertial ODOM+SLAM report with:
+The prepared root is `/path/to/datasets/converted/euroc`. It contains ODOM, SLAM, and combined reporter configs
+plus `dataset_metadata.json`. Every sequence contains `stereo.edex`, `frame_metadata.jsonl`, `IMU.jsonl`,
+camera-aligned `gt.txt`, and copied `00/` and `01/` media directories. Run the combined inertial ODOM+SLAM report
+with:
 
 ```bash
 cuvslam_reporter \
-    --test_config /path/to/datasets/converted/euroc/euroc-full.cfg \
+    --test_config /path/to/datasets/converted/euroc/euroc-vio_slam.cfg \
     --datasets_root /path/to/datasets/converted \
     --output_root /tmp/cuvslam-euroc-reports \
     --odometry_mode inertial \

@@ -116,9 +116,7 @@ for artifact in \
     dataset_metadata.json \
     euroc-vio.cfg \
     euroc-slam.cfg \
-    euroc-vio_slam.cfg \
-    euroc-smoke.cfg \
-    euroc-full.cfg; do
+    euroc-vio_slam.cfg; do
     if [[ ! -s "${dataset_dir}/${artifact}" ]]; then
         echo "error: converter did not produce ${dataset_dir}/${artifact}" >&2
         exit 1

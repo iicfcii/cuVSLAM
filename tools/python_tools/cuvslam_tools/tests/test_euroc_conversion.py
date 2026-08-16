@@ -245,11 +245,12 @@ class TestEurocConvertedSequence(unittest.TestCase):
             },
         )
         self.assertEqual(self.metadata["sequences"][0]["converted_counts"]["frames"], 3)
-        full_entries = json.loads((self.output / "euroc-full.cfg").read_text())["sequence_cfgs"]
-        smoke_entries = json.loads((self.output / "euroc-smoke.cfg").read_text())["sequence_cfgs"]
-        self.assertEqual({entry["sequence_folder"] for entry in full_entries}, {"MH_01_easy"})
-        self.assertEqual([entry["sequence_title"].split("-")[-1] for entry in smoke_entries], ["ODOM", "SLAM"])
-        self.assertFalse((self.output / "euroc_v203_slam.cfg").exists())
+        combined_entries = json.loads((self.output / "euroc-vio_slam.cfg").read_text())["sequence_cfgs"]
+        self.assertEqual({entry["sequence_folder"] for entry in combined_entries}, {"MH_01_easy"})
+        self.assertEqual(
+            self.metadata["generated_configs"],
+            ["euroc-slam.cfg", "euroc-vio.cfg", "euroc-vio_slam.cfg"],
+        )
 
     def test_metadata_is_deterministic_and_contains_only_relative_layout(self):
         second_output = self.root / "second" / "euroc"
@@ -351,14 +352,14 @@ class TestEurocConfigGeneration(unittest.TestCase):
             names = convert_euroc._write_configs(output, convert_euroc.ALL_SEQS)
 
             self.assertEqual(len(convert_euroc.ALL_SEQS), 11)
-            self.assertIn("euroc_v203_slam.cfg", names)
-            self.assertIn("euroc_v203_vo.cfg", names)
-            combined = json.loads((output / "euroc-vio_slam.cfg").read_text(encoding="utf-8"))
-            full = json.loads((output / "euroc-full.cfg").read_text(encoding="utf-8"))
-            self.assertEqual(combined, full)
-            self.assertEqual(len(full["sequence_cfgs"]), 22)
             self.assertEqual(
-                {entry["sequence_folder"] for entry in full["sequence_cfgs"]},
+                names,
+                ["euroc-slam.cfg", "euroc-vio.cfg", "euroc-vio_slam.cfg"],
+            )
+            combined = json.loads((output / "euroc-vio_slam.cfg").read_text(encoding="utf-8"))
+            self.assertEqual(len(combined["sequence_cfgs"]), 22)
+            self.assertEqual(
+                {entry["sequence_folder"] for entry in combined["sequence_cfgs"]},
                 set(convert_euroc.ALL_SEQS),
             )
             for config_name in names:
@@ -369,16 +370,6 @@ class TestEurocConfigGeneration(unittest.TestCase):
                     sequence_dir = output / entry["sequence_folder"]
                     self.assertTrue((sequence_dir / entry["edex_file"]).is_file())
                     self.assertTrue((sequence_dir / entry["gt_file_path"]).is_file())
-
-    def test_smoke_uses_first_selected_sequence_when_mh01_is_absent(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary)
-            convert_euroc._write_configs(output, ["V1_02_medium", "V2_03_difficult"])
-            smoke = json.loads((output / "euroc-smoke.cfg").read_text(encoding="utf-8"))
-            self.assertEqual(
-                [entry["sequence_folder"] for entry in smoke["sequence_cfgs"]],
-                ["V1_02_medium", "V1_02_medium"],
-            )
 
     def test_defaults_and_positional_cli_paths(self):
         expected_root = Path(__file__).resolve().parents[4]

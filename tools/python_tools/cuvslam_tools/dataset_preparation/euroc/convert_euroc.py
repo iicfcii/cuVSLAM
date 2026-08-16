@@ -45,15 +45,6 @@ _SOURCE_URL = "https://doi.org/10.3929/ethz-b-000690084"
 _SCHEMA_VERSION = "1.0"
 _CONVERTER_VERSION = "1.0"
 
-_STANDARD_CONFIGS = [
-    "euroc-vio.cfg",
-    "euroc-slam.cfg",
-    "euroc-vio_slam.cfg",
-    "euroc-full.cfg",
-    "euroc-smoke.cfg",
-]
-_LEGACY_V203_CONFIGS = ["euroc_v203_slam.cfg", "euroc_v203_vo.cfg"]
-
 
 class ConversionError(ValueError):
     """Raised when EuRoC input cannot be converted safely and unambiguously."""
@@ -503,31 +494,12 @@ def _write_configs(output_dir: Path, sequences: Sequence[str]) -> List[str]:
         for sequence in sequences
         for entry in (_sequence_config_entry(sequence, "odom"), _sequence_config_entry(sequence, "slam"))
     ]
-    smoke_sequence = "MH_01_easy" if "MH_01_easy" in sequences else sequences[0]
-    smoke_entries = [
-        _sequence_config_entry(smoke_sequence, "odom"),
-        _sequence_config_entry(smoke_sequence, "slam"),
-    ]
 
     configs = {
         "euroc-vio.cfg": _format_config(odometry_entries),
         "euroc-slam.cfg": _format_config(slam_entries),
         "euroc-vio_slam.cfg": _format_config(combined_entries),
-        "euroc-full.cfg": _format_config(combined_entries),
-        "euroc-smoke.cfg": _format_config(smoke_entries),
     }
-    if "V2_03_difficult" in sequences:
-        configs["euroc_v203_slam.cfg"] = _format_config(
-            [_sequence_config_entry("V2_03_difficult", "slam")]
-        )
-        configs["euroc_v203_vo.cfg"] = _format_config(
-            [_sequence_config_entry("V2_03_difficult", "odom")]
-        )
-
-    for config_name in _STANDARD_CONFIGS + _LEGACY_V203_CONFIGS:
-        config_path = output_dir / config_name
-        if config_path.exists() and config_name not in configs:
-            config_path.unlink()
     for config_name, contents in configs.items():
         (output_dir / config_name).write_text(contents, encoding="utf-8")
     return sorted(configs)
