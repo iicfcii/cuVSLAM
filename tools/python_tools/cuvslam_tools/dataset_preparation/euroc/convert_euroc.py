@@ -50,10 +50,7 @@ class ConversionError(ValueError):
     """Raised when EuRoC input cannot be converted safely and unambiguously."""
 
 
-# Benchmark calibration provenance: these values are derived from the checked-in
-# examples/euroc/sensor_{cam0,cam1,imu0}.yaml recalibration and serialized to match
-# the legacy EuRoC reporter corpus. They intentionally do not use the original
-# body-relative Brown calibration in each source archive.
+# Recalibrated parameters from examples/euroc, matching the benchmark corpus.
 _EDEX_TEMPLATE = """\
 [
     {
@@ -189,8 +186,7 @@ def _make_edex(frame_end: int) -> str:
     return _EDEX_TEMPLATE.replace("___FRAME_END___", str(frame_end))
 
 
-# This is separate from the reporter calibration above: the official EuRoC cam0
-# sensor-to-body transform is used only to express body-frame GT in the cam0 frame.
+# Official EuRoC cam0 sensor-to-body transform used for GT alignment.
 _T_BS_DATA = [
     0.0148655429818,
     -0.999880929698,
@@ -589,7 +585,7 @@ def _convert_sequence(
                     f"{sequence}: no associated cam0/cam1 frames within the ground-truth range"
                 )
 
-            # Preserve legacy benchmark semantics: camera frames include the GT
+            # Preserve benchmark data selection: camera frames include the GT
             # boundaries, while IMU samples must lie strictly inside them.
             filtered_imu_entries = [
                 entry

@@ -144,9 +144,9 @@ plus `dataset_metadata.json`. Every sequence contains `stereo.edex`, `frame_meta
 camera-aligned `gt.txt`, and copied `00/` and `01/` media directories.
 
 The reporter layout intentionally uses the recalibrated cam0-relative fisheye parameters checked in under
-`examples/euroc/` to reproduce the technical-report and legacy benchmark results. It does not use the original
-body-relative Brown camera calibration from the source archives. The official EuRoC cam0 body-from-sensor
-transform is used only to express body-frame ground truth in the cam0 frame.
+`examples/euroc/` to reproduce the technical-report and benchmark results. It does not use the original
+per-sequence camera calibration from the source archives. The official EuRoC cam0 body-from-sensor transform is
+used only to express body-frame ground truth in the cam0 frame.
 
 Run the combined inertial ODOM+SLAM report with:
 
