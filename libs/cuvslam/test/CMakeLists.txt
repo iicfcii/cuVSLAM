@@ -15,6 +15,8 @@
 # Tests of the public cuVSLAM API. They link the library the same way a user application would.
 
 set(SOURCES
+    image_format_test.cpp
+    pose_test.cpp
     tracker_test.cpp
     )
 
