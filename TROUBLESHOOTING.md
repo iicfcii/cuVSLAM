@@ -605,7 +605,7 @@ reports refer to an increasingly old point of the trajectory.
 To diagnose this, enable verbose logging and check the `delay_warning_queue_size` parameter. You’ll see a console
 message whenever more commands are queued to the SLAM thread than the configured number:
 
-```
+```text
 [WARNING] SLAM is behind odometry: XXX commands are queued to the SLAM thread that is more than desired YYY.
           Check SLAM settings: reduce max_map_size or increase throttling_time_ms.
 ```
