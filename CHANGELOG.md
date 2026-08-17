@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Unsynchronized reads of the SLAM engine during map localization (`LocalizeInMapCmd::Execute`)
+
 ## [17.0.0] - 2026-07-21
 
 Adds cuNLS-based multisensor fusion, improves tracking and SLAM robustness, and expands evaluation tooling.
