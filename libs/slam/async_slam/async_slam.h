@@ -46,6 +46,9 @@ struct AsyncSlamOptions {
   int max_pose_graph_nodes = 0;          // SLAM: limit of the node count in the pose graph
   uint64_t throttling_time_ms = 0;
   uint64_t retention_time_ms = 5000;
+  // Length of the SLAM input queue at which a warning is printed because SLAM falls behind odometry.
+  // Diagnostic only. Default: 10 commands.
+  uint32_t delay_warning_queue_size = 10;
   PoseGraphOptimizerOptions pgo_options;
   SpatialIndexOptions spatial_index_options;
   float max_landmarks_distance = std::numeric_limits<float>::max();
