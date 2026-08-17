@@ -1067,10 +1067,10 @@ public:
    *
    * @param[in] other other tracker
    */
-  Tracker(Tracker&& other) noexcept;
+  Tracker(Tracker&& other) noexcept = default;
 
   /// @brief Destructor
-  ~Tracker();
+  ~Tracker() = default;
 
   /**
    * @brief Track a rig pose using current frame, and update SLAM
@@ -1235,8 +1235,8 @@ public:
   const Slam* GetSlam() const;
 
 private:
-  class Impl;
-  std::unique_ptr<Impl> impl;
+  Odometry odometry_;
+  std::unique_ptr<Slam> slam_;  ///< null when SLAM is disabled
 };
 
 }  // namespace cuvslam

@@ -32,108 +32,95 @@ Odometry::Config WithSlamExports(Odometry::Config cfg) {
 
 }  // namespace
 
-class Tracker::Impl {
-public:
-  Impl(const Rig& rig, const Config& cfg)
-      : odometry{rig, cfg.slam.has_value() ? WithSlamExports(cfg.odometry) : cfg.odometry} {
-    if (cfg.slam.has_value()) {
-      slam = std::make_unique<Slam>(rig, odometry.GetPrimaryCameras(), *cfg.slam);
-    }
+Tracker::Tracker(const Rig& rig, const Config& cfg)
+    : odometry_{rig, cfg.slam.has_value() ? WithSlamExports(cfg.odometry) : cfg.odometry} {
+  if (cfg.slam.has_value()) {
+    slam_ = std::make_unique<Slam>(rig, odometry_.GetPrimaryCameras(), *cfg.slam);
   }
-
-  Odometry odometry;
-  std::unique_ptr<Slam> slam;
-  // Reused across frames so that the per-frame observation and landmark vectors keep their capacity
-  Odometry::State state;
-};
-
-Tracker::Tracker(const Rig& rig, const Config& cfg) : impl{std::make_unique<Impl>(rig, cfg)} {}
-
-Tracker::Tracker(Tracker&&) noexcept = default;
-
-Tracker::~Tracker() = default;
+}
 
 Tracker::TrackResult Tracker::Track(const ImageSet& images, const ImageSet& masks, const ImageSet& depths,
                                     const Pose* gt_pose, const cuvslam::internal::Internals* internals) {
   TrackResult result;
-  result.odometry = impl->odometry.Track(images, masks, depths, internals);
+  result.odometry = odometry_.Track(images, masks, depths, internals);
 
   // Odometry state is only meaningful once odometry has produced a pose, so SLAM stays untouched
   // on a lost frame and keeps its previous pose.
-  if (impl->slam && result.odometry.world_from_rig.has_value()) {
-    impl->odometry.GetState(impl->state);
-    impl->slam->Track(impl->state, gt_pose);
-    result.slam = impl->slam->GetPose();
+  if (slam_ && result.odometry.world_from_rig.has_value()) {
+    Odometry::State state;
+    odometry_.GetState(state);
+    slam_->Track(state, gt_pose);
+    result.slam = slam_->GetPose();
   }
 
   return result;
 }
 
 void Tracker::RegisterImuMeasurement(uint32_t sensor_index, const ImuMeasurement& imu) {
-  impl->odometry.RegisterImuMeasurement(sensor_index, imu);
+  odometry_.RegisterImuMeasurement(sensor_index, imu);
 }
 
 std::vector<Observation> Tracker::GetLastObservations(uint32_t camera_index) const {
-  return impl->odometry.GetLastObservations(camera_index);
+  return odometry_.GetLastObservations(camera_index);
 }
 
-std::vector<Landmark> Tracker::GetLastLandmarks() const { return impl->odometry.GetLastLandmarks(); }
+std::vector<Landmark> Tracker::GetLastLandmarks() const { return odometry_.GetLastLandmarks(); }
 
-std::optional<Odometry::Gravity> Tracker::GetLastGravity() const { return impl->odometry.GetLastGravity(); }
+std::optional<Odometry::Gravity> Tracker::GetLastGravity() const { return odometry_.GetLastGravity(); }
 
-std::unordered_map<uint64_t, Vector3f> Tracker::GetFinalLandmarks() const { return impl->odometry.GetFinalLandmarks(); }
+std::unordered_map<uint64_t, Vector3f> Tracker::GetFinalLandmarks() const { return odometry_.GetFinalLandmarks(); }
 
-bool Tracker::IsSlamEnabled() const { return impl->slam != nullptr; }
+bool Tracker::IsSlamEnabled() const { return slam_ != nullptr; }
 
 std::vector<PoseStamped> Tracker::GetAllSlamPoses(uint32_t max_poses_count) const {
   std::vector<PoseStamped> poses;
-  if (impl->slam) {
-    impl->slam->GetAllSlamPoses(poses, max_poses_count);
+  if (slam_) {
+    slam_->GetAllSlamPoses(poses, max_poses_count);
   }
   return poses;
 }
 
 void Tracker::SaveMap(const std::string_view& folder_name, std::function<void(bool success)> callback) const {
-  if (!impl->slam) {
+  if (!slam_) {
     callback(false);
     return;
   }
-  impl->slam->SaveMap(folder_name, std::move(callback));
+  slam_->SaveMap(folder_name, std::move(callback));
 }
 
 void Tracker::LocalizeInMap(const std::string_view& folder_name, int64_t timestamp_ns, const Pose& guess_pose,
                             const ImageSet& images, const Slam::LocalizationSettings& settings,
                             Slam::LocalizeStartCB start_cb, Slam::LocalizeFinishCB finish_cb) {
-  if (!impl->slam) {
+  if (!slam_) {
     throw std::invalid_argument{"SLAM is not enabled"};
   }
-  impl->slam->LocalizeInMap(folder_name, timestamp_ns, guess_pose, images, settings, std::move(start_cb),
-                            std::move(finish_cb));
+  slam_->LocalizeInMap(folder_name, timestamp_ns, guess_pose, images, settings, std::move(start_cb),
+                       std::move(finish_cb));
 }
 
 std::optional<Slam::Metrics> Tracker::GetSlamMetrics() const {
-  if (!impl->slam) {
+  if (!slam_) {
     return std::nullopt;
   }
   Slam::Metrics metrics;
-  impl->slam->GetSlamMetrics(metrics);
+  slam_->GetSlamMetrics(metrics);
   return metrics;
 }
 
 std::vector<PoseStamped> Tracker::GetLoopClosurePoses() const {
   std::vector<PoseStamped> poses;
-  if (impl->slam) {
-    impl->slam->GetLoopClosurePoses(poses);
+  if (slam_) {
+    slam_->GetLoopClosurePoses(poses);
   }
   return poses;
 }
 
-Odometry& Tracker::GetOdometry() { return impl->odometry; }
+Odometry& Tracker::GetOdometry() { return odometry_; }
 
-const Odometry& Tracker::GetOdometry() const { return impl->odometry; }
+const Odometry& Tracker::GetOdometry() const { return odometry_; }
 
-Slam* Tracker::GetSlam() { return impl->slam.get(); }
+Slam* Tracker::GetSlam() { return slam_.get(); }
 
-const Slam* Tracker::GetSlam() const { return impl->slam.get(); }
+const Slam* Tracker::GetSlam() const { return slam_.get(); }
 
 }  // namespace cuvslam
