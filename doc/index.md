@@ -3,7 +3,13 @@ cuVSLAM: CUDA-Accelerated Visual Odometry and Mapping
 
 This page provides documentation for cuVSLAM C++ API.
 
-Two main classes are `cuvslam::Odometry` and `cuvslam::Slam`.
+The API has three classes. `cuvslam::Odometry` tracks the rig pose from camera and IMU data, and
+`cuvslam::Slam` builds a map from odometry results, closes loops, and saves and reloads maps.
+`cuvslam::Tracker` combines the two behind one interface and is the recommended entry point: it runs
+the per-frame sequence both classes require, returns the odometry and SLAM poses together, and keeps
+its SLAM accessors safe to call when SLAM is disabled. Use `cuvslam::Odometry` and `cuvslam::Slam`
+directly when you need full control over the two components; `cuvslam::Tracker::GetOdometry` and
+`cuvslam::Tracker::GetSlam` reach them without giving up the tracker.
 
 Tracking modes
 --------------
