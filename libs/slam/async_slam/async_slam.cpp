@@ -211,13 +211,12 @@ void AsyncSlam::TrackResult(FrameId frameId, int64_t timestamp_ns, const odom::I
 }
 
 Isometry3T AsyncSlam::GetSlamPose() const {
-  std::lock_guard slam_guard(slam_mutex_);
-  const auto may_be_tip = tail_.GetTip();
+  const auto may_be_tip = tail_.GetTip();  // thread-safe
   if (!may_be_tip) {
     return Isometry3T::Identity();
   }
   const Isometry3T& tail_tip = may_be_tip->second;
-  Isometry3T slam_pose = tail_tip * track_data_.from_keyframe;
+  Isometry3T slam_pose = tail_tip * track_data_.from_keyframe;  // track_data_ touched only in main thread
 
   if (options_.planar_constraints) {
     slam_pose.translation().y() = 0;

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Unnecessary mutex contention in `AsyncSlam::GetSlamPose()`
+
 ## [17.0.0] - 2026-07-21
 
 Adds cuNLS-based multisensor fusion, improves tracking and SLAM robustness, and expands evaluation tooling.
