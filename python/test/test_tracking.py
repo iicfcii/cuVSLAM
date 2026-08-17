@@ -207,7 +207,7 @@ class TestTracking(unittest.TestCase):
             # timestamps stay well under kf_max_timedelta_between_kfs_s (60 s) so the time-based
             # keyframe rule never fires on its own.
             tracker.track((i + 1) * 1_000_000, static_images, internals=internals)
-            keyframes.append(tracker.odom.get_state().keyframe)
+            keyframes.append(tracker.get_odometry().get_state().keyframe)
         return keyframes
 
     def test_keyframe_override_forces_decision(self):

@@ -24,12 +24,10 @@ from .pycuvslam import (
     PoseWithCovariance,
     PoseEstimate,
     Observation,
-    Landmark)
+    Landmark,
+    Tracker)
 # Import all bindings under core namespace
 from . import pycuvslam as core
-
-# Import the wrapper class
-from .tracker import Tracker
 
 # Python helper functions for file-based config loading
 from . import utils

@@ -17,7 +17,7 @@ cuvslam-skills/  # Claude Code skills (cuvslam-onboard, cuvslam-troubleshoot, cu
 
 Key files:
 - `libs/cuvslam/cuvslam2.h` — primary C++ public API (the only public header)
-- `python/tracker.py` — high-level Python `Tracker` class
+- `libs/cuvslam/tracker.cpp` — high-level `Tracker` class combining odometry and SLAM
 - `python/cuvslam2.cpp` — nanobind Python bindings (must stay in sync with `cuvslam2.h`)
 - `CMakeLists.txt` — root CMake build definition
 - `build_release.sh` — convenience script for build + tests
@@ -128,7 +128,7 @@ Refer to these files when implementing new features or tests:
 | Stereo-inertial (IMU) example | `examples/euroc/track_euroc.py` |
 | Monocular-depth example | `examples/tum/track_tum.py` |
 | Multi-camera example | `examples/realsense/` |
-| High-level Python Tracker | `python/tracker.py` |
+| High-level Tracker (odometry + SLAM) | `libs/cuvslam/tracker.cpp` |
 | nanobind binding pattern | `python/cuvslam2.cpp` (see `nb::class_<>` usage) |
 | GTest unit test pattern | `libs/common/test/common_test.cpp` |
 | CMake library definition | any `libs/*/CMakeLists.txt` |
