@@ -26,8 +26,13 @@ echo "=== Installing cuvslam python bindings against $OUTPUT_DIR/build ==="
 CUVSLAM_BUILD_DIR="$OUTPUT_DIR/build" SKBUILD_BUILD_DIR=/tmp/skbuild \
   pip install /cuvslam/python/
 
-echo "=== Installing cuvslam_app requirements ==="
-pip install -r /cuvslam/tools/cuvslam_app/requirements.txt
+echo "=== Installing cuvslam tools ==="
+(
+  python_tools_install_src="$(mktemp -d)"
+  trap 'rm -rf "$python_tools_install_src"' EXIT
+  cp -a /cuvslam/tools/python_tools/. "$python_tools_install_src/"
+  pip install "${python_tools_install_src}[pdf]"
+)
 
 DATASETS=(
   "KITTI|kitti|kitti|kitti/kitti-vio_slam_gt.cfg|--odometry_mode=multicamera --rectified_stereo_camera=true --async_sba=false --multicam_mode=moderate --use_segments"

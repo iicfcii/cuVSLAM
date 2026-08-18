@@ -54,16 +54,23 @@ black-frame oscillation, and more.
 
 Sub-tools:
 
-1. `tracker`
-2. `reporter`
-3. `validator`
+1. `prepare_kitti` — `python_tools/cuvslam_tools/dataset_preparation/kitti`
+2. `prepare_euroc` — `python_tools/cuvslam_tools/dataset_preparation/euroc`
+3. `prepare_tartan` — `python_tools/cuvslam_tools/dataset_preparation/tartan`
+4. `prepare_tum` — `python_tools/cuvslam_tools/dataset_preparation/tum`
+5. `cuvslam_tracker` — `python_tools/cuvslam_tools/tracker`
+6. `cuvslam_reporter` — `python_tools/cuvslam_tools/reporter`
+7. `cuvslam_validator` — `python_tools/cuvslam_tools/datasets_validator`
+8. `rosbag_extract_edex`, `rosbag_extract_images`, `rosbag_extract_urdf`, `rosbag_extract_videos` —
+   `python_tools/cuvslam_tools/bag2edex`
+9. `undistort_edex_images` — `python_tools/cuvslam_tools/undistort`
 
 
 ## Use Cases
 
-### 1. Debugging a sequence that fails in python_tools/reporter
+### 1. Debugging a sequence that fails in python_tools/cuvslam_tools/reporter
 
-- Run the single sequence in `python_tools/tracker`.
+- Run the single sequence in `python_tools/cuvslam_tools/tracker`.
 - If the issue persists, use `cuvslam::debug_dump_directory` to dump all shuttle/MP4/etc.
   data to a simple EDEX format for `cuvslam_api_launcher`.
 - Run `tools/cuvslam_api_launcher` over the exported folder to obtain a clean C++ debugging
@@ -72,7 +79,7 @@ Sub-tools:
 ### 2. Developing a new feature and evaluating a parameter's effect on datasets
 
 - Temporarily expose the parameter through `const TrackOptions& options`.
-- Set the parameter in `python_tools/reporter`.
+- Set the parameter in `python_tools/cuvslam_tools/reporter`.
 
 ### 3. Measuring GPU load on a target device (e.g., Jetson Orin Nano at 60 fps)
 

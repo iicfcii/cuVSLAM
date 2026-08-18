@@ -1,15 +1,13 @@
 # Topic names:
 camera_info_topics:
-  - /camera0/color/camera_info
-  - /camera0/infra1/camera_info
-  - /camera0/infra2/camera_info
+  - /camera/infra1/camera_info
+  - /camera/infra2/camera_info
 image_topics:
-  - /camera0/color/image_raw
-  - /camera0/realsense_splitter_node/output/infra_1
-  - /camera0/realsense_splitter_node/output/infra_2
+  - /camera/infra1/image_rect_raw
+  - /camera/infra2/image_rect_raw
 
 # Frame names:
-rig_frame: camera0_link
+rig_frame: camera_link
 
 sync_threshold_ns: 30000000  # 30ms
 num_workers: 8

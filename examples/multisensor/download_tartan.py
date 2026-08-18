@@ -16,16 +16,19 @@
 
 """Download Tartan Ground dataset (RGB + depth + IMU) for the multisensor tracking example."""
 
-import os
-import tartanair as ta
+import sys
+from pathlib import Path
 
-data_root = 'dataset/tartan_ground/'
-os.makedirs(data_root, exist_ok=True)
-ta.init(data_root)
-ta.download_ground(
-    env=['OldTownFall'],
-    version=['anymal'],
-    modality=['image', 'depth', 'imu'],
-    traj=['P2000'],
-    camera_name=['lcam_front', 'lcam_back'],
-    unzip=True)
+
+def main() -> int:
+    """Run the shared TartanGround downloader with the multisensor variant."""
+    repo_root = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(repo_root / "tools" / "python_tools"))
+
+    from cuvslam_tools.dataset_preparation.tartan.download import main as download_main
+
+    return download_main(["--variant", "multisensor"])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

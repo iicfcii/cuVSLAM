@@ -16,7 +16,7 @@ changing anything.
 Workflows (`.github/workflows/`):
 
 - `pr-verify.yml` - lint, then build + unit test on x86, Orin, and Thor; eval on the x86 job (fork-gated); posts a KPI table to the PR comment.
-- `nightly.yml` - build + test matrix; eval on the four x86 configs; writes per-config KPI history and versioned Actions artifacts. Manual dispatch from a matching `release/vX.Y.Z` branch promotes the same distributable bytes to a draft GitHub Release.
+- `nightly.yml` - scheduled/manual build + test matrix; eval on the four x86 configs; writes per-config KPI history and versioned Actions artifacts. Scheduled runs never create a Release. A manual dispatch from a matching `release/vX.Y.Z` branch promotes the same distributable bytes to a protected draft GitHub Release.
 - `provision-datasets.yml` - manual `workflow_dispatch` on the default branch; downloads, converts, and uploads a dataset tarball to S3. The only writer of dataset storage.
 - `sync-rulesets.yml` - applies `.github/rulesets/default-branch-ruleset.json` through the API.
 
@@ -35,12 +35,12 @@ CI scripts (`scripts/`):
 - `Dockerfile` / `build_cuvslam_in_docker.sh` - product build image and wrapper; preserve Git/LFS metadata used by
   `get_version()`.
 
-Dataset tooling: `tools/datasets/<name>/` (download + `prepare_<name>.sh`), `tools/cuvslam_app/` (eval runner and `edex_reader.py`).
+Dataset tooling: `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/` (download + `prepare_<name>.sh`), `tools/cuvslam_app/` (eval runner and `edex_reader.py`).
 
 ## Task: add a dataset
 
 1. In `scripts/datasets_config.sh`, add the name to `PROVISIONABLE_DATASETS` and add its `dataset_upload_subdir` case (empty string means the converted root; otherwise the subdir under the converted output).
-2. Add `tools/datasets/<name>/prepare_<name>.sh` (plus a download script) that converts raw data to the edex layout under `--output-dir`. `dataset_prepare_script` resolves `tools/datasets/<name>/prepare_<name>.sh`.
+2. Add `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/prepare_<name>.sh` (plus a download script) that converts raw data to the edex layout under `--output-dir`. `dataset_prepare_script` resolves `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/prepare_<name>.sh`.
 3. Add the dataset to the `dataset` choice input in `provision-datasets.yml`.
 4. Run Provision dataset (`workflow_dispatch`) on the default branch. It writes `<S3_DATASETS_BUCKET>/<name>.tar`.
 5. Add the name to `EVAL_DATASET_NAMES` in `datasets_config.sh`, and add a record to `DATASETS[]` in `scripts/run_eval.sh`: `LABEL|link_name|subdir|test_config|app_flags`.
@@ -50,7 +50,7 @@ Dataset tooling: `tools/datasets/<name>/` (download + `prepare_<name>.sh`), `too
 
 A dataset moves through four stages. Change the one that owns the format, and keep packing and extraction in sync.
 
-- Conversion (raw to stored layout, e.g. images vs mp4): `tools/datasets/<name>/prepare_<name>.sh` and the converter it calls.
+- Conversion (raw to stored layout, e.g. images vs mp4): `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/prepare_<name>.sh` and the converter it calls.
 - Tarball packing: `scripts/provision_dataset.sh` creates an uncompressed `.tar` (`tar -cf`); `s3_tarball_uri` names it `<name>.tar`.
 - Extraction: `scripts/stage_eval_datasets.sh` runs `tar -xf`.
 - In-archive layout consumed at eval: `tools/cuvslam_app/cuvslam_app.py` and `tools/cuvslam_app/edex_reader.py` (already reads per-folder `<folder>.tar` archives).
@@ -79,6 +79,16 @@ tracked worktree differs from `HEAD`.
    verifier must reject `-modified` and a mismatched embedded revision before artifacts are uploaded.
 5. When changing checkout, LFS, Docker build, or version logic, test both an LFS-materialized clean checkout and an
    intentional tracked edit.
+
+## Task: build a draft release
+
+1. Create or update a branch named `release/vMAJOR.MINOR[.PATCH][-SUFFIX]`.
+2. Manually dispatch `Nightly Build & Test` from that branch. Release dispatches always build, even without commits in the last 24 hours.
+3. After every matrix job and evaluation succeeds, the workflow validates the branch version against `VERSION`, derives the tag from the branch (`release/v17.0` -> `v17.0`), and creates a draft Release containing the already-built C++ archives, wheels, documentation, and permanent evaluation bundle.
+4. Review the draft and publish it manually. A draft/published Release or Git tag with the same version is never overwritten.
+5. To rebuild an unpublished release after fixes, explicitly delete the old draft and dispatch the updated release branch again.
+
+Scheduled nightlies publish only versioned 30-day Actions artifacts. They never create or update a GitHub Release.
 
 ## Hard rules
 

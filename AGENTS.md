@@ -72,7 +72,7 @@ Before making code changes or designing new features, read **[DESIGN_CONCEPTS.md
 
 ## CI/CD pipelines
 
-The GitHub Actions CI/CD (build, test, lint, dataset evaluation, nightly release, dataset provisioning, and branch rulesets) is documented in the `cuvslam-ci` skill at [cuvslam-skills/cuvslam-ci/SKILL.md](cuvslam-skills/cuvslam-ci/SKILL.md). Read it before changing any `.github/workflows/**`, CI script under `scripts/`, dataset under `tools/datasets/`, or the test matrix.
+The GitHub Actions CI/CD (build, test, lint, dataset evaluation, nightly release, dataset provisioning, and branch rulesets) is documented in the `cuvslam-ci` skill at [cuvslam-skills/cuvslam-ci/SKILL.md](cuvslam-skills/cuvslam-ci/SKILL.md). Read it before changing any `.github/workflows/**`, CI script under `scripts/`, dataset preparation code under `tools/python_tools/cuvslam_tools/dataset_preparation/`, or the test matrix.
 
 Load-bearing rules:
 

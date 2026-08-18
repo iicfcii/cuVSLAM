@@ -56,6 +56,12 @@ s3_tarball="$(s3_tarball_uri "$DATASET")"
 prepare_rel="$(dataset_prepare_script "$DATASET")"
 upload_subdir="$(dataset_upload_subdir "$DATASET")"
 upload_src="$converted_dir${upload_subdir:+/$upload_subdir}"
+prepare_script="$REPO_ROOT/$prepare_rel"
+
+if [ ! -f "$prepare_script" ]; then
+  echo "Error: dataset preparation script not found: $prepare_rel" >&2
+  exit 1
+fi
 
 if [ "$DRY_RUN" != "true" ]; then
   echo "=== Verifying AWS credentials for S3 upload ==="
@@ -77,7 +83,7 @@ fi
 rm -rf "$raw_dir" "$converted_dir" "$tarball"
 mkdir -p "$raw_dir" "$converted_dir"
 
-bash "$REPO_ROOT/$prepare_rel" \
+bash "$prepare_script" \
   --raw-dir "$raw_dir" \
   --output-dir "$converted_dir" \
   "${download_args[@]}"

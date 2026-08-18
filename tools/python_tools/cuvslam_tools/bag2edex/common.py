@@ -12,12 +12,20 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+"""Shared ROS bag to EDEX configuration and helper utilities."""
+
+from contextlib import ExitStack, contextmanager
 import logging
 import pathlib
+import shutil
+import sqlite3
+import tempfile
+from typing import Optional
 
 import pydantic
 from rosbags import highlevel
 from rosbags.typesys import (
+    get_types_from_msg,
     get_typestore,
     Stores,
 )
@@ -51,19 +59,19 @@ class Config(pydantic.BaseModel):
     # Topics used to extract images. Must be the same length as camera_info_topics.
     image_topics: list[str]
     # Topic used to get IMU measurements.
-    imu_topic: str | None = None
+    imu_topic: Optional[str] = None
     # Frames used to acquire the extrinsics. If not set the frames from the messages will be used:
     rig_frame: str
-    camera_optical_frames: list[str] | None = None
-    imu_frame: str | None = None
+    camera_optical_frames: Optional[list[str]] = None
+    imu_frame: Optional[str] = None
     # Number of workers used in image extraction.
     num_workers: int = -1
     # Threshold used for syncing images in the same frame.
     sync_threshold_ns: int = int(0.001 * 10**9)
     # Width and height used to resize the extracted images.
-    output_width: int | None = None
-    output_height: int | None = None
-    output_format: str | None = None
+    output_width: Optional[int] = None
+    output_height: Optional[int] = None
+    output_format: Optional[str] = None
     # ROS distribution used to extract the rosbag.
     ros_distribution: str = "humble"
 
@@ -87,6 +95,107 @@ def get_typestore_from_ros_distribution(ros_distribution: str) -> Typestore:
     if ros_distribution not in ROS_TYPESTORES:
         raise ValueError(f"Unknown ROS distribution: {ros_distribution}")
     return get_typestore(ROS_TYPESTORES[ros_distribution])
+
+
+def _message_definition_is_valid(
+    topic_type: str,
+    encoding: str,
+    message_definition: str,
+    type_description_hash: str,
+) -> bool:
+    """Return whether rosbags can parse and validate one embedded message definition."""
+    if encoding != "ros2msg" or not message_definition or not type_description_hash:
+        return False
+
+    try:
+        types = get_types_from_msg(message_definition, topic_type)
+        store = Typestore()
+        store.register(types)
+        return type_description_hash == store.hash_rihs01(topic_type)
+    except Exception:
+        return False
+
+
+def _sanitize_rosbag2_message_definitions(sqlite_path: pathlib.Path) -> int:
+    """Delete invalid embedded ROS2 message definitions from a temporary sqlite bag copy."""
+    with sqlite3.connect(sqlite_path) as connection:
+        cursor = connection.cursor()
+        has_message_definitions = cursor.execute(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='message_definitions'"
+        ).fetchone()[0]
+        if not has_message_definitions:
+            return 0
+
+        invalid_ids = []
+        for row_id, topic_type, encoding, message_definition, type_description_hash in cursor.execute(
+            "SELECT id, topic_type, encoding, encoded_message_definition, type_description_hash "
+            "FROM message_definitions"
+        ):
+            if not _message_definition_is_valid(
+                topic_type,
+                encoding,
+                message_definition,
+                type_description_hash,
+            ):
+                invalid_ids.append(row_id)
+
+        if invalid_ids:
+            cursor.executemany(
+                "DELETE FROM message_definitions WHERE id = ?",
+                [(row_id,) for row_id in invalid_ids],
+            )
+            connection.commit()
+
+    return len(invalid_ids)
+
+
+def _copy_and_sanitize_rosbag(rosbag_path: pathlib.Path, temp_root: pathlib.Path) -> pathlib.Path:
+    """Copy a rosbag directory to temp_root and sanitize its sqlite metadata."""
+    sanitized_path = temp_root / rosbag_path.name
+    shutil.copytree(rosbag_path, sanitized_path)
+
+    n_removed = 0
+    for sqlite_path in sanitized_path.glob("*.db3"):
+        n_removed += _sanitize_rosbag2_message_definitions(sqlite_path)
+
+    logging.warning(
+        "Using a temporary rosbag copy with %d invalid embedded message definition(s) removed. "
+        "The source bag is unchanged.",
+        n_removed,
+    )
+    return sanitized_path
+
+
+@contextmanager
+def open_rosbag_reader(rosbag_path: pathlib.Path, ros_distribution: str):
+    """Open a rosbag reader, falling back for schema-v4 bags with invalid embedded definitions."""
+    typestore = get_typestore_from_ros_distribution(ros_distribution)
+    stack = ExitStack()
+    try:
+        reader = stack.enter_context(
+            highlevel.AnyReader(paths=[rosbag_path], default_typestore=typestore)
+        )
+    except AssertionError as exc:
+        stack.close()
+        if "Failed to parse" not in str(exc):
+            raise
+        logging.warning(
+            "rosbags could not parse embedded message definitions in '%s': %s",
+            rosbag_path,
+            exc,
+        )
+    else:
+        with stack:
+            yield reader
+        return
+
+    with tempfile.TemporaryDirectory(prefix="cuvslam_rosbag_") as temp_dir:
+        sanitized_path = _copy_and_sanitize_rosbag(rosbag_path, pathlib.Path(temp_dir))
+        with highlevel.AnyReader(
+            paths=[sanitized_path],
+            default_typestore=typestore,
+        ) as reader:
+            yield reader
 
 
 def get_first_message(reader: highlevel.AnyReader, topics: list[str]) -> list[object]:

@@ -12,6 +12,8 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+"""Image extraction and synchronization utilities for ROS bag to EDEX conversion."""
+
 import concurrent.futures
 import json
 import logging
@@ -22,7 +24,7 @@ import shutil
 import sys
 import threading
 import time
-from typing import Any
+from typing import Any, Optional
 
 import av
 import numpy as np
@@ -33,8 +35,8 @@ from cuvslam_tools.common import edex
 from . import (
     Config,
     get_first_message,
-    get_typestore_from_ros_distribution,
     log_rosbag_info,
+    open_rosbag_reader,
 )
 
 
@@ -49,6 +51,7 @@ DISTORTION_MODEL_ROS2EDEX = {
 def progress_bar(
     iteration: int, total: int, prefix="", suffix="", line_length=80, fill="█"
 ):
+    """Render a single-line text progress bar to stdout."""
     length = line_length - len(prefix) - len(suffix)
     if total <= 0:
         percent = "0.0"
@@ -100,9 +103,9 @@ def get_image_path(base_path: pathlib.Path, topic: str, frame_idx: int) -> pathl
 def _producer(
     reader: highlevel.AnyReader,
     topics: list[str],
-    width: int | None,
-    height: int | None,
-    format: str | None,
+    width: Optional[int],
+    height: Optional[int],
+    pixel_format: Optional[str],
     images_base_path: pathlib.Path,
     frame_queue: queue.Queue,
     shutdown_event: threading.Event,
@@ -201,7 +204,7 @@ def _producer(
             decoded_frame = decoded_frame.reformat(
                 width=width or decoded_frame.width,
                 height=height or decoded_frame.height,
-                format=format or decoded_frame.format,
+                format=pixel_format or decoded_frame.format,
             )
 
             # Store the timestamp corresponding to the frame.
@@ -249,9 +252,9 @@ def _consumer(
 def run_executor(
     reader: highlevel.AnyReader,
     topics: list[str],
-    width: int,
-    height: int,
-    format: str,
+    width: Optional[int],
+    height: Optional[int],
+    pixel_format: Optional[str],
     images_base_path: pathlib.Path,
     num_workers: int = -1,
 ) -> pd.DataFrame:
@@ -282,7 +285,7 @@ def run_executor(
             topics,
             width,
             height,
-            format,
+            pixel_format,
             images_base_path,
             frame_queue,
             shutdown_event,
@@ -409,7 +412,7 @@ def run_image_extraction(
         topics=config.image_topics,
         width=config.output_width,
         height=config.output_height,
-        format=config.output_format,
+        pixel_format=config.output_format,
         images_base_path=config.output_path / "images",
         num_workers=config.num_workers,
     )
@@ -435,6 +438,7 @@ def run_image_extraction(
 def get_distortion_model(
     distortion_model: str, distortion_params: np.ndarray
 ) -> tuple[edex.DistortionModel, np.ndarray]:
+    """Map ROS camera distortion metadata to an EDEX distortion model."""
     assert (
         distortion_model in DISTORTION_MODEL_ROS2EDEX
     ), f"Unrecognized distortion model: '{distortion_model}'"
@@ -537,10 +541,7 @@ def extract_images(config: Config):
     (config.output_path / "frame_metadata.jsonl").unlink(missing_ok=True)
     config.output_path.mkdir(parents=True, exist_ok=True)
 
-    with highlevel.AnyReader(
-        paths=[config.rosbag_path],
-        default_typestore=get_typestore_from_ros_distribution(config.ros_distribution),
-    ) as reader:
+    with open_rosbag_reader(config.rosbag_path, config.ros_distribution) as reader:
         log_rosbag_info(reader)
 
         # Do some quick checks that all the required data is present in the rosbag.

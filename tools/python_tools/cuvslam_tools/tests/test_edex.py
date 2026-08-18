@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import json
 
 from cuvslam_tools.common.edex import EDEXMetadata, DistortionModel
 
@@ -69,9 +70,47 @@ class TestEdex(unittest.TestCase):
             edex_intrinsics_2 = EDEXMetadata.read(Path(temp_file.name))
             self.assertEqual(edex, edex_intrinsics_2)
 
+    def test_read_edex_nested_sequence(self):
+        edex_data = json.loads((DATA_DIR / "edex").read_text(encoding="utf-8"))
+        edex_data[1]["sequence"] = [
+            ["images/front_stereo_camera/left/000000.png"],
+            ["images/front_stereo_camera/right/000000.png"],
+        ]
+
+        with tempfile.NamedTemporaryFile(
+            mode="w+", delete=True, encoding="utf-8"
+        ) as temp_file:
+            json.dump(edex_data, temp_file)
+            temp_file.flush()
+
+            edex = EDEXMetadata.read(Path(temp_file.name))
+            self.assertEqual(
+                edex.body.sequence,
+                [
+                    [Path("images/front_stereo_camera/left/000000.png")],
+                    [Path("images/front_stereo_camera/right/000000.png")],
+                ],
+            )
+
+            edex.write(Path(temp_file.name))
+            round_trip = json.loads(Path(temp_file.name).read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            round_trip[1]["sequence"],
+            [
+                ["images/front_stereo_camera/left/000000.png"],
+                ["images/front_stereo_camera/right/000000.png"],
+            ],
+        )
+
     def test_read_edex_bad(self):
         with self.assertRaises(Exception):
             EDEXMetadata.read(DATA_DIR / "edex_bad")
+
+    def test_metadata_requires_body(self):
+        edex = EDEXMetadata.read(DATA_DIR / "edex")
+        with self.assertRaises(TypeError):
+            EDEXMetadata(edex.header)
 
 
 if __name__ == "__main__":

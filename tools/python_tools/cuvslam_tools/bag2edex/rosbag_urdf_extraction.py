@@ -172,6 +172,7 @@ def extract_urdf(
     output_path: pathlib.Path,
 ) -> None:
     """Extracts the URDF from a rosbag and saves it to the output path."""
+    output_path.mkdir(parents=True, exist_ok=True)
     (output_path / "robot.urdf").unlink(missing_ok=True)
     tf_manager = rosbag_tf_extraction.get_static_transform_manager_from_bag(
         rosbag_path,

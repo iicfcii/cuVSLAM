@@ -12,11 +12,13 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+"""Pydantic models and JSON helpers for reading and writing EDEX metadata."""
+
 from enum import Enum
 from functools import partial
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional, Union
 
 import numpy as np
 from pydantic import (
@@ -28,7 +30,8 @@ from pydantic import (
 )
 
 
-def to_np_array(value: list[float | int], dtype: np.dtype = np.float32) -> np.ndarray:
+def to_np_array(value: list[Union[float, int]], dtype: np.dtype = np.float32) -> np.ndarray:
+    """Convert JSON numeric lists to numpy arrays with the requested dtype."""
     return np.array(value, dtype=dtype)
 
 
@@ -38,7 +41,8 @@ ArrayFloat = Annotated[
 ArrayInt = Annotated[np.ndarray, BeforeValidator(partial(to_np_array, dtype=np.int32))]
 
 
-def all_close_or_none(a: np.ndarray | None, b: np.ndarray | None) -> bool:
+def all_close_or_none(a: Optional[np.ndarray], b: Optional[np.ndarray]) -> bool:
+    """Return true when both arrays are close, or both values are None."""
     return (a is None and b is None) or (
         a is not None and b is not None and np.allclose(a, b)
     )
@@ -48,6 +52,7 @@ class EDEXEncoder(json.JSONEncoder):
     """Custom JSON encoder for EDEX files that handles numpy arrays and Path objects."""
 
     def default(self, obj):
+        """Serialize numpy arrays and paths before falling back to JSON defaults."""
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if isinstance(obj, Path):
@@ -97,33 +102,26 @@ class Intrinsics(BaseModel):
     focal: ArrayFloat
     principal: ArrayFloat
     resolution: ArrayInt = Field(alias="size")
-    projection: ArrayFloat | None = None
-    rectification: ArrayFloat | None = None
+    projection: Optional[ArrayFloat] = None
+    rectification: Optional[ArrayFloat] = None
 
     @model_validator(mode="after")
     def check_fields(self):
+        """Validate intrinsic array shapes for the selected distortion model."""
         # Check distortion model
-        match self.distortion_model:
-            case DistortionModel.PINHOLE:
-                if self.distortion_params.shape != (0,):
-                    raise ValueError(
-                        f"Invalid distortion params: {self.distortion_params}"
-                    )
-            case DistortionModel.FISHEYE:
-                if self.distortion_params.shape != (4,):
-                    raise ValueError(
-                        f"Invalid distortion params: {self.distortion_params}"
-                    )
-            case DistortionModel.BROWN5K:
-                if self.distortion_params.shape != (5,):
-                    raise ValueError(
-                        f"Invalid distortion params: {self.distortion_params}"
-                    )
-            case DistortionModel.POLYNOMIAL:
-                if self.distortion_params.shape != (8,):
-                    raise ValueError(
-                        f"Invalid distortion params: {self.distortion_params}"
-                    )
+        if self.distortion_model == DistortionModel.PINHOLE:
+            expected_distortion_shape = (0,)
+        elif self.distortion_model == DistortionModel.FISHEYE:
+            expected_distortion_shape = (4,)
+        elif self.distortion_model == DistortionModel.BROWN5K:
+            expected_distortion_shape = (5,)
+        elif self.distortion_model == DistortionModel.POLYNOMIAL:
+            expected_distortion_shape = (8,)
+        else:
+            raise ValueError(f"Invalid distortion model: {self.distortion_model}")
+
+        if self.distortion_params.shape != expected_distortion_shape:
+            raise ValueError(f"Invalid distortion params: {self.distortion_params}")
 
         # Check pinhole intrinsics
         if self.focal.shape != (2,):
@@ -146,6 +144,7 @@ class Intrinsics(BaseModel):
         return self
 
     def __eq__(self, other: "Intrinsics") -> bool:
+        """Compare intrinsics using exact enum/shape checks and tolerant floats."""
         return (
             isinstance(other, Intrinsics)
             and self.distortion_model == other.distortion_model
@@ -170,15 +169,17 @@ class Camera(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     intrinsics: Intrinsics
-    transform: ArrayFloat | None = None
+    transform: Optional[ArrayFloat] = None
 
     @model_validator(mode="after")
     def check_fields(self):
+        """Validate the optional rig-to-camera transform shape."""
         if self.transform is not None and self.transform.shape != (3, 4):
             raise ValueError(f"Invalid transform: {self.transform}")
         return self
 
     def __eq__(self, other: "Camera") -> bool:
+        """Compare camera intrinsics and optional transform values."""
         return (
             isinstance(other, Camera)
             and self.intrinsics == other.intrinsics
@@ -204,6 +205,7 @@ class IMU(BaseModel):
 
     @model_validator(mode="after")
     def check_fields(self):
+        """Validate gravity and rig-to-IMU transform shapes."""
         if self.g.shape != (3,):
             raise ValueError(f"Invalid g: {self.g}")
         if self.transform.shape != (3, 4):
@@ -211,6 +213,7 @@ class IMU(BaseModel):
         return self
 
     def __eq__(self, other: "IMU") -> bool:
+        """Compare IMU calibration, measurement path, and transform values."""
         return (
             isinstance(other, IMU)
             and np.allclose(self.g, other.g)
@@ -235,7 +238,7 @@ class EDEXHeader(BaseModel):
     frame_start: int
     frame_end: int
     cameras: list[Camera]
-    imu: IMU | None = None
+    imu: Optional[IMU] = None
 
 
 class EDEXBody(BaseModel):
@@ -244,11 +247,11 @@ class EDEXBody(BaseModel):
 
     Attributes:
         frame_metadata: Optional path to per-frame metadata file (JSONL format)
-        sequence: List of paths to first frame images for each camera
+        sequence: List of paths, or per-camera lists of paths, to frame images.
     """
 
-    frame_metadata: Path | None = None
-    sequence: list[Path]
+    frame_metadata: Optional[Path] = None
+    sequence: list[Union[Path, list[Path]]]
 
 
 class EDEXMetadata:
@@ -263,12 +266,14 @@ class EDEXMetadata:
         body: Data file references (images, frame metadata)
     """
 
-    def __init__(self, header: EDEXHeader, body: EDEXBody | None = None):
+    def __init__(self, header: EDEXHeader, body: EDEXBody):
+        """Create metadata from parsed EDEX header and body sections."""
         self.header = header
         self.body = body
 
     @classmethod
     def read(cls, filename: Path) -> "EDEXMetadata":
+        """Read and validate an EDEX metadata file from disk."""
         try:
             with open(filename, "r") as f:
                 data = json.load(f)
@@ -280,6 +285,7 @@ class EDEXMetadata:
             raise e
 
     def write(self, filename: Path):
+        """Validate and write EDEX metadata to disk."""
         try:
             # Validate the header and body before writing
             new_header = EDEXHeader.model_validate(self.header.model_dump())
@@ -295,9 +301,11 @@ class EDEXMetadata:
             raise e
 
     def __str__(self) -> str:
+        """Return a debug string containing header and body data."""
         return f"EDEXMetadata(header={self.header.model_dump()}, body={self.body.model_dump()})"
 
     def __eq__(self, other: "EDEXMetadata") -> bool:
+        """Compare EDEX header and body sections."""
         return (
             isinstance(other, EDEXMetadata)
             and self.header == other.header

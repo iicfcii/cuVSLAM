@@ -800,7 +800,8 @@ NB_MODULE(pycuvslam, m) {
 
   nb::class_<Slam::Config>(slam_cls, "Config", "SLAM configuration parameters")
       .def(nb::init<>())
-      .def(nb::init<std::string_view, bool, bool, bool, bool, bool, float, float, uint32_t, uint32_t, uint32_t>(),
+      .def(nb::init<std::string_view, bool, bool, bool, bool, bool, float, float, uint32_t, uint32_t, uint32_t,
+                    uint32_t>(),
            nb::kw_only(), nb::arg("map_cache_path") = Slam::Config{}.map_cache_path,
            nb::arg("use_gpu") = Slam::Config{}.use_gpu, nb::arg("sync_mode") = Slam::Config{}.sync_mode,
            nb::arg("enable_reading_internals") = true,  // enable by default; in Python convenience is a priority
@@ -810,7 +811,8 @@ NB_MODULE(pycuvslam, m) {
            nb::arg("max_landmarks_distance") = Slam::Config{}.max_landmarks_distance,
            nb::arg("max_map_size") = Slam::Config{}.max_map_size,
            nb::arg("throttling_time_ms") = Slam::Config{}.throttling_time_ms,
-           nb::arg("retention_time_ms") = Slam::Config{}.retention_time_ms)
+           nb::arg("retention_time_ms") = Slam::Config{}.retention_time_ms,
+           nb::arg("delay_warning_queue_size") = Slam::Config{}.delay_warning_queue_size)
       .def_rw("map_cache_path", &Slam::Config::map_cache_path,
               "If empty, map is kept in memory only. Else, map is synced to disk (LMDB) at this path, allowing "
               "large-scale maps; if the path already exists it will be overwritten. To load an existing map, use "
@@ -834,14 +836,18 @@ NB_MODULE(pycuvslam, m) {
       .def_rw("retention_time_ms", &Slam::Config::retention_time_ms,
               "How long the past is preserved. Maximum time to keep odometries delta history to be able "
               "to process LocalizeInMap within timestamps from past.")
+      .def_rw("delay_warning_queue_size", &Slam::Config::delay_warning_queue_size,
+              "Length of the SLAM input queue at which cuVSLAM warns that SLAM is falling behind odometry. "
+              "Diagnostic only: exceeding it does not change tracking behavior, it only prints a warning (requires "
+              "verbosity Warning or higher, see set_verbosity). Default: 10 queued commands.")
       .def("__repr__", [](const Slam::Config& cfg) {
         return nb::str(
                    "cuvslam.Slam.Config(map_cache_path={}, use_gpu={}, sync_mode={}, enable_reading_internals={}, "
                    "planar_constraints={}, gt_align_mode={}, map_cell_size={}, max_landmarks_distance={}, "
-                   "max_map_size={}, throttling_time_ms={}, retention_time_ms={})")
+                   "max_map_size={}, throttling_time_ms={}, retention_time_ms={}, delay_warning_queue_size={})")
             .format(cfg.map_cache_path, cfg.use_gpu, cfg.sync_mode, cfg.enable_reading_internals,
                     cfg.planar_constraints, cfg.gt_align_mode, cfg.map_cell_size, cfg.max_landmarks_distance,
-                    cfg.max_map_size, cfg.throttling_time_ms, cfg.retention_time_ms);
+                    cfg.max_map_size, cfg.throttling_time_ms, cfg.retention_time_ms, cfg.delay_warning_queue_size);
       });
 
   nb::class_<Slam::LocalizationSettings>(slam_cls, "LocalizationSettings", "Localization settings")

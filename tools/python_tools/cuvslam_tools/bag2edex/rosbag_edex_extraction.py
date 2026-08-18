@@ -28,8 +28,8 @@ from cuvslam_tools.common import edex
 from . import (
     Config,
     get_first_message,
-    get_typestore_from_ros_distribution,
     log_rosbag_info,
+    open_rosbag_reader,
     rosbag_image_extraction,
     rosbag_tf_extraction,
     rosbag_urdf_extraction,
@@ -200,10 +200,7 @@ def extract_edex(config: Config):
     urdf_content = rosbag_urdf_extraction.get_urdf_from_tf_manager("robot", tf_manager)
     (config.output_path / "robot.urdf").write_text(urdf_content)
 
-    with highlevel.AnyReader(
-        paths=[config.rosbag_path],
-        default_typestore=get_typestore_from_ros_distribution(config.ros_distribution),
-    ) as reader:
+    with open_rosbag_reader(config.rosbag_path, config.ros_distribution) as reader:
         log_rosbag_info(reader)
 
         # Do some quick checks that all the required data is present in the rosbag.

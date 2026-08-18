@@ -2,6 +2,7 @@ S3_DATASETS_BUCKET="${S3_DATASETS_BUCKET:?Set repository variable S3_DATASETS_BU
 AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:?Set repository variable AWS_DEFAULT_REGION, e.g. us-west-2}"
 
 PROVISIONABLE_DATASETS=(kitti euroc tum tartan)
+DATASET_PREPARATION_ROOT="tools/python_tools/cuvslam_tools/dataset_preparation"
 
 EVAL_DATASET_NAMES=(
   kitti
@@ -31,7 +32,7 @@ dataset_prepare_script() {
     echo "Error: unknown dataset '$1' (expected: ${PROVISIONABLE_DATASETS[*]})" >&2
     return 1
   }
-  echo "tools/datasets/$1/prepare_$1.sh"
+  echo "$DATASET_PREPARATION_ROOT/$1/prepare_$1.sh"
 }
 
 s3_tarball_uri() {

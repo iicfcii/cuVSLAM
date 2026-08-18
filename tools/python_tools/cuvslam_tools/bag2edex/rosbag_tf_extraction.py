@@ -19,10 +19,8 @@ import pandas as pd
 from pytransform3d import trajectories
 from pytransform3d import transform_manager
 
-from rosbags import highlevel
-
 from . import (
-    get_typestore_from_ros_distribution,
+    open_rosbag_reader,
 )
 
 
@@ -33,10 +31,7 @@ def _extract_tf_dataframe_from_bag(
     Read a bag and return a pandas dataframe containing the transforms from /tf and /tf_static.
     """
     data = collections.defaultdict(list)
-    with highlevel.AnyReader(
-        paths=[rosbag_path],
-        default_typestore=get_typestore_from_ros_distribution(ros_distribution),
-    ) as reader:
+    with open_rosbag_reader(rosbag_path, ros_distribution) as reader:
         connections = [
             x for x in reader.connections if x.topic in ["/tf_static", "/tf"]
         ]

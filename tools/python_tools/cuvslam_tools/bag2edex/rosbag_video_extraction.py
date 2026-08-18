@@ -20,8 +20,8 @@ from rosbags import highlevel
 
 from . import (
     Config,
-    get_typestore_from_ros_distribution,
     log_rosbag_info,
+    open_rosbag_reader,
 )
 
 
@@ -52,10 +52,7 @@ def extract_videos(config: Config):
     shutil.rmtree(config.output_path / "videos", ignore_errors=True)
     config.output_path.mkdir(parents=True, exist_ok=True)
 
-    with highlevel.AnyReader(
-        paths=[config.rosbag_path],
-        default_typestore=get_typestore_from_ros_distribution(config.ros_distribution),
-    ) as reader:
+    with open_rosbag_reader(config.rosbag_path, config.ros_distribution) as reader:
         log_rosbag_info(reader)
 
         # Extract the videos from available topics.
