@@ -73,6 +73,114 @@ cuvslam::Slam::LocalizationSettings MakeLocalizationSettings() {
 
 }  // namespace
 
+TEST(AsyncSlam, GetSlamPose_ReturnsIdentityBeforeAnyTrackResult) {
+  std::unique_ptr<cuvslam::camera::ICameraModel> camera;
+  const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
+  cuvslam::slam::AsyncSlamOptions options;
+  options.use_gpu = false;
+  options.reproduce_mode = true;
+  options.loop_closure_solver_type = cuvslam::slam::LoopClosureSolverType::kDummy;
+
+  cuvslam::slam::AsyncSlam slam(rig, {0}, options);
+
+  EXPECT_TRUE(slam.GetSlamPose().isApprox(cuvslam::Isometry3T::Identity()));
+}
+
+TEST(AsyncSlam, GetSlamPose_ComposesTailTipWithTrackDataFromKeyframe) {
+  std::unique_ptr<cuvslam::camera::ICameraModel> camera;
+  const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
+  cuvslam::slam::AsyncSlamOptions options;
+  options.use_gpu = false;
+  options.reproduce_mode = true;
+  options.loop_closure_solver_type = cuvslam::slam::LoopClosureSolverType::kDummy;
+
+  cuvslam::slam::AsyncSlam slam(rig, {0}, options);
+
+  // First keyframe: tail gets {ts=1000, Identity}; track_data_ is reset to Identity afterwards.
+  cuvslam::odom::IVisualOdometry::VOFrameStat keyframe_stat{};
+  keyframe_stat.keyframe = true;
+  slam.TrackResult(1, 1'000, keyframe_stat, MakeImages(1, 1'000), cuvslam::Isometry3T::Identity());
+  EXPECT_TRUE(slam.GetSlamPose().isApprox(cuvslam::Isometry3T::Identity()));
+
+  // Non-keyframe with delta z=3: track_data_.from_keyframe accumulates the delta.
+  // GetSlamPose() = tail_tip (Identity) * delta = translation z=3.
+  cuvslam::odom::IVisualOdometry::VOFrameStat nonkey_stat{};
+  nonkey_stat.keyframe = false;
+  cuvslam::Isometry3T delta = cuvslam::Isometry3T::Identity();
+  delta.translation().z() = 3.f;
+  slam.TrackResult(2, 2'000, nonkey_stat, {}, delta);
+
+  const cuvslam::Isometry3T pose = slam.GetSlamPose();
+  EXPECT_NEAR(pose.translation().z(), 3.f, 1e-5f);
+  EXPECT_NEAR(pose.translation().x(), 0.f, 1e-5f);
+}
+
+TEST(AsyncSlam, GetSlamPose_CalledFromCallerThreadAfterTrackResult_ReturnsConsistentPose) {
+  // Verifies the single-threaded calling convention: GetSlamPose() is called from the same
+  // thread as TrackResult(), so track_data_ is safe to read without additional locking.
+  std::unique_ptr<cuvslam::camera::ICameraModel> camera;
+  const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
+  cuvslam::slam::AsyncSlamOptions options;
+  options.use_gpu = false;
+  options.reproduce_mode = true;
+  options.loop_closure_solver_type = cuvslam::slam::LoopClosureSolverType::kDummy;
+
+  cuvslam::slam::AsyncSlam slam(rig, {0}, options);
+
+  cuvslam::odom::IVisualOdometry::VOFrameStat keyframe_stat{};
+  keyframe_stat.keyframe = true;
+  slam.TrackResult(1, 1'000, keyframe_stat, MakeImages(1, 1'000), cuvslam::Isometry3T::Identity());
+
+  cuvslam::Isometry3T delta = cuvslam::Isometry3T::Identity();
+  delta.translation().x() = 5.f;
+  slam.TrackResult(2, 2'000, {}, {}, delta);
+
+  const cuvslam::Isometry3T pose = slam.GetSlamPose();
+  EXPECT_TRUE(pose.matrix().allFinite());
+  EXPECT_NEAR(pose.translation().x(), 5.f, 1e-5f);
+}
+
+TEST(AsyncSlam, GetSlamPose_AsyncMode_ReturnsIdentityBeforeAnyTrackResult) {
+  std::unique_ptr<cuvslam::camera::ICameraModel> camera;
+  const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
+  cuvslam::slam::AsyncSlamOptions options;
+  options.use_gpu = false;
+  options.reproduce_mode = false;
+  options.loop_closure_solver_type = cuvslam::slam::LoopClosureSolverType::kDummy;
+
+  cuvslam::slam::AsyncSlam slam(rig, {0}, options);
+
+  EXPECT_TRUE(slam.GetSlamPose().isApprox(cuvslam::Isometry3T::Identity()));
+}
+
+TEST(AsyncSlam, GetSlamPose_AsyncMode_IsFiniteAndCorrectAfterTrackResult) {
+  // tail and track_data_ are both updated in TrackResult() on the caller thread, so
+  // GetSlamPose() is immediately correct without waiting for the background thread.
+  std::unique_ptr<cuvslam::camera::ICameraModel> camera;
+  const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
+  cuvslam::slam::AsyncSlamOptions options;
+  options.use_gpu = false;
+  options.reproduce_mode = false;
+  options.loop_closure_solver_type = cuvslam::slam::LoopClosureSolverType::kDummy;
+
+  cuvslam::slam::AsyncSlam slam(rig, {0}, options);
+
+  cuvslam::odom::IVisualOdometry::VOFrameStat keyframe_stat{};
+  keyframe_stat.keyframe = true;
+  slam.TrackResult(1, 1'000, keyframe_stat, MakeImages(1, 1'000), cuvslam::Isometry3T::Identity());
+  EXPECT_TRUE(slam.GetSlamPose().matrix().allFinite());
+
+  // Non-keyframe with delta z=7: track_data_.from_keyframe is updated in the caller thread,
+  // so GetSlamPose() reflects it immediately.
+  cuvslam::Isometry3T delta = cuvslam::Isometry3T::Identity();
+  delta.translation().z() = 7.f;
+  slam.TrackResult(2, 2'000, {}, {}, delta);
+
+  const cuvslam::Isometry3T pose = slam.GetSlamPose();
+  EXPECT_TRUE(pose.matrix().allFinite());
+  EXPECT_NEAR(pose.translation().z(), 7.f, 1e-5f);
+}
+
 TEST(AsyncSlam, TrackResultCanRunWhileLocalizeInMapIsInFlight) {
   std::unique_ptr<cuvslam::camera::ICameraModel> camera;
   const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
