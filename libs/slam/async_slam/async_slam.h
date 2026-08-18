@@ -209,8 +209,11 @@ private:
   bool GetLatestProcessingImages_worker(FrameId frame_id, Images& current_images);
 
   // Loop closure detection + pose graph optimization for the given batch's latest state.
-  void RunLoopClosureAndOptimization_worker(FrameId frame_id, uint64_t timestamp_ns,
-                                            const Isometry3T& world_from_rig_guess, const Images& current_images);
+  void DetectLoopClosure_worker(FrameId frame_id, uint64_t timestamp_ns, const Isometry3T& world_from_rig_guess,
+                                const Images& current_images);
+
+  // Runs pose graph optimization if lc_found or planar_constraints. Returns true if optimization ran.
+  bool OptimizePoseGraph_worker(bool lc_found);
 
   // Publishes landmarks and pose graph to their respective views, if attached.
   void PublishViews_worker(uint64_t timestamp_ns);

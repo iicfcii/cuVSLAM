@@ -122,9 +122,8 @@ bool AsyncSlam::GetLatestProcessingImages_worker(FrameId frame_id, Images& curre
   return current_image != current_images.end() && ((*current_image)->get_image_meta().frame_id == frame_id);
 }
 
-void AsyncSlam::RunLoopClosureAndOptimization_worker(FrameId frame_id, uint64_t timestamp_ns,
-                                                     const Isometry3T& world_from_rig_guess,
-                                                     const Images& current_images) {
+void AsyncSlam::DetectLoopClosure_worker(FrameId frame_id, uint64_t timestamp_ns,
+                                         const Isometry3T& world_from_rig_guess, const Images& current_images) {
   // init last_step_telemetry_
   AsyncSlamLCTelemetry last_step_telemetry;
   last_step_telemetry.timestamp_ns = timestamp_ns;
@@ -188,20 +187,25 @@ void AsyncSlam::RunLoopClosureAndOptimization_worker(FrameId frame_id, uint64_t 
   if (lc_found) {
     SlamStdout("S");  // Successful LC
   }
-  // Slam Pose Graph Optimization
+  last_step_telemetry.pgo_status = OptimizePoseGraph_worker(lc_found);
+  telemetry_queue_.Push(std::make_shared<AsyncSlamLCTelemetry>(last_step_telemetry));
+}
+
+bool AsyncSlam::OptimizePoseGraph_worker(bool lc_found) {
   bool optimization_happens = false;
   if (lc_found || options_.planar_constraints) {
     // TODO: ? optimize_options.keyframes_in_sight = loop_closure_status.keyframes_in_sight;
     std::lock_guard slam_guard(slam_mutex_);
-
     optimization_happens = slam_->OptimizePoseGraph(options_.planar_constraints);
   }
-  if (optimization_happens) {
+  if (!optimization_happens) {
+    return false;
+  }
+  {
     std::lock_guard slam_guard(slam_mutex_);
     const Isometry3T pose_estimate_slam = slam_->GetCurrentPose();
     TRACE_EVENT ev1 = profiler_domain_.trace_event("post optimization", profiler_color_);
     log::Value<LogFrames>("pose_slam", pose_estimate_slam);
-    last_step_telemetry.pgo_status = true;
 
     int64_t last_keyframe_ts;
     Isometry3T last_keyframe_pose;
@@ -211,10 +215,9 @@ void AsyncSlam::RunLoopClosureAndOptimization_worker(FrameId frame_id, uint64_t 
             "Failed to update SLAM tail after pose graph optimization: keyframe timestamp is outside retention.");
       }
     }
-
-    SlamStdout(":");
   }
-  telemetry_queue_.Push(std::make_shared<AsyncSlamLCTelemetry>(last_step_telemetry));
+  SlamStdout(":");
+  return true;
 }
 
 void AsyncSlam::PublishViews_worker(uint64_t timestamp_ns) {
@@ -253,7 +256,7 @@ void AsyncSlam::ProcessInput_worker() {
   Images current_images;
   const bool is_valid_image = GetLatestProcessingImages_worker(frame_id, current_images);
   if (is_valid_image) {
-    RunLoopClosureAndOptimization_worker(frame_id, timestamp_ns, world_from_rig_guess, current_images);
+    DetectLoopClosure_worker(frame_id, timestamp_ns, world_from_rig_guess, current_images);
   }
 
   PublishViews_worker(timestamp_ns);
