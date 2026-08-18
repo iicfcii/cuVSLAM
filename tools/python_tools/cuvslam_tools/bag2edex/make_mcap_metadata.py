@@ -18,6 +18,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import yaml
+
 
 def ns_from_seconds(seconds: str) -> int:
     return int(round(float(seconds) * 1_000_000_000))
@@ -68,40 +70,41 @@ def main():
 
     rel_file = mcap_path.name
 
-    yaml = []
-    yaml.append("rosbag2_bagfile_information:")
-    yaml.append(f"  version: {args.version}")
-    yaml.append("  storage_identifier: mcap")
-    yaml.append("  duration:")
-    yaml.append(f"    nanoseconds: {duration_ns}")
-    yaml.append("  starting_time:")
-    yaml.append(f"    nanoseconds_since_epoch: {start_ns}")
-    yaml.append(f"  message_count: {total_messages}")
-    yaml.append("  relative_file_paths:")
-    yaml.append(f"    - {rel_file}")
-    yaml.append("  files:")
-    yaml.append(f"    - path: {rel_file}")
-    yaml.append("      starting_time:")
-    yaml.append(f"        nanoseconds_since_epoch: {start_ns}")
-    yaml.append("      duration:")
-    yaml.append(f"        nanoseconds: {duration_ns}")
-    yaml.append(f"      message_count: {total_messages}")
-    yaml.append("  topics_with_message_count:")
+    metadata = {
+        "rosbag2_bagfile_information": {
+            "version": args.version,
+            "storage_identifier": "mcap",
+            "duration": {"nanoseconds": duration_ns},
+            "starting_time": {"nanoseconds_since_epoch": start_ns},
+            "message_count": total_messages,
+            "relative_file_paths": [rel_file],
+            "files": [
+                {
+                    "path": rel_file,
+                    "starting_time": {"nanoseconds_since_epoch": start_ns},
+                    "duration": {"nanoseconds": duration_ns},
+                    "message_count": total_messages,
+                }
+            ],
+            "topics_with_message_count": [
+                {
+                    "topic_metadata": {
+                        "name": name,
+                        "type": msg_type,
+                        "serialization_format": serialization,
+                        "offered_qos_profiles": "",
+                    },
+                    "message_count": int(count),
+                }
+                for name, msg_type, count, serialization in topics
+            ],
+            "compression_format": "",
+            "compression_mode": "",
+            "custom_data": {},
+        }
+    }
 
-    for name, msg_type, count, serialization in topics:
-        yaml.append("    - topic_metadata:")
-        yaml.append(f"        name: {name}")
-        yaml.append(f"        type: {msg_type}")
-        yaml.append(f"        serialization_format: {serialization}")
-        yaml.append('        offered_qos_profiles: ""')
-        yaml.append(f"      message_count: {count}")
-
-    yaml.append('  compression_format: ""')
-    yaml.append('  compression_mode: ""')
-    yaml.append("  custom_data: {}")
-    yaml.append("")
-
-    metadata_path.write_text("\n".join(yaml))
+    metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False))
     print(f"Wrote: {metadata_path}")
 
 
