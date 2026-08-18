@@ -87,7 +87,7 @@ rosbag_extract_urdf \
 
 `make_mcap_metadata.py` regenerates the `metadata.yaml` file that `rosbag2` requires next to an `.mcap` file. Use it when you have a standalone `.mcap` file without its companion `metadata.yaml` — for example, after downloading only the `.mcap` from a recording system or after the metadata file was accidentally deleted.
 
-**Prerequisites:** `ros2` must be on `PATH` (the script calls `ros2 bag info` internally).
+**Prerequisites:** a ROS 2 environment must be sourced with `ros2` on `PATH`, and the MCAP storage plugin must be installed (the script calls `ros2 bag info --storage mcap` internally).
 
 **Usage:**
 ```sh
