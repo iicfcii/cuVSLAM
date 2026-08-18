@@ -157,11 +157,13 @@ private:
     void Execute(AsyncSlam& async_slam, FrameId, const Isometry3T&) override;
   };
 
-  // --- Accessed only from the caller's thread (e.g. TrackResult(), GetPoseForFrame() callers) ---
-  bool reproduce_mode_ = false;
+  // --- Immutable after construction; read by both the caller's thread and the background worker thread ---
   const camera::Rig rig_;
   const std::vector<CameraId> cameras_;
   const AsyncSlamOptions options_;
+
+  // --- Accessed only from the caller's thread (e.g. TrackResult(), GetPoseForFrame() callers) ---
+  bool reproduce_mode_ = false;
   std::thread thread_;
   bool is_first_frame_ = true;
   VOTrackData track_data_;
