@@ -110,8 +110,10 @@ TEST(AsyncSlam, LocalizeInMap_ReproduceMode_BothCallbacksCalledSynchronously) {
 }
 
 TEST(AsyncSlam, LocalizeInMap_AsyncMode_GetSlamPoseRemainsFiniteWhileLocalizationIsInFlight) {
-  // Verifies that GetSlamPose() (caller thread) is safe while LocalizeInMapCmd::Execute()
-  // holds slam_mutex_ on the worker thread (lines 143-150 in async_slam_localize.cpp).
+  // Verifies that GetSlamPose() (caller thread) is safe while the worker thread is executing
+  // LocalizeInMapCmd::Execute(). With a missing map the worker returns at OpenDatabase() and
+  // never reaches the slam_mutex_-protected section (async_slam_localize.cpp L143-150);
+  // testing that path requires a real map database which is not available here.
   std::unique_ptr<cuvslam::camera::ICameraModel> camera;
   const cuvslam::camera::Rig rig = MakeSingleCameraRig(camera);
   cuvslam::slam::AsyncSlamOptions options;
