@@ -157,6 +157,7 @@ void AsyncSlam::TrackResult(const FrameId frameId, const int64_t timestamp_ns,
       vo_keyframe->frame_data.tracks2d_norm.reserve(stat.tracks2d.size());
 
       std::unordered_set<TrackId> added_tracks;
+      int invalid_cam_id_count = 0;
       for (const auto& [cam_id, track_id, uv] : stat.tracks2d) {
         if (stat.tracks3d.find(track_id) == stat.tracks3d.end()) {
           continue;  // remove landmarks without 3d
@@ -170,7 +171,7 @@ void AsyncSlam::TrackResult(const FrameId frameId, const int64_t timestamp_ns,
           continue;
         }
         if (cam_id >= rig_.num_cameras) {
-          SlamStdout("Found track with invalid camera id");
+          ++invalid_cam_id_count;
           continue;  // skip invalid camera ID
         }
         const auto& intrinsics = rig_.intrinsics[cam_id];
@@ -178,6 +179,9 @@ void AsyncSlam::TrackResult(const FrameId frameId, const int64_t timestamp_ns,
         intrinsics->normalizePoint(uv, uv_norm);
         vo_keyframe->frame_data.tracks2d_norm.emplace_back(VOFrameData::Track2DXY{cam_id, track_id, uv_norm});
         added_tracks.insert(track_id);
+      }
+      if (invalid_cam_id_count > 0) {
+        SlamStdout("Skipped %d track(s) with invalid camera id", invalid_cam_id_count);
       }
       // xyz to camera space
       for (const auto& [track_id, xyz_rel] : stat.tracks3d) {
