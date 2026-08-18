@@ -788,6 +788,12 @@ public:
     /// How long the past is preserved. Maximum time to keep odometries delta history to be able to process
     /// LocalizeInMap within timestamps from past.
     uint32_t retention_time_ms = 5000;
+    /// Length of the SLAM input queue at which cuVSLAM warns that SLAM is falling behind odometry. Diagnostic only:
+    /// exceeding it does not change tracking behavior, it only prints a warning. SLAM runs in a background thread and
+    /// is fed a queue of commands (keyframes, map localization, map saving); if it cannot keep up, the queue grows and
+    /// the poses and loop closures SLAM reports refer to an increasingly old point of the trajectory. The warning
+    /// requires verbosity Warning or higher (see SetVerbosity). Default: 10 queued commands.
+    uint32_t delay_warning_queue_size = 10;
   };
 
   // TODO(vikuznetsov): remove when https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165 is fixed

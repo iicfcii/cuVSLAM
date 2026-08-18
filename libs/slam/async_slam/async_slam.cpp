@@ -189,6 +189,11 @@ void AsyncSlam::TrackResult(const FrameId frameId, const int64_t timestamp_ns,
     }
     if (tail_.UpdateTimeByOdometry(timestamp_ns, current_pose)) {
       input_queue_.Push(vo_keyframe);
+      const size_t queue_size = input_queue_.Size();
+      TraceWarningIf(queue_size > options_.delay_warning_queue_size,
+                     "SLAM is behind odometry: %zu commands are queued to the SLAM thread that is more than desired "
+                     "%u. Check SLAM settings: reduce max_map_size or increase throttling_time_ms.",
+                     queue_size, options_.delay_warning_queue_size);
     }
     VO_ResetFrameData(frameId, timestamp_ns, track_data_);
   }
