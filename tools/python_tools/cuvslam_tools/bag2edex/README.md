@@ -90,6 +90,7 @@ rosbag_extract_urdf \
 **Prerequisites:** a ROS 2 environment must be sourced with `ros2` on `PATH`, and the MCAP storage plugin must be installed (the script calls `ros2 bag info --storage mcap` internally).
 
 **Usage:**
+
 ```sh
 ./make_mcap_metadata.py path/to/rosbag.mcap
 ```
@@ -100,6 +101,7 @@ The script writes `metadata.yaml` into the same directory as the `.mcap` file. O
 - `--version <int>` — sets the `rosbag2_bagfile_information.version` field in the metadata (default: `9`). Only change this if you need to match a specific rosbag2 version.
 
 **Example:**
+
 ```sh
 ./make_mcap_metadata.py /data/bags/my_recording/my_recording_0.mcap
 # Wrote: /data/bags/my_recording/metadata.yaml
