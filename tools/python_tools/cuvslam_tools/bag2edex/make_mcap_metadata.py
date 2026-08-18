@@ -93,6 +93,7 @@ def main():
                         "type": msg_type,
                         "serialization_format": serialization,
                         "offered_qos_profiles": "",
+                        "type_description_hash": "",
                     },
                     "message_count": int(count),
                 }
