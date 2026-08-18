@@ -1,6 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## Unreleased
+
+### Added
+
+- `Slam::Config::delay_warning_queue_size`: warns in verbose mode when more than the configured number of commands
+  are queued to the SLAM thread, meaning SLAM falls behind odometry
 
 ### Fixed
 
