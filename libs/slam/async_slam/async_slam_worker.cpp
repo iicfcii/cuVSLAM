@@ -132,8 +132,9 @@ void AsyncSlam::DetectLoopClosure_worker(FrameId frame_id, uint64_t timestamp_ns
 
   bool skip_loop_closure = false;
   if (!last_loop_closures_stamped_.empty()) {
-    // no need for LC if previous LC was recent
-    if ((timestamp_ns - last_loop_closures_stamped_.back().timestamp_ns) < throttling_time_ns_) {
+    // no need for LC if previous LC was recent; treat out-of-order timestamps as within the window
+    const uint64_t last_lc_ts = last_loop_closures_stamped_.back().timestamp_ns;
+    if (timestamp_ns < last_lc_ts || (timestamp_ns - last_lc_ts) < throttling_time_ns_) {
       skip_loop_closure = true;  // loop closure not needed
     }
   }
