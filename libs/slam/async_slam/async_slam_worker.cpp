@@ -79,14 +79,7 @@ bool AsyncSlam::AddKeyframesAndRunCommands_worker(FrameId& frame_id, uint64_t& t
     }
 
     Images current_images;
-    {
-      std::lock_guard image_guard(processing_images_mutex_);
-      current_images = processing_images_;
-    }
-    const auto current_image =
-        std::find_if(current_images.begin(), current_images.end(), [](const auto& image) { return image != nullptr; });
-    const bool is_valid_image =
-        current_image != current_images.end() && ((*current_image)->get_image_meta().frame_id == frame_data.frame_id);
+    const bool is_valid_image = GetLatestProcessingImages_worker(frame_data.frame_id, current_images);
     Isometry3T pose_estimate_slam;
     {
       const VOTrackData& track_data = vo_kf->track_data;
