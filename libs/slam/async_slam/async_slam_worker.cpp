@@ -86,11 +86,11 @@ bool AsyncSlam::AddKeyframesAndRunCommands_worker(FrameId& frame_id, uint64_t& t
 
       Isometry3T last_keyframe_pose;
       int64_t last_keyframe_ts;
+      std::lock_guard slam_guard(slam_mutex_);
       if (slam_->GetLastKeyframePoseAndTimestamp(last_keyframe_pose, last_keyframe_ts) && last_keyframe_ts > 0 &&
           track_data.timestamp_ns < static_cast<uint64_t>(last_keyframe_ts)) {
         continue;  // no need to add keyframe in past if slam in a future
       }
-      std::lock_guard slam_guard(slam_mutex_);
       slam_->AddKeyframe(track_data.from_keyframe, frame_data, is_valid_image ? current_images : Images());
       pose_estimate_slam = slam_->GetCurrentPose();
     }
@@ -197,6 +197,7 @@ void AsyncSlam::RunLoopClosureAndOptimization_worker(FrameId frame_id, uint64_t 
     optimization_happens = slam_->OptimizePoseGraph(options_.planar_constraints);
   }
   if (optimization_happens) {
+    std::lock_guard slam_guard(slam_mutex_);
     const Isometry3T pose_estimate_slam = slam_->GetCurrentPose();
     TRACE_EVENT ev1 = profiler_domain_.trace_event("post optimization", profiler_color_);
     log::Value<LogFrames>("pose_slam", pose_estimate_slam);
@@ -264,7 +265,11 @@ void AsyncSlam::ProcessInput_worker() {
 }
 
 bool AsyncSlam::CopyToDatabase_worker(const std::string& path) {
-  const bool status = slam_->AttachToNewDatabaseSaveMapAndDetach(path);
+  bool status;
+  {
+    std::lock_guard slam_guard(slam_mutex_);
+    status = slam_->AttachToNewDatabaseSaveMapAndDetach(path);
+  }
   if (copy_to_database_callback_) {
     copy_to_database_callback_(status);
   }
