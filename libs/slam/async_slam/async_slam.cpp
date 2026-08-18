@@ -175,6 +175,10 @@ void AsyncSlam::TrackResult(const FrameId frameId, const int64_t timestamp_ns,
           continue;  // skip invalid camera ID
         }
         const auto& intrinsics = rig_.intrinsics[cam_id];
+        if (intrinsics == nullptr) {
+          SlamStderr("Intrinsics for camera %zu should not be null", static_cast<size_t>(cam_id));
+          continue;
+        }
         Vector2T uv_norm;
         intrinsics->normalizePoint(uv, uv_norm);
         vo_keyframe->frame_data.tracks2d_norm.emplace_back(VOFrameData::Track2DXY{cam_id, track_id, uv_norm});
