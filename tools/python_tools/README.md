@@ -158,7 +158,6 @@ cuvslam_reporter \
     --odometry_mode inertial \
     --rectified_stereo_camera false \
     --async_sba false \
-    --multicam_mode moderate \
     --use_segments
 ```
 
@@ -209,7 +208,6 @@ cuvslam_reporter \
     --odometry_mode multicamera \
     --rectified_stereo_camera true \
     --async_sba false \
-    --multicam_mode moderate \
     --use_segments
 ```
 
