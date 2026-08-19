@@ -295,8 +295,7 @@ NB_MODULE(pycuvslam, m) {
       .value("Brown", Distortion::Model::Brown, "Brown distortion model with 3 radial and 2 tangential coefficients")
       .value("Fisheye", Distortion::Model::Fisheye, "Fisheye distortion model (equidistant) with 4 coefficients")
       .value("Polynomial", Distortion::Model::Polynomial,
-             "Polynomial distortion model with 8 coefficients, order: (k1, k2, p1, p2, k3, k4, k5, k6)")
-      .export_values();
+             "Polynomial distortion model with 8 coefficients, order: (k1, k2, p1, p2, k3, k4, k5, k6)");
 
   auto cam_cls =
       nb::class_<Camera>(m, "Camera",
@@ -424,13 +423,12 @@ NB_MODULE(pycuvslam, m) {
   // Odometry class must be defined before its nested enums/classes are bound to it.
   auto odom_cls = nb::class_<Odometry>(m, "Odometry", "Visual Inertial Odometry (VIO) Tracker");
 
-  nb::enum_<Odometry::MulticameraMode>(odom_cls, "MulticameraMode")
+  nb::enum_<Odometry::MulticameraMode>(odom_cls, "MulticameraMode", "Multicamera tracking modes")
       .value("Performance", Odometry::MulticameraMode::Performance, "Optimized for speed")
       .value("Precision", Odometry::MulticameraMode::Precision, "Optimized for accuracy")
-      .value("Moderate", Odometry::MulticameraMode::Moderate, "Balance between speed and accuracy")
-      .export_values();
+      .value("Moderate", Odometry::MulticameraMode::Moderate, "Balance between speed and accuracy");
 
-  nb::enum_<Odometry::OdometryMode>(odom_cls, "OdometryMode")
+  nb::enum_<Odometry::OdometryMode>(odom_cls, "OdometryMode", "Sensor configurations supported by odometry")
       .value("Multicamera", Odometry::OdometryMode::Multicamera,
              "Uses multiple synchronized cameras, all cameras need to have frustum overlap with at least one another. "
              "Simplest case: stereo camera pair.")
@@ -451,8 +449,7 @@ NB_MODULE(pycuvslam, m) {
              " - The current solver supports pinhole cameras; other camera models are not supported.\n"
              " - Depth images passed to track() must be 2D uint16 ndarrays (cuVSLAM's C++ contract also accepts "
              "FLOAT32, but the current PyCuVSLAM binding only exposes uint16); each depth image's camera_index must "
-             "appear in MultisensorSettings.depth_camera_ids.")
-      .export_values();
+             "appear in MultisensorSettings.depth_camera_ids.");
 
   // Multisensor Settings class — describes available sensors at construction time for OdometryMode::Multisensor.
   nb::class_<Odometry::MultisensorSettings>(
@@ -497,7 +494,7 @@ NB_MODULE(pycuvslam, m) {
             .format(settings.depth_scale_factor, settings.depth_camera_id, settings.enable_depth_stereo_tracking);
       });
 
-  nb::class_<Odometry::Config>(odom_cls, "Config")
+  nb::class_<Odometry::Config>(odom_cls, "Config", "Odometry configuration parameters")
       // WARNING: the order of init arguments in this definition must coincide with the order in the structure
       .def(nb::init<Odometry::MulticameraMode, Odometry::OdometryMode, bool, bool, bool, bool, bool, bool, bool, bool,
                     float, std::string_view, bool, const Odometry::RGBDSettings&,
@@ -808,11 +805,10 @@ NB_MODULE(pycuvslam, m) {
       .value("Landmarks", Slam::DataLayer::Landmarks, "Landmarks that are visible in the current frame")
       .value("Map", Slam::DataLayer::Map, "Landmarks of the map")
       .value("LoopClosure", Slam::DataLayer::LoopClosure,
-             "Map's landmarks that are visible in the last loop closure event")
-      // currently we don't expose EnableReadingData()/DisableReadingData() to python,
-      // so we only need layer names for ReadLandmarks() binding
-      // .value("PoseGraph", Slam::DataLayer::PoseGraph, "Pose Graph")
-      .export_values();
+             "Map's landmarks that are visible in the last loop closure event");
+  // currently we don't expose EnableReadingData()/DisableReadingData() to python,
+  // so we only need layer names for ReadLandmarks() binding
+  // .value("PoseGraph", Slam::DataLayer::PoseGraph, "Pose Graph");
 
   nb::class_<Slam::Config>(slam_cls, "Config", "SLAM configuration parameters")
       .def(nb::init<>())
