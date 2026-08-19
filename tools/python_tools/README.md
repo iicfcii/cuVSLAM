@@ -72,7 +72,7 @@ Reinstall the binding after rebuilding `libcuvslam.so`.
 | Command | Purpose |
 |---|---|
 | `prepare_kitti` | Download KITTI odometry archives, convert them to cuVSLAM format, and generate KITTI reporter configs. |
-| `prepare_euroc` | Download the EuRoC MAV Machine Hall bundle and convert `MH_01_easy` to EDEX plus TUM-format ground truth. |
+| `prepare_euroc` | Download and convert all 11 official EuRoC MAV sequences, or an explicit subset, to portable EDEX and reporter configs. |
 | `prepare_tartan` | Download TartanGround data and convert TartanGround stereo pairs or compatible TartanAir-layout sequences to EDEX. |
 | `prepare_tum` | Download and lay out the TUM RGB-D `freiburg3_long_office_household` dataset. |
 | `cuvslam_tracker` | Run one EDEX sequence or supported video input through cuVSLAM. |
@@ -120,12 +120,45 @@ prepare_kitti \
 
 The converted dataset layout is suitable for tracker and reporter workflows. Pass one of the generated KITTI config files to `cuvslam_reporter --test_config`.
 
-`prepare_euroc` downloads the EuRoC MAV Machine Hall bundle, extracts `MH_01_easy`, and writes converted data under `euroc/MH_01_easy`.
+`prepare_euroc` downloads the official Machine Hall, Vicon Room 1, and Vicon Room 2 bundles and converts all 11
+EuRoC MAV sequences. The output is portable: camera images are copied under each prepared sequence instead of
+being linked to raw data outside the prepared root.
 
 ```bash
 prepare_euroc \
     --raw-dir /path/to/datasets/euroc/raw \
     --output-dir /path/to/datasets/converted
+```
+
+Use `--sequences` for a smaller conversion. Only bundles needed by the selected sequences are downloaded:
+
+```bash
+prepare_euroc \
+    --raw-dir /path/to/datasets/euroc/raw \
+    --output-dir /path/to/datasets/converted \
+    --sequences MH_01_easy
+```
+
+The prepared root is `/path/to/datasets/converted/euroc`. It contains ODOM, SLAM, and combined reporter configs
+plus `dataset_metadata.json`. Every sequence contains `stereo.edex`, `frame_metadata.jsonl`, `IMU.jsonl`,
+camera-aligned `gt.txt`, and copied `00/` and `01/` media directories.
+
+The reporter layout intentionally uses the recalibrated cam0-relative fisheye parameters checked in under
+`examples/euroc/` to reproduce the technical-report and benchmark results. It does not use the original
+per-sequence camera calibration from the source archives. The official EuRoC cam0 body-from-sensor transform is
+used only to express body-frame ground truth in the cam0 frame.
+
+Run the combined inertial ODOM+SLAM report with:
+
+```bash
+cuvslam_reporter \
+    --test_config /path/to/datasets/converted/euroc/euroc-vio_slam.cfg \
+    --datasets_root /path/to/datasets/converted \
+    --output_root /tmp/cuvslam-euroc-reports \
+    --odometry_mode inertial \
+    --rectified_stereo_camera false \
+    --async_sba false \
+    --use_segments
 ```
 
 `prepare_tartan` downloads a TartanGround variant, stages each available `lcam_*`/`rcam_*` stereo pair into the classic TartanAir layout expected by the converter, and converts the staged sequences to EDEX.
@@ -175,7 +208,6 @@ cuvslam_reporter \
     --odometry_mode multicamera \
     --rectified_stereo_camera true \
     --async_sba false \
-    --multicam_mode moderate \
     --use_segments
 ```
 

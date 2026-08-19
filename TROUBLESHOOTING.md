@@ -596,6 +596,36 @@ For real-time or high-throughput operation, enable async mode. Adjust these para
 2. `Slam::Config::throttling_time_ms`
 3. `Slam::Config::sync_mode`
 
+### Verify SLAM keeps up with odometry
+
+In async mode SLAM runs on a background thread that is fed a queue of commands: keyframes produced by odometry, map
+localization and map saving requests. If SLAM cannot keep up, this queue grows and the poses and loop closures SLAM
+reports refer to an increasingly old point of the trajectory.
+
+To diagnose this, enable verbose logging and check the `delay_warning_queue_size` parameter. You’ll see a console
+message whenever more commands are queued to the SLAM thread than the configured number:
+
+```text
+[WARNING] SLAM is behind odometry: XXX commands are queued to the SLAM thread that is more than desired YYY.
+          Check SLAM settings: reduce max_map_size or increase throttling_time_ms.
+```
+
+Note that a single slow command—loading a large map, for example—delays every keyframe queued behind it, so the
+queue length is what matters, not only the number of keyframes.
+
+If you see this warning, reduce the SLAM workload: lower `max_map_size`, increase `throttling_time_ms` to make loop
+closures less frequent, or set `map_cache_path` so a large map is kept on disk instead of in memory.
+
+**C++ API**
+
+```cpp
+cuvslam::Slam::Config::delay_warning_queue_size
+```
+
+**Python API**
+
+[cuvslam.core.Slam.Config.delay_warning_queue_size](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Slam.Config.delay_warning_queue_size)
+
 ## EDEX file
 
 An EDEX file is the standard JSON “scene file” for cuVSLAM. It describes the camera rig, image (and optional depth)

@@ -12,6 +12,7 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -50,6 +51,175 @@ class TestDatasetPreparationCli(unittest.TestCase):
             ],
             check=False,
         )
+
+    def test_prepare_euroc_passes_explicit_sequence_subset(self):
+        completed = subprocess.CompletedProcess(args=[], returncode=0)
+        script = Path("/src/euroc/prepare_euroc.sh")
+
+        with mock.patch.object(
+            euroc_cli,
+            "resolve_prepare_script",
+            return_value=(script, True),
+        ), mock.patch.object(euroc_cli.subprocess, "run", return_value=completed) as run:
+            self.assertEqual(
+                euroc_cli.main(
+                    [
+                        "--raw-dir",
+                        "/raw",
+                        "--output-dir",
+                        "/converted",
+                        "--sequences",
+                        "MH_01_easy",
+                        "V1_01_easy",
+                    ]
+                ),
+                0,
+            )
+
+        run.assert_called_once_with(
+            [
+                "bash",
+                str(script),
+                "--raw-dir",
+                "/raw",
+                "--output-dir",
+                "/converted",
+                "--sequences",
+                "MH_01_easy",
+                "V1_01_easy",
+            ],
+            check=False,
+        )
+
+    def test_download_euroc_rejects_corrupt_cached_archive(self):
+        script = (
+            Path(__file__).resolve().parents[1]
+            / "dataset_preparation"
+            / "euroc"
+            / "download_euroc.sh"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            raw_dir = Path(temporary)
+            (raw_dir / "machine_hall.zip").write_bytes(b"corrupt")
+
+            completed = subprocess.run(
+                [
+                    "bash",
+                    str(script),
+                    "--archive",
+                    "machine_hall.zip",
+                    str(raw_dir),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(completed.returncode, 1)
+        self.assertIn("md5 mismatch for existing", completed.stderr)
+        self.assertIn("re-run with --force", completed.stderr)
+
+    def test_download_euroc_sets_explicit_user_agent(self):
+        script = (
+            Path(__file__).resolve().parents[1]
+            / "dataset_preparation"
+            / "euroc"
+            / "download_euroc.sh"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            raw_dir = root / "raw"
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            curl = fake_bin / "curl"
+            curl.write_text(
+                "#!/usr/bin/env bash\n"
+                "user_agent=\n"
+                "output=\n"
+                "while [[ $# -gt 0 ]]; do\n"
+                "    case \"$1\" in\n"
+                "        -A) user_agent=\"$2\"; shift 2 ;;\n"
+                "        -o) output=\"$2\"; shift 2 ;;\n"
+                "        *) shift ;;\n"
+                "    esac\n"
+                "done\n"
+                "[[ \"$user_agent\" == cuVSLAM-dataset-preparation/1.0 ]] || exit 42\n"
+                "printf 'synthetic archive' >\"$output\"\n"
+            )
+            curl.chmod(0o755)
+            md5sum = fake_bin / "md5sum"
+            md5sum.write_text(
+                "#!/usr/bin/env bash\n"
+                "printf '363f5c2502b469cdd97ef85997714806  %s\\n' \"$2\"\n"
+            )
+            md5sum.chmod(0o755)
+            env = dict(os.environ)
+            env["PATH"] = f"{fake_bin}:{env['PATH']}"
+
+            completed = subprocess.run(
+                [
+                    "bash",
+                    str(script),
+                    "--archive",
+                    "machine_hall.zip",
+                    str(raw_dir),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("done", completed.stdout)
+
+    def test_prepare_euroc_subset_downloads_only_required_bundle(self):
+        script = (
+            Path(__file__).resolve().parents[1]
+            / "dataset_preparation"
+            / "euroc"
+            / "prepare_euroc.sh"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            raw_dir = root / "raw"
+            raw_dir.mkdir()
+            (raw_dir / "machine_hall.zip").write_bytes(b"synthetic archive")
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            md5sum = fake_bin / "md5sum"
+            md5sum.write_text(
+                "#!/usr/bin/env bash\n"
+                "printf '363f5c2502b469cdd97ef85997714806  %s\\n' \"$2\"\n"
+            )
+            md5sum.chmod(0o755)
+            curl = fake_bin / "curl"
+            curl.write_text("#!/usr/bin/env bash\nexit 99\n")
+            curl.chmod(0o755)
+            env = dict(os.environ)
+            env["PATH"] = f"{fake_bin}:{env['PATH']}"
+
+            completed = subprocess.run(
+                [
+                    "bash",
+                    str(script),
+                    "--raw-dir",
+                    str(raw_dir),
+                    "--output-dir",
+                    str(root / "output"),
+                    "--sequences",
+                    "MH_01_easy",
+                    "--download-only",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("using verified", completed.stdout)
+        self.assertNotIn("vicon_room", completed.stdout)
 
     def test_prepare_tartan_passes_variant_and_paths(self):
         completed = subprocess.CompletedProcess(args=[], returncode=7)
