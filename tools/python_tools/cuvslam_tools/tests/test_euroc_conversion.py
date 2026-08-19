@@ -342,7 +342,7 @@ class TestEurocConfigGeneration(unittest.TestCase):
 
     def test_all_eleven_configs_resolve_and_name_edex_and_ground_truth(self):
         with tempfile.TemporaryDirectory() as temporary:
-            output = Path(temporary) / "euroc"
+            output = Path(temporary) / "custom-euroc-output"
             output.mkdir()
             for sequence in convert_euroc.ALL_SEQS:
                 sequence_dir = output / sequence
@@ -358,6 +358,11 @@ class TestEurocConfigGeneration(unittest.TestCase):
                 ["euroc-slam.cfg", "euroc-vio.cfg", "euroc-vio_slam.cfg"],
             )
             combined = json.loads((output / "euroc-vio_slam.cfg").read_text(encoding="utf-8"))
+            self.assertEqual(combined["dataset_folder"], "custom-euroc-output/")
+            self.assertEqual(
+                (output.parent / combined["dataset_folder"]).resolve(),
+                output.resolve(),
+            )
             self.assertEqual(len(combined["sequence_cfgs"]), 22)
             self.assertEqual(
                 {entry["sequence_folder"] for entry in combined["sequence_cfgs"]},

@@ -460,13 +460,15 @@ def _sequence_config_entry(sequence: str, mode: str) -> List[Tuple[str, object]]
     return fields
 
 
-def _format_config(entries: List[List[Tuple[str, object]]]) -> str:
+def _format_config(
+    entries: List[List[Tuple[str, object]]], dataset_folder: str
+) -> str:
     lines = [
         "{",
         '    "version": "0.1",',
         '    "write_cache": false,',
         '    "use_cuda": false,',
-        '    "dataset_folder": "euroc/",',
+        f'    "dataset_folder": {_json_scalar(dataset_folder)},',
         '    "use_icp_scaling": false,',
         '    "segment_lengths": [1, 2, 3, 5, 7.5, 10, 15, 20, 25, 35, 45],',
         '    "sequence_cfgs": [',
@@ -486,6 +488,7 @@ def _write_configs(output_dir: Path, sequences: Sequence[str]) -> List[str]:
     if not sequences:
         raise ConversionError("no sequences selected")
 
+    dataset_folder = output_dir.resolve().name + "/"
     odometry_entries = [_sequence_config_entry(sequence, "odom") for sequence in sequences]
     slam_entries = [_sequence_config_entry(sequence, "slam") for sequence in sequences]
     combined_entries = [
@@ -495,9 +498,9 @@ def _write_configs(output_dir: Path, sequences: Sequence[str]) -> List[str]:
     ]
 
     configs = {
-        "euroc-vio.cfg": _format_config(odometry_entries),
-        "euroc-slam.cfg": _format_config(slam_entries),
-        "euroc-vio_slam.cfg": _format_config(combined_entries),
+        "euroc-vio.cfg": _format_config(odometry_entries, dataset_folder),
+        "euroc-slam.cfg": _format_config(slam_entries, dataset_folder),
+        "euroc-vio_slam.cfg": _format_config(combined_entries, dataset_folder),
     }
     for config_name, contents in configs.items():
         (output_dir / config_name).write_text(contents, encoding="utf-8")
