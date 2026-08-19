@@ -27,6 +27,8 @@ jobs:
   check-changes:
     name: Check for recent changes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       should_build: ${{ steps.decide.outputs.should_build }}
       is_release: ${{ steps.decide.outputs.is_release }}
@@ -80,6 +82,31 @@ jobs:
           else
             echo "should_build=false" >> "$GITHUB_OUTPUT"
             echo "Skipping: no commits in last 24h, force=${FORCE}, release=${IS_RELEASE}"
+          fi
+
+      - name: Verify release target is available
+        if: steps.decide.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.decide.outputs.release_tag }}
+        run: |
+          set -euo pipefail
+          existing_release=$(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              --jq ".[] | select(.tag_name == \"${TAG}\") | [.id, .draft, .html_url] | @tsv"
+          )
+          if [ -n "$existing_release" ]; then
+            echo "::error::A draft or published release already targets ${TAG}. Delete an obsolete draft explicitly before rebuilding; published releases must not be replaced."
+            echo "$existing_release"
+            exit 1
+          fi
+          existing_tag=$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${TAG}" \
+              --jq ".[] | select(.ref == \"refs/tags/${TAG}\") | .ref"
+          )
+          if [ -n "$existing_tag" ]; then
+            echo "::error::Git tag ${TAG} already exists. Refusing to move or replace it."
+            exit 1
           fi
 
   build-and-test:
@@ -641,14 +668,8 @@ jobs:
       actions: read
       contents: write  # Required by gh release create below.
     steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: cuvslam-*
-          path: release-assets
-          merge-multiple: true
-
-      - name: Verify release does not already exist
+      # Recheck after the matrix to catch a release or tag created since preflight.
+      - name: Recheck release target is available
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.check-changes.outputs.release_tag }}
@@ -663,10 +684,21 @@ jobs:
             echo "$existing_release"
             exit 1
           fi
-          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG}" >/dev/null 2>&1; then
+          existing_tag=$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${TAG}" \
+              --jq ".[] | select(.ref == \"refs/tags/${TAG}\") | .ref"
+          )
+          if [ -n "$existing_tag" ]; then
             echo "::error::Git tag ${TAG} already exists. Refusing to move or replace it."
             exit 1
           fi
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: cuvslam-*
+          path: release-assets
+          merge-multiple: true
 
       - name: Validate release assets and prepare notes
         env:

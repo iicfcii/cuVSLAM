@@ -10,6 +10,7 @@
 ### Fixed
 
 - Unsynchronized reads of the SLAM engine during map localization (`LocalizeInMapCmd::Execute`)
+- Unnecessary mutex contention in `AsyncSlam::GetSlamPose()`
 
 ## [17.0.0] - 2026-07-21
 
