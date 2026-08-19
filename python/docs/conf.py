@@ -16,8 +16,10 @@ import enum
 import inspect
 import os
 import sys
+
 from sphinx.ext.autodoc import AttributeDocumenter, ClassDocumenter
 from sphinx.util.docstrings import prepare_docstring
+
 sys.path.insert(0, os.path.abspath('../../..'))
 
 project = 'PyCuVSLAM'
@@ -68,7 +70,7 @@ class NanobindEnumValueDocumenter(AttributeDocumenter):
     priority = AttributeDocumenter.priority + 1
 
     @classmethod
-    def can_document_member(cls, member, membername, isattr, parent):
+    def can_document_member(_cls, member, _membername, _isattr, _parent) -> bool:
         return isinstance(member, enum.Enum)
 
     def get_doc(self):
@@ -87,7 +89,7 @@ class NanobindClassDocumenter(ClassDocumenter):
         if self.object.__module__ == 'cuvslam.pycuvslam':
             definition_order = {name: index for index, name in enumerate(self.object.__dict__)}
 
-            def member_position(entry):
+            def member_position(entry) -> int:
                 name = entry[0].name.rsplit('.', 1)[-1]
                 return definition_order.get(name, len(definition_order))
 
