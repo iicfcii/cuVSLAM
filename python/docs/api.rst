@@ -3,18 +3,19 @@ API Reference
 
 .. module:: cuvslam
 
-This module provides Python bindings for the cuVSLAM library.
+Tracker coordinates frame and IMU processing across Odometry and optional Slam. Odometry estimates
+rig motion from sensor input; Slam builds and optimizes a reusable map from odometry results.
 
 Main classes
 ------------
+
+.. autoclass:: Tracker
+   :members:
 
 .. autoclass:: Odometry
    :members:
 
 .. autoclass:: Slam
-   :members:
-
-.. autoclass:: Tracker
    :members:
 
 Data Structures

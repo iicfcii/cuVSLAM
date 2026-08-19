@@ -421,7 +421,10 @@ NB_MODULE(pycuvslam, m) {
   // Data structures from Odometry class
 
   // Odometry class must be defined before its nested enums/classes are bound to it.
-  auto odom_cls = nb::class_<Odometry>(m, "Odometry", "Visual Inertial Odometry (VIO) Tracker");
+  auto odom_cls = nb::class_<Odometry>(
+      m, "Odometry",
+      "Estimates the rig pose from synchronized camera images and optional depth/IMU data.\n\n"
+      "Use directly for odometry-only workflows, or access Tracker's instance through `get_odometry()`.");
 
   nb::enum_<Odometry::MulticameraMode>(odom_cls, "MulticameraMode", "Multicamera tracking modes")
       .value("Performance", Odometry::MulticameraMode::Performance, "Optimized for speed")
@@ -799,7 +802,11 @@ NB_MODULE(pycuvslam, m) {
           "    parameters (dict[str, str]): Map of key/value string pairs to apply.");
 
   // Slam class must be defined before its nested enums/classes are bound to it.
-  auto slam_cls = nb::class_<Slam>(m, "Slam", "Simultaneous Localization and Mapping (SLAM)");
+  auto slam_cls = nb::class_<Slam>(
+      m, "Slam",
+      "Builds and optimizes a reusable map from odometry results, including loop closure, map persistence, and "
+      "relocalization.\n\n"
+      "Use directly for manual orchestration, or access Tracker's instance through `get_slam()`.");
 
   nb::enum_<Slam::DataLayer>(slam_cls, "DataLayer", "Data layer for SLAM")
       .value("Landmarks", Slam::DataLayer::Landmarks, "Landmarks that are visible in the current frame")

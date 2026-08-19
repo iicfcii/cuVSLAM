@@ -337,7 +337,10 @@ struct Landmark {
 };
 
 /**
- * @brief Visual Inertial Odometry (VIO) Tracker
+ * @brief Estimates rig motion from camera, depth, and IMU input
+ *
+ * Processes synchronized sensor data to estimate the rig pose. Use directly for odometry-only
+ * workflows, or through Tracker when coordinating with SLAM.
  */
 class CUVSLAM_API Odometry {
 public:
@@ -745,7 +748,10 @@ struct Result {
 };
 
 /**
- * Simultaneous Localization and Mapping (SLAM)
+ * @brief Builds and optimizes a reusable map from odometry results
+ *
+ * Consumes Odometry::State to maintain a pose graph, detect loop closures, save and load maps, and
+ * relocalize in an existing map.
  *
  * Thread safety: all methods must be called from a single thread, except LocalizeInMap()
  * and SaveMap() which may be called concurrently with any other method from another thread.
