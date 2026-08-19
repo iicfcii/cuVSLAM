@@ -1004,16 +1004,15 @@ private:
  * Slam::Track() when odometry produced a pose, then Slam::GetPose().
  *
  * Everything Tracker does can be done by driving Odometry and Slam directly; use those when you
- * need full control over the two components. Tracker is the recommended entry point otherwise, and
- * the SLAM accessors below are safe to call when SLAM is disabled (they return empty results).
+ * need full control over the two components. Tracker is the recommended entry point otherwise.
  *
- * The underlying components stay reachable through GetOdometry() and GetSlam(), so anything not
- * mirrored here - odometry expert parameters, SLAM data layer reading, and so on - remains
- * available without unwrapping the tracker.
+ * The underlying components stay reachable through GetOdometry() and GetSlam(). Tracker only
+ * coordinates inputs that advance the odometry/SLAM pipeline; queries and module-specific
+ * operations are performed on the component that owns them.
  *
  * Thread safety: same as the underlying components. Track() and RegisterImuMeasurement() must be
- * called from a single thread in non-decreasing timestamp order; SaveMap() and LocalizeInMap() may
- * be called concurrently from another thread.
+ * called from a single thread in non-decreasing timestamp order. Operations performed through
+ * GetOdometry() and GetSlam() follow the thread-safety contracts of those classes.
  */
 class CUVSLAM_API Tracker {
 public:
@@ -1080,9 +1079,9 @@ public:
    *
    * Odometry poses stay in the same coordinate frame until a loss of tracking. SLAM poses jump when
    * a loop closure is detected and the pose graph is optimized; they are never adjusted
-   * retroactively, so use GetAllSlamPoses() to get a smooth trajectory up to the latest frame. In
-   * asynchronous mode loop closure runs on a separate thread to keep Track() fast, so SLAM poses
-   * are not updated immediately.
+   * retroactively, so use GetSlam().GetAllSlamPoses() to get a smooth trajectory up to the latest
+   * frame. In asynchronous mode loop closure runs on a separate thread to keep Track() fast, so
+   * SLAM poses are not updated immediately.
    *
    * @param[in]  images     synchronized images, no more than the number of cameras in the rig
    * @param[in]  masks      (Optional) corresponding masks
@@ -1113,43 +1112,6 @@ public:
   void RegisterImuMeasurement(uint32_t sensor_index, const ImuMeasurement& imu);
 
   /**
-   * @brief Get an array of observations from the last frame for a specific camera
-   *
-   * @param[in] camera_index Index of the camera to get observations for
-   * @return Array of observations
-   * @throws std::invalid_argument if observations export is disabled
-   * @see Odometry::GetLastObservations
-   */
-  std::vector<Observation> GetLastObservations(uint32_t camera_index) const;
-
-  /**
-   * @brief Get an array of landmarks from the last frame
-   *
-   * @return Array of landmarks
-   * @throws std::invalid_argument if landmarks export is disabled
-   * @see Odometry::GetLastLandmarks
-   */
-  std::vector<Landmark> GetLastLandmarks() const;
-
-  /**
-   * @brief Get gravity acceleration vector in the last rig / VO frame
-   *
-   * @return Optional gravity vector. Empty if gravity is not yet available.
-   * @throws std::invalid_argument if IMU fusion is disabled
-   * @see Odometry::GetLastGravity
-   */
-  std::optional<Odometry::Gravity> GetLastGravity() const;
-
-  /**
-   * @brief Get all final landmarks from all frames
-   *
-   * @return map of landmark id to its position in the odometry start frame
-   * @throws std::invalid_argument if final landmarks export is disabled
-   * @see Odometry::GetFinalLandmarks
-   */
-  std::unordered_map<uint64_t, Vector3f> GetFinalLandmarks() const;
-
-  /**
    * @brief Is SLAM enabled
    *
    * @return true when the tracker was constructed with a SLAM configuration
@@ -1157,82 +1119,28 @@ public:
   bool IsSlamEnabled() const;
 
   /**
-   * @brief Get all SLAM poses for each frame
-   *
-   * Recalculates past poses using the current pose graph, so the trajectory is smooth, unlike the
-   * per-frame SLAM poses returned by Track() which jump on loop closures.
-   * This call could be blocked by the slam thread.
-   *
-   * @param[in] max_poses_count maximum number of poses to return, 0 for all
-   * @return poses with timestamps, empty when SLAM is disabled
-   * @see Slam::GetAllSlamPoses
-   */
-  std::vector<PoseStamped> GetAllSlamPoses(uint32_t max_poses_count = 0) const;
-
-  /**
-   * @brief Save SLAM database (map) to folder
-   *
-   * When SLAM is disabled the callback is invoked with `false`.
-   *
-   * @param[in] folder_name Folder name, where SLAM database (map) will be saved
-   * @param[in] callback Callback function to be called when save is complete, may be called in a
-   * separate thread
-   * @see Slam::SaveMap
-   */
-  void SaveMap(const std::string_view& folder_name, std::function<void(bool success)> callback) const;
-
-  /**
-   * @brief Localize in the existing database (map)
-   *
-   * @param[in] folder_name Folder containing the saved SLAM map (database)
-   * @param[in] timestamp_ns Time in nanoseconds for the localized pose
-   * @param[in] guess_pose Initial guess for rig pose at the images' timestamp
-   * @param[in] images Observed images from multicamera (1 - mono, 2 - stereo, etc.)
-   * @param[in] settings Localization settings
-   * @param[in] start_cb Called when localization starts, may be called in a separate thread
-   * @param[in] finish_cb Called when localization completes, may be called in a separate thread
-   * @throws std::invalid_argument if SLAM is disabled
-   * @see Slam::LocalizeInMap
-   */
-  void LocalizeInMap(const std::string_view& folder_name, int64_t timestamp_ns, const Pose& guess_pose,
-                     const ImageSet& images, const Slam::LocalizationSettings& settings, Slam::LocalizeStartCB start_cb,
-                     Slam::LocalizeFinishCB finish_cb);
-
-  /**
-   * @brief Get SLAM metrics
-   *
-   * @return metrics, or empty when SLAM is disabled
-   * @see Slam::GetSlamMetrics
-   */
-  std::optional<Slam::Metrics> GetSlamMetrics() const;
-
-  /**
-   * @brief Get list of last 10 loop closure poses with timestamps
-   *
-   * @return poses with timestamps, empty when SLAM is disabled
-   * @see Slam::GetLoopClosurePoses
-   */
-  std::vector<PoseStamped> GetLoopClosurePoses() const;
-
-  /**
    * @brief Get the underlying odometry
    *
-   * @return odometry owned by this tracker
+   * The returned object is for queries only. Do not call Odometry::Track() on an odometry obtained
+   * from Tracker; use Tracker::Track() so SLAM receives every successful odometry state.
+   *
+   * @return read-only odometry owned by this tracker
    */
-  Odometry& GetOdometry();
-
-  /// @copydoc Tracker::GetOdometry()
   const Odometry& GetOdometry() const;
 
   /**
    * @brief Get the underlying SLAM
    *
-   * @return SLAM owned by this tracker, or nullptr when SLAM is disabled
+   * Do not call Slam::Track() on a SLAM instance obtained from Tracker; use Tracker::Track() so
+   * odometry and SLAM remain synchronized.
+   *
+   * @return SLAM owned by this tracker
+   * @throws std::logic_error if SLAM is disabled
    */
-  Slam* GetSlam();
+  Slam& GetSlam();
 
   /// @copydoc Tracker::GetSlam()
-  const Slam* GetSlam() const;
+  const Slam& GetSlam() const;
 
 private:
   Odometry odometry_;

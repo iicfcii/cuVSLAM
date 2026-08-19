@@ -89,10 +89,10 @@ cuvslam::Odometry::Config::debug_dump_directory
 **Python API**
 
 ```python
-cuvslam.core.Odometry.Config.debug_dump_directory
+cuvslam.Odometry.Config.debug_dump_directory
 ```
 
-See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.debug_dump_directory).
+See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.debug_dump_directory).
 
 **Isaac ROS**
 
@@ -142,7 +142,7 @@ cuvslam::Odometry::Config::max_frame_delta_s
 
 **Python API**
 
-[cuvslam.core.Odometry.Config.max_frame_delta_s](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.max_frame_delta_s)
+[cuvslam.Odometry.Config.max_frame_delta_s](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.max_frame_delta_s)
 
 **Isaac ROS**
 
@@ -177,8 +177,8 @@ cuvslam::Slam::Config::sync_mode = true;
 
 **Python API**
 
-1. [cuvslam.core.Odometry.Config.async_sba](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.async_sba)
-2. [cuvslam.core.Slam.Config.sync_mode](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Slam.Config.sync_mode)
+1. [cuvslam.Odometry.Config.async_sba](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.async_sba)
+2. [cuvslam.Slam.Config.sync_mode](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Slam.Config.sync_mode)
 
 **Isaac ROS**
 
@@ -214,10 +214,10 @@ cuvslam::Slam::Config::enable_reading_internals = true;
 **Python API**
 
 1. [set_verbosity()](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.set_verbosity)
-2. [cuvslam.core.Odometry.Config.enable_observations_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.enable_observations_export)
-3. [cuvslam.core.Odometry.Config.enable_landmarks_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.enable_landmarks_export)
-4. [cuvslam.core.Odometry.Config.enable_final_landmarks_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.enable_final_landmarks_export)
-5. [cuvslam.core.Slam.Config.enable_reading_internals](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Slam.Config.enable_reading_internals)
+2. [cuvslam.Odometry.Config.enable_observations_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.enable_observations_export)
+3. [cuvslam.Odometry.Config.enable_landmarks_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.enable_landmarks_export)
+4. [cuvslam.Odometry.Config.enable_final_landmarks_export](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.enable_final_landmarks_export)
+5. [cuvslam.Slam.Config.enable_reading_internals](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Slam.Config.enable_reading_internals)
 
 **Isaac ROS**
 
@@ -361,10 +361,10 @@ cuvslam::Odometry::Config::rectified_stereo_camera
 **Python API**
 
 ```python
-cuvslam.core.Odometry.Config.rectified_stereo_camera
+cuvslam.Odometry.Config.rectified_stereo_camera
 ```
 
-See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.rectified_stereo_camera).
+See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.rectified_stereo_camera).
 
 **Isaac ROS**
 
@@ -432,10 +432,10 @@ cuvslam::Odometry::Config::use_denoising
 **Python API**
 
 ```python
-cuvslam.core.Odometry.Config.use_denoising
+cuvslam.Odometry.Config.use_denoising
 ```
 
-See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.use_denoising).
+See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.use_denoising).
 
 **Isaac ROS**
 
@@ -477,10 +477,10 @@ cuvslam::Odometry::Config::use_motion_model
 **Python API**
 
 ```python
-cuvslam.core.Odometry.Config.use_motion_model
+cuvslam.Odometry.Config.use_motion_model
 ```
 
-See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Odometry.Config.use_motion_model).
+See [Python API Reference](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Odometry.Config.use_motion_model).
 
 **Isaac ROS**
 
@@ -562,7 +562,7 @@ vertical (up/down) drift is eliminated or greatly reduced. There are two ground 
    cuvslam::Slam::Config::planar_constraints
    ```
    **Python API**
-   [cuvslam.core.Slam.Config.planar_constraints](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.core.Slam.Config.planar_constraints)
+   [cuvslam.Slam.Config.planar_constraints](https://nvidia-isaac.github.io/cuVSLAM/python/api.html#cuvslam.Slam.Config.planar_constraints)
 
    **Isaac ROS**
    ```

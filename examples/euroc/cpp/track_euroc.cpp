@@ -518,7 +518,7 @@ int main(int argc, char **argv) {
 
     // Reading SLAM data layers is not mirrored on Tracker, so reach the SLAM instance directly.
     // It is non-null here because the config above enables SLAM.
-    cuvslam::Slam &slam = *tracker.GetSlam();
+    cuvslam::Slam &slam = tracker.GetSlam();
 
     // Enable SLAM data layers for visualization
     slam.EnableReadingData(cuvslam::Slam::DataLayer::Map, 100000);         // Map landmarks
@@ -616,7 +616,8 @@ int main(int argc, char **argv) {
         tracked_frames++;
 
         // Get loop closure poses
-        const auto current_lc_poses = tracker.GetLoopClosurePoses();
+        std::vector<cuvslam::PoseStamped> current_lc_poses;
+        slam.GetLoopClosurePoses(current_lc_poses);
         for (const auto &lc : current_lc_poses) {
           if (reported_loop_closures.find(lc.timestamp_ns) == reported_loop_closures.end()) {
             reported_loop_closures.insert(lc.timestamp_ns);
@@ -696,7 +697,7 @@ int main(int argc, char **argv) {
         rec.log("world/camera_0/axes", rerun::Arrows3D::from_vectors(axes_vectors).with_colors(axes_colors));
 
         // Log observations
-        auto observations = tracker.GetLastObservations(0);
+        auto observations = tracker.GetOdometry().GetLastObservations(0);
         if (!observations.empty()) {
           std::vector<rerun::Vec2D> points;
           std::vector<rerun::Color> colors;
@@ -720,7 +721,7 @@ int main(int argc, char **argv) {
                     img_right.data, {static_cast<uint32_t>(img_right.width), static_cast<uint32_t>(img_right.height)}));
 
         // Log gravity vector
-        auto gravity = tracker.GetLastGravity();
+        auto gravity = tracker.GetOdometry().GetLastGravity();
         if (gravity.has_value()) {
           const auto &g = gravity.value();
           rec.log("world/camera_0/gravity",

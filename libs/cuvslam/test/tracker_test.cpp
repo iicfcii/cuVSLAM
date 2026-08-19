@@ -15,6 +15,8 @@
  */
 
 #include <cstdint>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "common/include_gtest.h"
@@ -23,10 +25,12 @@
 namespace {
 
 using cuvslam::Odometry;
-using cuvslam::Pose;
 using cuvslam::Rig;
 using cuvslam::Slam;
 using cuvslam::Tracker;
+
+static_assert(std::is_same_v<decltype(std::declval<Tracker&>().GetOdometry()), const Odometry&>);
+static_assert(std::is_same_v<decltype(std::declval<Tracker&>().GetSlam()), Slam&>);
 
 constexpr int32_t kWidth = 640;
 constexpr int32_t kHeight = 480;
@@ -90,51 +94,25 @@ TEST_F(TrackerTest, SlamIsDisabledByDefault) {
   Tracker tracker{rig};
 
   EXPECT_FALSE(tracker.IsSlamEnabled());
-  EXPECT_EQ(tracker.GetSlam(), nullptr);
+  EXPECT_THROW(tracker.GetSlam(), std::logic_error);
 
   const auto result = tracker.Track(NextFrame());
   EXPECT_TRUE(result.odometry.world_from_rig.has_value());
   EXPECT_FALSE(result.slam.has_value());
-
-  EXPECT_TRUE(tracker.GetAllSlamPoses().empty());
-  EXPECT_TRUE(tracker.GetLoopClosurePoses().empty());
-  EXPECT_FALSE(tracker.GetSlamMetrics().has_value());
-}
-
-TEST_F(TrackerTest, SaveMapWithoutSlamReportsFailure) {
-  Tracker tracker{rig};
-
-  bool called = false;
-  bool success = true;
-  tracker.SaveMap("unused_folder", [&](bool result) {
-    called = true;
-    success = result;
-  });
-
-  EXPECT_TRUE(called);
-  EXPECT_FALSE(success);
-}
-
-TEST_F(TrackerTest, LocalizeInMapWithoutSlamThrows) {
-  Tracker tracker{rig};
-
-  EXPECT_THROW(tracker.LocalizeInMap(
-                   "unused_folder", kFramePeriodNs, Pose{}, NextFrame(), Slam::LocalizationSettings{}, [] {},
-                   [](const cuvslam::Result<Pose>&) {}),
-               std::invalid_argument);
 }
 
 TEST_F(TrackerTest, TrackReturnsSlamPoseWhenEnabled) {
   Tracker tracker{rig, MakeSyncConfig(/*enable_slam=*/true)};
 
   EXPECT_TRUE(tracker.IsSlamEnabled());
-  EXPECT_NE(tracker.GetSlam(), nullptr);
+  EXPECT_NO_THROW(tracker.GetSlam());
 
   const auto result = tracker.Track(NextFrame());
   ASSERT_TRUE(result.odometry.world_from_rig.has_value());
   EXPECT_TRUE(result.slam.has_value());
 
-  EXPECT_TRUE(tracker.GetSlamMetrics().has_value());
+  Slam::Metrics metrics;
+  EXPECT_NO_THROW(tracker.GetSlam().GetSlamMetrics(metrics));
 }
 
 // A SLAM configuration must turn on the exports SLAM depends on, whatever the odometry config said.
@@ -146,8 +124,8 @@ TEST_F(TrackerTest, SlamConfigEnablesRequiredExports) {
   Tracker tracker{rig, cfg};
   tracker.Track(NextFrame());
 
-  EXPECT_NO_THROW(tracker.GetLastObservations(0));
-  EXPECT_NO_THROW(tracker.GetLastLandmarks());
+  EXPECT_NO_THROW(tracker.GetOdometry().GetLastObservations(0));
+  EXPECT_NO_THROW(tracker.GetOdometry().GetLastLandmarks());
 
   // The caller's config is an input, not scratch space.
   EXPECT_FALSE(cfg.odometry.enable_observations_export);
@@ -163,8 +141,8 @@ TEST_F(TrackerTest, ExportsStayDisabledWithoutSlam) {
   Tracker tracker{rig, cfg};
   tracker.Track(NextFrame());
 
-  EXPECT_THROW(tracker.GetLastObservations(0), std::invalid_argument);
-  EXPECT_THROW(tracker.GetLastLandmarks(), std::invalid_argument);
+  EXPECT_THROW(tracker.GetOdometry().GetLastObservations(0), std::invalid_argument);
+  EXPECT_THROW(tracker.GetOdometry().GetLastLandmarks(), std::invalid_argument);
 }
 
 TEST_F(TrackerTest, ExposesUnderlyingComponents) {
@@ -175,10 +153,9 @@ TEST_F(TrackerTest, ExposesUnderlyingComponents) {
   tracker.Track(NextFrame());
 
   // Data layer reading is reached through the SLAM accessor rather than mirrored on Tracker.
-  Slam* slam = tracker.GetSlam();
-  ASSERT_NE(slam, nullptr);
-  slam->EnableReadingData(Slam::DataLayer::Landmarks, 1000);
-  EXPECT_NO_THROW(slam->ReadLandmarks(Slam::DataLayer::Landmarks));
+  Slam& slam = tracker.GetSlam();
+  slam.EnableReadingData(Slam::DataLayer::Landmarks, 1000);
+  EXPECT_NO_THROW(slam.ReadLandmarks(Slam::DataLayer::Landmarks));
 }
 
 // Moving must carry the odometry and SLAM instances over intact. Note that a blank scene has nothing
@@ -191,7 +168,7 @@ TEST_F(TrackerTest, MoveKeepsComponentsUsable) {
   Tracker moved{std::move(tracker)};
 
   EXPECT_TRUE(moved.IsSlamEnabled());
-  EXPECT_NE(moved.GetSlam(), nullptr);
+  EXPECT_NO_THROW(moved.GetSlam());
   EXPECT_FALSE(moved.GetOdometry().GetPrimaryCameras().empty());
   EXPECT_NO_THROW(moved.Track(NextFrame()));
 }

@@ -5,6 +5,21 @@ API Reference
 
 This module provides Python bindings for the cuVSLAM library.
 
+``Odometry`` and ``Slam`` are available directly in this module. The former
+``cuvslam.core`` namespace remains as a deprecated compatibility alias.
+
+Core classes
+------------
+
+.. autoclass:: Odometry
+   :members:
+
+.. autoclass:: Slam
+   :members:
+
+.. autoclass:: cuvslam.Odometry.Config
+   :members:
+
 Data Structures
 ---------------
 
@@ -35,37 +50,16 @@ Data Structures
 .. autoclass:: Observation
    :members:
 
-.. autoclass:: cuvslam.core.Odometry.MulticameraMode
-   :members:
-
-.. autoclass:: cuvslam.core.Odometry.OdometryMode
-   :members:
-
-.. autoclass:: cuvslam.core.Odometry.Config
-   :members:
-
-.. autoclass:: cuvslam.core.Odometry.RGBDSettings
-   :members:
-
-.. autoclass:: cuvslam.core.Odometry.MultisensorSettings
-   :members:
-
-.. autoclass:: cuvslam.core.Slam.Config
-   :members:
-
-.. autoclass:: cuvslam.core.Slam.Metrics
-   :members:
-
-.. autoclass:: cuvslam.core.Slam.LocalizationSettings
-   :members:
-
 Tracker class
 -------------
+
+``Tracker`` coordinates calls that advance odometry and SLAM. Use
+``get_odometry()`` and ``get_slam()`` for module-specific queries and operations;
+do not call either returned component's ``track()`` method.
 
 .. autoclass:: Tracker
    :members:
    :undoc-members:
-   :exclude-members: OdometryMode, MulticameraMode
 
 Functions
 ---------

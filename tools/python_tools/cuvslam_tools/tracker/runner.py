@@ -93,7 +93,7 @@ class Tracker:
         self.visualizer = None
 
         # Configure tracker with args if they're in dict format
-        self.odom_cfg = vslam.Tracker.OdometryConfig()
+        self.odom_cfg = vslam.Odometry.Config()
         self.configure_tracker(args)
 
         # Configure RGBD settings if in RGBD mode
@@ -106,7 +106,7 @@ class Tracker:
         if getattr(args, 'use_slam', False):
             self.odom_cfg.enable_observations_export = True
             self.odom_cfg.enable_landmarks_export = True
-            self.slam_cfg = vslam.Tracker.SlamConfig()
+            self.slam_cfg = vslam.Slam.Config()
             self.slam_cfg.use_gpu = self.odom_cfg.use_gpu
             self.slam_cfg.sync_mode = args.sync_slam
             if args.visualize_rerun:
@@ -154,24 +154,24 @@ class Tracker:
             if hasattr(args, attr):
                 setattr(self.odom_cfg, attr, getattr(args, attr))
 
-    def _initialize_rgbd_settings(self, args: argparse.Namespace) -> Optional[vslam.Tracker.OdometryRGBDSettings]:
+    def _initialize_rgbd_settings(self, args: argparse.Namespace) -> Optional[vslam.Odometry.RGBDSettings]:
         """Initialize RGBD settings based on args and default values.
 
         Args:
             args: Command-line arguments containing RGBD configuration
 
         Returns:
-            OdometryRGBDSettings if in RGBD mode, None otherwise
+            Odometry.RGBDSettings if in RGBD mode, None otherwise
 
         Raises:
             ValueError: If depth_camera_id is not provided when in RGBD mode
         """
         # Only initialize RGBD settings if in RGBD mode
-        if not hasattr(args, 'odometry_mode') or args.odometry_mode != vslam.Tracker.OdometryMode.RGBD:
+        if not hasattr(args, 'odometry_mode') or args.odometry_mode != vslam.Odometry.OdometryMode.RGBD:
             return None
 
         # Create RGBD settings
-        rgbd_settings = vslam.Tracker.OdometryRGBDSettings()
+        rgbd_settings = vslam.Odometry.RGBDSettings()
 
         # depth_camera_id is REQUIRED - must be provided in stereo.edex file
         depth_camera_id = getattr(args, 'depth_camera_id', None)
@@ -233,33 +233,38 @@ class Tracker:
         landmarks = []
         if self.odom_cfg.enable_observations_export:
             # Get last observations for the main camera
-            observations_0 = self.tracker.get_last_observations(0)
+            observations_0 = self.tracker.get_odometry().get_last_observations(0)
             self.tracks2D[frame_id] = observations_0
         if self.odom_cfg.enable_landmarks_export:
             # Get last landmarks for the main camera
-            landmarks = self.tracker.get_last_landmarks()
+            landmarks = self.tracker.get_odometry().get_last_landmarks()
             self.landmarks[frame_id] = landmarks
 
         # Get loop closures if SLAM is enabled
         if self.slam_cfg:
-            last_loop_closures = self.tracker.get_loop_closure_poses()
+            last_loop_closures = self.tracker.get_slam().get_loop_closure_poses()
             if last_loop_closures:
                 for lc in last_loop_closures:
                     self.loop_closures[lc.timestamp_ns] = lc.pose
 
         if self.visualizer and (odom_world_from_rig is not None or slam_pose is not None):
             gravity = None
-            if self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Inertial:
+            if self.odom_cfg.odometry_mode == vslam.Odometry.OdometryMode.Inertial:
                 # Gravity estimation requires collecting sufficient number of keyframes
                 # with motion diversity
-                gravity_raw = self.tracker.get_last_gravity()
+                gravity_raw = self.tracker.get_odometry().get_last_gravity()
                 gravity = np.array(gravity_raw) if gravity_raw is not None else None
             if self.odom_cfg.enable_final_landmarks_export:
-                self.final_landmarks = self.tracker.get_final_landmarks()
+                self.final_landmarks = self.tracker.get_odometry().get_final_landmarks()
             # SLAM data
-            pose_graph = self.tracker.get_pose_graph()
-            map_landmarks = self.tracker.get_slam_landmarks(vslam.Tracker.SlamDataLayer.Map)
-            lc_landmarks = self.tracker.get_slam_landmarks(vslam.Tracker.SlamDataLayer.LoopClosure)
+            pose_graph = None
+            map_landmarks = None
+            lc_landmarks = None
+            if self.slam_cfg:
+                slam = self.tracker.get_slam()
+                pose_graph = slam.get_pose_graph()
+                map_landmarks = slam.get_landmarks(vslam.Slam.DataLayer.Map)
+                lc_landmarks = slam.get_landmarks(vslam.Slam.DataLayer.LoopClosure)
             self.visualizer.visualize_frame(
                 frame_id=frame_id,
                 images=images,
@@ -279,7 +284,7 @@ class Tracker:
     def process_imu(self, timestamp: int, linear_accelerations: Sequence[float],
                     angular_velocities: Sequence[float]):
         """Register one IMU sample when inertial odometry is active."""
-        if self.odom_cfg.odometry_mode == vslam.Tracker.OdometryMode.Inertial:
+        if self.odom_cfg.odometry_mode == vslam.Odometry.OdometryMode.Inertial:
             imu_measurement = vslam.ImuMeasurement()
             imu_measurement.timestamp_ns = timestamp
             imu_measurement.linear_accelerations = linear_accelerations
@@ -301,7 +306,7 @@ class Tracker:
 
         # if slam is enabled, overwrite all slam poses in the end after LCs and PGOs
         if self.slam_cfg:
-            slam_poses = self.tracker.get_all_slam_poses()
+            slam_poses = self.tracker.get_slam().get_all_slam_poses()
             if slam_poses:
                 for pose in slam_poses:
                     frame_id = self.frame_id_from_ts[pose.timestamp_ns]
@@ -311,7 +316,7 @@ class Tracker:
         self.stat.average_fps = get_fps(self.stat.tracking_time, self.stat.n_frames)
 
         if self.odom_cfg.enable_final_landmarks_export:
-            self.final_landmarks = self.tracker.get_final_landmarks()
+            self.final_landmarks = self.tracker.get_odometry().get_final_landmarks()
         tracker_results.frame_metadata = self.frame_metadata
         tracker_results.world_from_rig = self.world_from_rig
         tracker_results.loop_closures = self.loop_closures
@@ -446,7 +451,7 @@ def track(args: argparse.Namespace,
         )
         args.repeat_type = 'repeat'
 
-    if args.repeat_type == 'shuttle' and args.odometry_mode == vslam.Tracker.OdometryMode.Inertial:
+    if args.repeat_type == 'shuttle' and args.odometry_mode == vslam.Odometry.OdometryMode.Inertial:
         raise ValueError("Inertial mode is not supported for shuttle mode")
 
     if args.dataset.endswith('.mp4'):
@@ -454,7 +459,7 @@ def track(args: argparse.Namespace,
                               num_loops=args.num_loops, repeat_type=args.repeat_type,
                               gt_path=getattr(args, 'gt_path', None))
     else:
-        rgbd_mode = args.odometry_mode == vslam.Tracker.OdometryMode.RGBD
+        rgbd_mode = args.odometry_mode == vslam.Odometry.OdometryMode.RGBD
         dataset = EdexReader(args.dataset, stereo_edex=args.config_path,
                              num_loops=args.num_loops, rgbd_mode=rgbd_mode,
                              repeat_type=args.repeat_type,

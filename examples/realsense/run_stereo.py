@@ -61,7 +61,7 @@ def main() -> None:
     )
 
     # Configure tracker
-    cfg = vslam.Tracker.OdometryConfig(
+    cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
@@ -143,7 +143,7 @@ def main() -> None:
                     frame_id=frame_id,
                     images=[images[0]],
                     pose=odom_pose,
-                    observations_main_cam=[tracker.get_last_observations(0)],
+                    observations_main_cam=[tracker.get_odometry().get_last_observations(0)],
                     trajectory=trajectory,
                     timestamp=timestamp
                 )

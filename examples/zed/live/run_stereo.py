@@ -45,7 +45,7 @@ def main():
     image_jitter_threshold_ns = (1000 / actual_fps + 2) * 1e6  # ms -> ns, +2 ms buffer
 
     # Configure tracker
-    cfg = vslam.Tracker.OdometryConfig(
+    cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         enable_observations_export=True
@@ -129,7 +129,7 @@ def main():
                     frame_id=frame_id,
                     images=[left_rgb],
                     pose=odom_pose,
-                    observations_main_cam=[tracker.get_last_observations(0)],
+                    observations_main_cam=[tracker.get_odometry().get_last_observations(0)],
                     trajectory=trajectory,
                     timestamp=timestamp
                 )

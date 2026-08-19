@@ -68,16 +68,16 @@ def main() -> None:
     pipeline.stop()
 
     # Configure RGBD settings
-    rgbd_settings = vslam.Tracker.OdometryRGBDSettings()
+    rgbd_settings = vslam.Odometry.RGBDSettings()
     rgbd_settings.depth_scale_factor = 1 / depth_scale
     rgbd_settings.depth_camera_id = 0
     rgbd_settings.enable_depth_stereo_tracking = False
 
     # Configure tracker
-    cfg = vslam.Tracker.OdometryConfig(
+    cfg = vslam.Odometry.Config(
         async_sba=True,
         enable_final_landmarks_export=True,
-        odometry_mode=vslam.Tracker.OdometryMode.RGBD,
+        odometry_mode=vslam.Odometry.OdometryMode.RGBD,
         rgbd_settings=rgbd_settings
     )
 
@@ -158,7 +158,7 @@ def main() -> None:
 
                 # Visualize results for color and depth cameras
                 # Same observations for both, since we only have one image
-                observations = tracker.get_last_observations(0)
+                observations = tracker.get_odometry().get_last_observations(0)
                 visualizer.visualize_frame(
                     frame_id=frame_id,
                     images=images,

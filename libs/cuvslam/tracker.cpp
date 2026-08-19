@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <stdexcept>
-#include <utility>
 
 namespace cuvslam {
 
@@ -60,67 +59,22 @@ void Tracker::RegisterImuMeasurement(uint32_t sensor_index, const ImuMeasurement
   odometry_.RegisterImuMeasurement(sensor_index, imu);
 }
 
-std::vector<Observation> Tracker::GetLastObservations(uint32_t camera_index) const {
-  return odometry_.GetLastObservations(camera_index);
-}
-
-std::vector<Landmark> Tracker::GetLastLandmarks() const { return odometry_.GetLastLandmarks(); }
-
-std::optional<Odometry::Gravity> Tracker::GetLastGravity() const { return odometry_.GetLastGravity(); }
-
-std::unordered_map<uint64_t, Vector3f> Tracker::GetFinalLandmarks() const { return odometry_.GetFinalLandmarks(); }
-
 bool Tracker::IsSlamEnabled() const { return slam_ != nullptr; }
-
-std::vector<PoseStamped> Tracker::GetAllSlamPoses(uint32_t max_poses_count) const {
-  std::vector<PoseStamped> poses;
-  if (slam_) {
-    slam_->GetAllSlamPoses(poses, max_poses_count);
-  }
-  return poses;
-}
-
-void Tracker::SaveMap(const std::string_view& folder_name, std::function<void(bool success)> callback) const {
-  if (!slam_) {
-    callback(false);
-    return;
-  }
-  slam_->SaveMap(folder_name, std::move(callback));
-}
-
-void Tracker::LocalizeInMap(const std::string_view& folder_name, int64_t timestamp_ns, const Pose& guess_pose,
-                            const ImageSet& images, const Slam::LocalizationSettings& settings,
-                            Slam::LocalizeStartCB start_cb, Slam::LocalizeFinishCB finish_cb) {
-  if (!slam_) {
-    throw std::invalid_argument{"SLAM is not enabled"};
-  }
-  slam_->LocalizeInMap(folder_name, timestamp_ns, guess_pose, images, settings, std::move(start_cb),
-                       std::move(finish_cb));
-}
-
-std::optional<Slam::Metrics> Tracker::GetSlamMetrics() const {
-  if (!slam_) {
-    return std::nullopt;
-  }
-  Slam::Metrics metrics;
-  slam_->GetSlamMetrics(metrics);
-  return metrics;
-}
-
-std::vector<PoseStamped> Tracker::GetLoopClosurePoses() const {
-  std::vector<PoseStamped> poses;
-  if (slam_) {
-    slam_->GetLoopClosurePoses(poses);
-  }
-  return poses;
-}
-
-Odometry& Tracker::GetOdometry() { return odometry_; }
 
 const Odometry& Tracker::GetOdometry() const { return odometry_; }
 
-Slam* Tracker::GetSlam() { return slam_.get(); }
+Slam& Tracker::GetSlam() {
+  if (!slam_) {
+    throw std::logic_error{"SLAM is not enabled"};
+  }
+  return *slam_;
+}
 
-const Slam* Tracker::GetSlam() const { return slam_.get(); }
+const Slam& Tracker::GetSlam() const {
+  if (!slam_) {
+    throw std::logic_error{"SLAM is not enabled"};
+  }
+  return *slam_;
+}
 
 }  // namespace cuvslam

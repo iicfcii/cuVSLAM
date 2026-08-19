@@ -6,7 +6,7 @@ AI agent guidance for working in this repository. **Start by reading `README.md`
 
 ```text
 libs/            # 24 modular C++ libraries (camera, slam, odometry, cuda_modules, …)
-python/          # PyCuVSLAM: nanobind bindings + high-level Tracker wrapper
+python/          # PyCuVSLAM nanobind bindings for Tracker, Odometry, and Slam
 examples/        # Runnable Python examples per dataset/camera (kitti, euroc, tum, realsense, zed, …)
 tools/           # C++ analysis and visualization tools (tracker, reporter, visualizer)
 test_data/       # Small reference datasets (edex, sof, navsim)
