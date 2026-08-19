@@ -197,7 +197,7 @@ class TestTracking(unittest.TestCase):
         """Track a fixed feature-rich frame repeatedly, applying a per-frame keyframe override.
 
         ``overrides`` is one entry per frame: None for automatic selection, True/False to force the
-        keyframe decision. Returns the list of per-frame ``keyframe`` flags reported by the tracker.
+        keyframe decision. Returns the list of per-frame ``keyframe`` flags reported by odometry.
         """
         img = data.ImageGenerator(self.rig.cameras, 10)
         # Reuse one feature-rich frame so the scene is near-static: the automatic selector sees a
@@ -207,7 +207,7 @@ class TestTracking(unittest.TestCase):
         cfg = vslam.Odometry.Config()
         cfg.odometry_mode = mode
         cfg.enable_observations_export = True  # required so get_state() (and its keyframe flag) is available
-        tracker = vslam.Tracker(self.rig, cfg)
+        odometry = vslam.Odometry(self.rig, cfg)
 
         keyframes = []
         for i, override in enumerate(overrides):
@@ -217,8 +217,8 @@ class TestTracking(unittest.TestCase):
                 internals.kf_override_frame_selection = override
             # timestamps stay well under kf_max_timedelta_between_kfs_s (60 s) so the time-based
             # keyframe rule never fires on its own.
-            tracker.track((i + 1) * 1_000_000, static_images, internals=internals)
-            keyframes.append(tracker.get_odometry().get_state().keyframe)
+            odometry.track((i + 1) * 1_000_000, static_images, internals=internals)
+            keyframes.append(odometry.get_state().keyframe)
         return keyframes
 
     def test_keyframe_override_forces_decision(self):

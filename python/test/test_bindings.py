@@ -517,7 +517,7 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(cfg.map_cache_path, "")
         self.assertTrue(cfg.use_gpu)
         self.assertFalse(cfg.sync_mode)
-        self.assertFalse(cfg.enable_reading_internals)
+        self.assertTrue(cfg.enable_reading_internals)
         self.assertFalse(cfg.planar_constraints)
         self.assertFalse(cfg.gt_align_mode)
         self.assertEqual(cfg.map_cell_size, 0.0)

@@ -23,32 +23,36 @@ namespace cuvslam {
 
 namespace {
 
-Odometry::Config WithSlamExports(Odometry::Config cfg) {
-  cfg.enable_observations_export = true;
-  cfg.enable_landmarks_export = true;
-  return cfg;
+Odometry::Config TrackerOdometryConfig(const Tracker::Config& cfg) {
+  if (cfg.slam.has_value() && cfg.slam->gt_align_mode) {
+    throw std::invalid_argument{"Tracker does not support gt_align_mode; use standalone Odometry and Slam instances."};
+  }
+  Odometry::Config odometry = cfg.odometry;
+  if (cfg.slam.has_value()) {
+    odometry.enable_observations_export = true;
+    odometry.enable_landmarks_export = true;
+  }
+  return odometry;
 }
 
 }  // namespace
 
-Tracker::Tracker(const Rig& rig, const Config& cfg)
-    : odometry_{rig, cfg.slam.has_value() ? WithSlamExports(cfg.odometry) : cfg.odometry} {
+Tracker::Tracker(const Rig& rig, const Config& cfg) : odometry_{rig, TrackerOdometryConfig(cfg)} {
   if (cfg.slam.has_value()) {
     slam_ = std::make_unique<Slam>(rig, odometry_.GetPrimaryCameras(), *cfg.slam);
   }
 }
 
-Tracker::TrackResult Tracker::Track(const ImageSet& images, const ImageSet& masks, const ImageSet& depths,
-                                    const Pose* gt_pose, const cuvslam::internal::Internals* internals) {
+Tracker::TrackResult Tracker::Track(const ImageSet& images, const ImageSet& masks, const ImageSet& depths) {
   TrackResult result;
-  result.odometry = odometry_.Track(images, masks, depths, internals);
+  result.odometry = odometry_.Track(images, masks, depths);
 
   // Odometry state is only meaningful once odometry has produced a pose, so SLAM stays untouched
   // on a lost frame and keeps its previous pose.
   if (slam_ && result.odometry.world_from_rig.has_value()) {
     Odometry::State state;
     odometry_.GetState(state);
-    slam_->Track(state, gt_pose);
+    slam_->Track(state);
     result.slam = slam_->GetPose();
   }
 

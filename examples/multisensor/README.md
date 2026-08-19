@@ -80,7 +80,7 @@ After running the script, a Rerun visualization window opens with:
 
 - **Multisensor odometry mode**
   (`cuvslam.Odometry.OdometryMode.Multisensor`) configured via
-  `Odometry.MultisensorSettings(depth_camera_ids=[0, 1], ...)`.
+  `cuvslam.Odometry.MultisensorSettings(depth_camera_ids=[0, 1], ...)`.
 - **Depth in millimetres (uint16)**: cuvslam's Python tracker requires
   `uint16` depth maps. TartanGround ships float32 depth in metres, so
   `load_depth()` multiplies by 1000 and clips to the uint16 range, and the

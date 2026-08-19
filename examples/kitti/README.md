@@ -187,4 +187,4 @@ Run the example script to visualize the estimated trajectory, left stereo images
 python3 track_kitti_masks.py
 ```
 
-**Performance Tip:** To reduce computational overhead, run PyCuVSLAM in `Odometry.MulticameraMode.Performance` mode and provide masks only for the left-camera images. In this mode, PyCuVSLAM selects visual features exclusively from the left-camera images for pose estimation from provided stereo-pair
+**Performance Tip:** To reduce computational overhead, run PyCuVSLAM in `Odometry.MulticameraMode.Performance` mode and provide masks only for the left-camera images. In this mode, PyCuVSLAM selects visual features exclusively from the left-camera images for pose estimation from the provided stereo pair.

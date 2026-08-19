@@ -818,7 +818,6 @@ NB_MODULE(pycuvslam, m) {
   // .value("PoseGraph", Slam::DataLayer::PoseGraph, "Pose Graph");
 
   nb::class_<Slam::Config>(slam_cls, "Config", "SLAM configuration parameters")
-      .def(nb::init<>())
       .def(nb::init<std::string_view, bool, bool, bool, bool, bool, float, float, uint32_t, uint32_t, uint32_t>(),
            nb::kw_only(), nb::arg("map_cache_path") = Slam::Config{}.map_cache_path,
            nb::arg("use_gpu") = Slam::Config{}.use_gpu, nb::arg("sync_mode") = Slam::Config{}.sync_mode,
@@ -1114,13 +1113,13 @@ NB_MODULE(pycuvslam, m) {
           "Parameters:\n"
           "    rig: Camera rig configuration\n"
           "    odom_config: Optional odometry configuration (uses defaults if omitted)\n"
-          "    slam_config: Optional SLAM configuration (disables SLAM if None)")
+          "    slam_config: Optional SLAM configuration (disables SLAM if None). `gt_align_mode` requires standalone "
+          "Odometry and Slam instances.")
       .def(
           "track",
           [](Tracker& self, int64_t timestamp, const std::vector<nb::ndarray<nb::ro>>& images,
              const std::optional<std::vector<nb::ndarray<nb::ro>>>& masks,
-             const std::optional<std::vector<nb::ndarray<nb::ro>>>& depths, const std::optional<Pose>& gt_pose,
-             const std::optional<cuvslam::internal::Internals>& internals)
+             const std::optional<std::vector<nb::ndarray<nb::ro>>>& depths)
               -> std::tuple<PoseEstimate, std::optional<Pose>> {
             if (masks.has_value()) {
               THROW_INVALID_ARG_IF(masks->size() != images.size() && !masks->empty(),
@@ -1135,12 +1134,10 @@ NB_MODULE(pycuvslam, m) {
                 masks.has_value() ? ImageSetFromNDArrays(*masks, timestamp, ArrayType::Mask) : Odometry::ImageSet();
             const auto depth_set =
                 depths.has_value() ? ImageSetFromNDArrays(*depths, timestamp, ArrayType::Depth) : Odometry::ImageSet();
-            auto result = self.Track(image_set, mask_set, depth_set, gt_pose.has_value() ? &*gt_pose : nullptr,
-                                     internals.has_value() ? &*internals : nullptr);
+            auto result = self.Track(image_set, mask_set, depth_set);
             return {result.odometry, result.slam};
           },
           nb::arg("timestamp"), nb::arg("images"), nb::arg("masks") = nb::none(), nb::arg("depths") = nb::none(),
-          nb::arg("gt_pose") = nb::none(), nb::arg("internals") = nb::none(),
           "Track a rig pose using current image frame.\n\n"
           "This method combines odometry and SLAM processing in a single call.\n\n"
           "In inertial mode, if visual odometry tracker fails to compute a pose, the function returns the position "
@@ -1166,10 +1163,7 @@ NB_MODULE(pycuvslam, m) {
           "    timestamp: Images timestamp in nanoseconds\n"
           "    images: List of numpy arrays or tensors containing the camera images\n"
           "    masks: Optional list of numpy arrays or tensors containing masks for the images\n"
-          "    depths: Optional list of numpy arrays or tensors containing depth images\n"
-          "    gt_pose: Optional ground truth pose. Should be provided if `gt_align_mode` is enabled, otherwise "
-          "should be None.\n"
-          "    internals: Optional internal per-frame solver parameters.\n\n"
+          "    depths: Optional list of numpy arrays or tensors containing depth images\n\n"
           "Returns:\n"
           "    PoseEstimate: The computed pose estimate from Odometry. On failure `world_from_rig` will be `None`.\n"
           "    Pose: If SLAM is enabled, the computed pose estimate from SLAM, otherwise `None`.\n\n"

@@ -1035,7 +1035,8 @@ public:
     /// config object you pass in is never modified.
     Odometry::Config odometry;
     /// SLAM configuration. Empty (the default) disables SLAM, and the tracker then runs pure
-    /// visual odometry.
+    /// visual odometry. `Slam::Config::gt_align_mode` is not supported by Tracker; use standalone
+    /// Odometry and Slam instances for ground-truth-aligned map building.
     std::optional<Slam::Config> slam;
   };
 
@@ -1092,19 +1093,13 @@ public:
    * @param[in]  images     synchronized images, no more than the number of cameras in the rig
    * @param[in]  masks      (Optional) corresponding masks
    * @param[in]  depths     (Optional) depth images, see Odometry::Track()
-   * @param[in]  gt_pose    (Optional) ground truth pose. Pass it when `Slam::Config::gt_align_mode`
-   * is enabled, otherwise pass nullptr (default).
-   * @param[in]  internals  (Optional) per-frame development parameters; pass nullptr (default) to
-   * use built-in defaults. Not intended for production use.
    *
    * @return odometry pose estimate and, when available, the SLAM pose
-   * @throws std::invalid_argument if image parameters are invalid or `gt_pose` is passed
-   * incorrectly
+   * @throws std::invalid_argument if image parameters are invalid
    * @throws std::runtime_error in case of unexpected errors
    * @see Odometry::Track, Slam::Track
    */
-  TrackResult Track(const ImageSet& images, const ImageSet& masks = {}, const ImageSet& depths = {},
-                    const Pose* gt_pose = nullptr, const cuvslam::internal::Internals* internals = nullptr);
+  TrackResult Track(const ImageSet& images, const ImageSet& masks = {}, const ImageSet& depths = {});
 
   /**
    * @brief Register IMU measurement

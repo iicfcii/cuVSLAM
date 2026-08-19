@@ -101,6 +101,13 @@ TEST_F(TrackerTest, SlamIsDisabledByDefault) {
   EXPECT_FALSE(result.slam.has_value());
 }
 
+TEST_F(TrackerTest, GtAlignModeRequiresManualDispatch) {
+  Tracker::Config cfg = MakeSyncConfig(/*enable_slam=*/true);
+  cfg.slam->gt_align_mode = true;
+
+  EXPECT_THROW(Tracker(rig, cfg), std::invalid_argument);
+}
+
 TEST_F(TrackerTest, TrackReturnsSlamPoseWhenEnabled) {
   Tracker tracker{rig, MakeSyncConfig(/*enable_slam=*/true)};
 
