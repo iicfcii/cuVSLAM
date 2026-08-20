@@ -233,16 +233,16 @@ class Tracker:
         landmarks = []
         if self.odom_cfg.enable_observations_export:
             # Get last observations for the main camera
-            observations_0 = self.tracker.get_odometry().get_last_observations(0)
+            observations_0 = self.tracker.odometry.get_last_observations(0)
             self.tracks2D[frame_id] = observations_0
         if self.odom_cfg.enable_landmarks_export:
             # Get last landmarks for the main camera
-            landmarks = self.tracker.get_odometry().get_last_landmarks()
+            landmarks = self.tracker.odometry.get_last_landmarks()
             self.landmarks[frame_id] = landmarks
 
         # Get loop closures if SLAM is enabled
         if self.slam_cfg:
-            last_loop_closures = self.tracker.get_slam().get_loop_closure_poses()
+            last_loop_closures = self.tracker.slam.get_loop_closure_poses()
             if last_loop_closures:
                 for lc in last_loop_closures:
                     self.loop_closures[lc.timestamp_ns] = lc.pose
@@ -252,16 +252,16 @@ class Tracker:
             if self.odom_cfg.odometry_mode == vslam.Odometry.OdometryMode.Inertial:
                 # Gravity estimation requires collecting sufficient number of keyframes
                 # with motion diversity
-                gravity_raw = self.tracker.get_odometry().get_last_gravity()
+                gravity_raw = self.tracker.odometry.get_last_gravity()
                 gravity = np.array(gravity_raw) if gravity_raw is not None else None
             if self.odom_cfg.enable_final_landmarks_export:
-                self.final_landmarks = self.tracker.get_odometry().get_final_landmarks()
+                self.final_landmarks = self.tracker.odometry.get_final_landmarks()
             # SLAM data
             pose_graph = None
             map_landmarks = None
             lc_landmarks = None
             if self.slam_cfg:
-                slam = self.tracker.get_slam()
+                slam = self.tracker.slam
                 pose_graph = slam.get_pose_graph()
                 map_landmarks = slam.get_landmarks(vslam.Slam.DataLayer.Map)
                 lc_landmarks = slam.get_landmarks(vslam.Slam.DataLayer.LoopClosure)
@@ -306,7 +306,7 @@ class Tracker:
 
         # if slam is enabled, overwrite all slam poses in the end after LCs and PGOs
         if self.slam_cfg:
-            slam_poses = self.tracker.get_slam().get_all_slam_poses()
+            slam_poses = self.tracker.slam.get_all_slam_poses()
             if slam_poses:
                 for pose in slam_poses:
                     frame_id = self.frame_id_from_ts[pose.timestamp_ns]
@@ -316,7 +316,7 @@ class Tracker:
         self.stat.average_fps = get_fps(self.stat.tracking_time, self.stat.n_frames)
 
         if self.odom_cfg.enable_final_landmarks_export:
-            self.final_landmarks = self.tracker.get_odometry().get_final_landmarks()
+            self.final_landmarks = self.tracker.odometry.get_final_landmarks()
         tracker_results.frame_metadata = self.frame_metadata
         tracker_results.world_from_rig = self.world_from_rig
         tracker_results.loop_closures = self.loop_closures

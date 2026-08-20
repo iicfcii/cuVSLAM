@@ -104,9 +104,9 @@ def rerun_visualize(tracker, frame, odom_pose, trajectory, image):
 
     if not rich_vis:
         return
-    observations = tracker.get_odometry().get_last_observations(0)  # get observation from left camera
-    landmarks = tracker.get_odometry().get_last_landmarks()
-    final_landmarks = tracker.get_odometry().get_final_landmarks()
+    observations = tracker.odometry.get_last_observations(0)  # get observation from left camera
+    landmarks = tracker.odometry.get_last_landmarks()
+    final_landmarks = tracker.odometry.get_final_landmarks()
 
     observations_uv = [[o.u, o.v] for o in observations]
     observations_colors = [color_from_id(o.id) for o in observations]

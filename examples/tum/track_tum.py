@@ -142,7 +142,7 @@ for rgb_time, rgb_path, depth_path in rgbd_pairs:
     trajectory.append(odom_pose.translation)
 
     # Get observations
-    observations = [tracker.get_odometry().get_last_observations(0)]
+    observations = [tracker.odometry.get_last_observations(0)]
 
     # Extract observation points and colors
     obs_uv = [[o.u, o.v] for o in observations[0]]

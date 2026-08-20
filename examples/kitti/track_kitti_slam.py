@@ -232,8 +232,8 @@ if os.path.exists(map_path) and (guess_pose is not None):
     ]
     _, _ = tracker.track(timestamp, init_images)
 
-    tracker.get_slam().localize_in_map(map_path, timestamp, guess_pose, init_images, loc_settings, localization_start_cb,
-                            localization_finish_cb)
+    tracker.slam.localize_in_map(map_path, timestamp, guess_pose, init_images, loc_settings, localization_start_cb,
+                                 localization_finish_cb)
 
     wait_time = 0
     wait_timestamp_ns = timestamp
@@ -300,11 +300,11 @@ for frame in range(IDX, len(timestamps)):
     current_pose = combine_poses(slam_initial_pose, odom_pose)
 
     # Get visualization data
-    observations = tracker.get_odometry().get_last_observations(0)  # get observation from left camera
-    landmarks = tracker.get_odometry().get_last_landmarks()
+    observations = tracker.odometry.get_last_observations(0)  # get observation from left camera
+    landmarks = tracker.odometry.get_last_landmarks()
 
     # Transform final landmarks by the initial pose
-    raw_final_landmarks = list(tracker.get_odometry().get_final_landmarks().values())
+    raw_final_landmarks = list(tracker.odometry.get_final_landmarks().values())
     final_landmarks = transform_landmarks(raw_final_landmarks, slam_initial_pose)
 
     # Prepare visualization data
@@ -318,7 +318,7 @@ for frame in range(IDX, len(timestamps)):
     trajectory_tum.append(list(slam_pose.translation) + list(slam_pose.rotation))  # slam trajectory in tum format
 
     # Get loop closure poses
-    current_lc_poses = tracker.get_slam().get_loop_closure_poses()
+    current_lc_poses = tracker.slam.get_loop_closure_poses()
     if (current_lc_poses and
         (not loop_closure_poses or
          not np_array_equal(current_lc_poses[-1].pose.translation, loop_closure_poses[-1]))):
@@ -363,7 +363,7 @@ if guess_pose is None:
     print(f"Saving trajectory to {trajectory_file} of length {len(trajectory_tum)}")
     savetxt(trajectory_file, trajectory_tum)
 
-    tracker.get_slam().save_map(map_path, save_callback)
+    tracker.slam.save_map(map_path, save_callback)
 
     # Wait for map saving to complete
     start_time = time.time()

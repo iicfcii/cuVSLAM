@@ -173,7 +173,7 @@ class TestMap(unittest.TestCase):
         def save_callback(success):
             nonlocal map_saved
             map_saved = success
-        tracker.get_slam().save_map(self.map_path(map_name), save_callback)
+        tracker.slam.save_map(self.map_path(map_name), save_callback)
         self.assertTrue(map_saved)
 
     def try_localize(
@@ -210,8 +210,8 @@ class TestMap(unittest.TestCase):
             result_pose = pose
             localization_complete.set()
 
-        tracker.get_slam().localize_in_map(self.map_path(map_name), timestamp, guess_pose, images, loc_settings,
-                                localization_start_cb, localization_finish_cb)
+        tracker.slam.localize_in_map(self.map_path(map_name), timestamp, guess_pose, images, loc_settings,
+                                     localization_start_cb, localization_finish_cb)
         while not localization_complete.wait(timeout=0.1):
             # Simulate time passing; this is necessary for the async callback to be processed
             timestamp += 1_000

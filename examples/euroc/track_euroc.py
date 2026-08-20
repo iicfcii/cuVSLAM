@@ -154,14 +154,14 @@ for frame_metadata in frames_metadata:
 
     # Get current pose and observations for the main camera and gravity in rig frame
     odom_pose = odom_pose_estimate.world_from_rig.pose
-    current_observations_main_cam = tracker.get_odometry().get_last_observations(0)
+    current_observations_main_cam = tracker.odometry.get_last_observations(0)
     trajectory.append(odom_pose.translation)
     odom_trajectory.append([timestamp] + list(odom_pose.translation) + list(odom_pose.rotation))
 
     gravity = None
     if cfg.odometry_mode == cuvslam.Odometry.OdometryMode.Inertial:
         # Gravity estimation requires collecting sufficient number of keyframes with motion diversity
-        gravity = tracker.get_odometry().get_last_gravity()
+        gravity = tracker.odometry.get_last_gravity()
 
     # Visualize
     rr.set_time("frame", sequence=frame_id)

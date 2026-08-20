@@ -424,7 +424,7 @@ NB_MODULE(pycuvslam, m) {
   auto odom_cls = nb::class_<Odometry>(
       m, "Odometry",
       "Estimates the rig pose from synchronized camera images and optional depth/IMU data.\n\n"
-      "Use directly for odometry-only workflows, or access Tracker's instance through `get_odometry()`.");
+      "Use directly for odometry-only workflows, or access Tracker's instance through its `odometry` property.");
 
   nb::enum_<Odometry::MulticameraMode>(odom_cls, "MulticameraMode", "Multicamera tracking modes")
       .value("Performance", Odometry::MulticameraMode::Performance, "Optimized for speed")
@@ -806,7 +806,7 @@ NB_MODULE(pycuvslam, m) {
       m, "Slam",
       "Builds and optimizes a reusable map from odometry results, including loop closure, map persistence, and "
       "relocalization.\n\n"
-      "Use directly for manual orchestration, or access Tracker's instance through `get_slam()`.");
+      "Use directly for manual orchestration, or access Tracker's instance through its `slam` property.");
 
   nb::enum_<Slam::DataLayer>(slam_cls, "DataLayer", "Data layer for SLAM")
       .value("Landmarks", Slam::DataLayer::Landmarks, "Landmarks that are visible in the current frame")
@@ -1100,8 +1100,8 @@ NB_MODULE(pycuvslam, m) {
 
   auto tracker_cls = nb::class_<Tracker>(m, "Tracker",
                                          "Coordinates cuVSLAM Odometry and optional SLAM.\n\n"
-                                         "Submit frames and IMU measurements through this class. Use `get_odometry()` "
-                                         "and `get_slam()` for module-specific queries and operations.");
+                                         "Submit frames and IMU measurements through this class. Use the `odometry` "
+                                         "and `slam` properties for module-specific queries and operations.");
 
   tracker_cls
       .def(
@@ -1153,7 +1153,7 @@ NB_MODULE(pycuvslam, m) {
           "Odometry will output poses in the same coordinate frame until a loss of tracking.\n\n"
           "To get SLAM poses, SLAM must be enabled in the constructor by providing a non-null `slam_config`.\n"
           "SLAM poses may have loop closure (LC) jumps when LC is detected and pose graph is optimized.\n"
-          "SLAM poses cannot be adjusted retroactively, so use `get_slam().get_all_slam_poses()` to get a smooth "
+          "SLAM poses cannot be adjusted retroactively, so use `slam.get_all_slam_poses()` to get a smooth "
           "trajectory up to the latest frame.\n"
           "Also, in asynchronous mode, LC is done in a separate work thread to keep `track` call fast, so SLAM poses "
           "are not updated immediately.\n\n"
@@ -1202,15 +1202,15 @@ NB_MODULE(pycuvslam, m) {
           "Raises:\n"
           "    ValueError: If IMU fusion is disabled or if called out of the order of timestamps.")
       .def("is_slam_enabled", &Tracker::IsSlamEnabled, "Return whether this tracker owns a SLAM instance.")
-      .def(
-          "get_odometry", [](const Tracker& self) -> const Odometry& { return self.GetOdometry(); },
+      .def_prop_ro(
+          "odometry", [](const Tracker& self) -> const Odometry& { return self.GetOdometry(); },
           nb::rv_policy::reference_internal,
-          "Get the underlying odometry instance, see :class:`cuvslam.Odometry`.\n\n"
+          "The underlying odometry instance, see :class:`cuvslam.Odometry`.\n\n"
           "Do not call ``track()`` on an Odometry obtained from Tracker; use ``Tracker.track()`` so SLAM receives "
           "every successful odometry state.")
-      .def(
-          "get_slam", [](Tracker& self) -> Slam& { return self.GetSlam(); }, nb::rv_policy::reference_internal,
-          "Get the underlying SLAM instance, see :class:`cuvslam.Slam`.\n\n"
+      .def_prop_ro(
+          "slam", [](Tracker& self) -> Slam& { return self.GetSlam(); }, nb::rv_policy::reference_internal,
+          "The underlying SLAM instance, see :class:`cuvslam.Slam`.\n\n"
           "Do not call ``track()`` on a Slam obtained from Tracker; use ``Tracker.track()`` so odometry and SLAM "
           "remain synchronized.\n\n"
           "Raises:\n"

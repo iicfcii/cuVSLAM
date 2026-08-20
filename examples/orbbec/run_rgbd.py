@@ -234,7 +234,7 @@ def main() -> None:
                 trajectory.append(odom_pose.translation)
 
                 # Visualize results for color and depth cameras
-                observations = tracker.get_odometry().get_last_observations(0)
+                observations = tracker.odometry.get_last_observations(0)
                 visualizer.visualize_frame(
                     frame_id=frame_id,
                     images=[color_rgb, depth_data],

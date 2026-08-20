@@ -134,7 +134,7 @@ def main():
 
                 # Visualize results for color and depth cameras
                 # Same observations for both, since we only have one image
-                observations = tracker.get_odometry().get_last_observations(0)
+                observations = tracker.odometry.get_last_observations(0)
                 visualizer.visualize_frame(
                     frame_id=frame_id,
                     images=[left_rgb, depth_data, right_rgb] if RUN_STEREO else [left_rgb, depth_data],

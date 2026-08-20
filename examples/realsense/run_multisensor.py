@@ -293,8 +293,8 @@ def main() -> None:
 
             odom_pose = odom_pose_with_cov.pose
             trajectory.append(odom_pose.translation)
-            observations = tracker.get_odometry().get_last_observations(0)
-            gravity = tracker.get_odometry().get_last_gravity() if SHOW_GRAVITY else None
+            observations = tracker.odometry.get_last_observations(0)
+            gravity = tracker.odometry.get_last_gravity() if SHOW_GRAVITY else None
             if gravity is not None:
                 gravity = np.asarray(gravity, dtype=np.float32)
 

@@ -129,7 +129,7 @@ def main():
                     frame_id=frame_id,
                     images=[left_rgb],
                     pose=odom_pose,
-                    observations_main_cam=[tracker.get_odometry().get_last_observations(0)],
+                    observations_main_cam=[tracker.odometry.get_last_observations(0)],
                     trajectory=trajectory,
                     timestamp=timestamp
                 )

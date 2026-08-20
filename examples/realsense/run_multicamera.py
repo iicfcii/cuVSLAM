@@ -273,7 +273,7 @@ def main() -> None:
             # Visualize results (showing only left cameras)
             left_images = [all_images[i] for i in range(0, len(all_images), 2)]
             left_observations = [
-                tracker.get_odometry().get_last_observations(i)
+                tracker.odometry.get_last_observations(i)
                 for i in range(0, len(all_images), 2)
             ]
 

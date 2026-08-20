@@ -102,7 +102,7 @@ At the end of the mapping process, the trajectory and map will be saved as `traj
 
 After the mapping stage, you can reuse the previously stored map and trajectory to perform localization from an arbitrary starting point. For example, you may start from frame index `IDX = 700`. PyCuVSLAM will use the corresponding stereo pair and pose from the saved trajectory as an initial guess for localization.
 
-To use SLAM localization, first configure localization parameters using `cuvslam.Slam.LocalizationSettings`. Then, pass these settings to `tracker.get_slam().localize_in_map`. After initiating localization, PyCuVSLAM will search for matching visual features in the loaded map near the provided initial pose guess. If localization succeeds, you will see a confirmation message on the terminal, and the new initial coordinates will be updated accordingly.
+To use SLAM localization, first configure localization parameters using `cuvslam.Slam.LocalizationSettings`. Then, pass these settings to `tracker.slam.localize_in_map`. After initiating localization, PyCuVSLAM will search for matching visual features in the loaded map near the provided initial pose guess. If localization succeeds, you will see a confirmation message on the terminal, and the new initial coordinates will be updated accordingly.
 
 As a result, the initial pose displayed will reflect the localized position (no longer zero translation or unit rotation). Additionally, loop closure detection events will trigger immediately, as the complete map from the mapping stage is already loaded:
 

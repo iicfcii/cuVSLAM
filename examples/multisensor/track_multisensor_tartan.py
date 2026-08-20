@@ -165,10 +165,10 @@ for record in frames_metadata:
         continue
 
     odom_pose = odom_pose_estimate.world_from_rig.pose
-    observations = [tracker.get_odometry().get_last_observations(i) for i in range(len(CAMERA_LIST))]
-    landmarks = tracker.get_odometry().get_last_landmarks()
-    final_landmarks = tracker.get_odometry().get_final_landmarks()
-    gravity = tracker.get_odometry().get_last_gravity() if use_imu else None
+    observations = [tracker.odometry.get_last_observations(i) for i in range(len(CAMERA_LIST))]
+    landmarks = tracker.odometry.get_last_landmarks()
+    final_landmarks = tracker.odometry.get_final_landmarks()
+    gravity = tracker.odometry.get_last_gravity() if use_imu else None
 
     observations_uv = [[[o.u, o.v] for o in obs] for obs in observations]
     observations_colors = [[color_from_id(o.id) for o in obs] for obs in observations]

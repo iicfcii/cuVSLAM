@@ -253,7 +253,7 @@ With Rerun: `cmake -S . -B build -DUSE_RERUN=ON && cmake --build build --target 
 
 1. **Map:** Run tracker with SLAM config to collect map
 2. **Save:** Map stored as `map/data.mdb` (LMDB)
-3. **Localize:** Load saved map, provide initial pose hint, call `tracker.get_slam().localize_in_map()`
+3. **Localize:** Load saved map, provide initial pose hint, call `tracker.slam.localize_in_map()`
 
 ```python
 odom_cfg = cuvslam.Odometry.Config(...)
@@ -261,7 +261,7 @@ slam_cfg = cuvslam.Slam.Config(sync_mode=True)  # sync for reproducibility
 tracker = cuvslam.Tracker(cuvslam.Rig(...), odom_cfg, slam_cfg)
 
 odom_pose, slam_pose = tracker.track(...)
-slam = tracker.get_slam()
+slam = tracker.slam
 
 # Save map
 def map_saved(success):

@@ -221,8 +221,8 @@ def camera_thread(
                 continue
 
             # Put result in queue for main thread
-            observations = tracker.get_odometry().get_last_observations(0)
-            gravity = tracker.get_odometry().get_last_gravity() if show_gravity else None
+            observations = tracker.odometry.get_last_observations(0)
+            gravity = tracker.odometry.get_last_gravity() if show_gravity else None
             result_queue.put([current_timestamp, odom_pose_with_cov.pose, images, observations, gravity])
             thread_with_timestamp.last_low_rate_timestamp = current_timestamp
     except Exception as e:
