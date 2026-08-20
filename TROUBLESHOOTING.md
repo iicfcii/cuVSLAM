@@ -495,11 +495,12 @@ See [Step 4: Mask static image areas](#step-4-mask-static-image-areas)
 - For stereo images, try to cut up to 10% from the left border of the left eye and up to 10% from the right border of
   the right eye to keep only the overlapped area.
 
-### Tune multicamera L2R depth range
+### Tune L2R depth range
 
-Applies only to Multicamera mode. cuVSLAM samples scene depth along each epipolar curve to seed initial guesses for
-the left-to-right (L2R) LK tracker. The sampled range must match the rig: too tight and near-camera features are
-dropped, too wide and the candidate list inflates and LK converges on decoys.
+Applies to every odometry mode that tracks between overlapping camera pairs — Multicamera, Inertial, RGBD and
+Multisensor. Ignored in Mono mode, which has no L2R stage. cuVSLAM samples scene depth along each epipolar curve
+to seed initial guesses for the left-to-right (L2R) LK tracker. The sampled range must match the rig: too tight
+and near-camera features are dropped, too wide and the candidate list inflates and LK converges on decoys.
 
 Always set these to the actual near/far limits of your scene when you know them — the auto-detected defaults
 are a fallback for when the scene is unknown, not a target to leave in place. Tight bounds around the real depth

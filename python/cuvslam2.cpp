@@ -513,10 +513,11 @@ NB_MODULE(pycuvslam, m) {
               "Settings for Multisensor odometry mode. See :class:`Odometry.MultisensorSettings`")
       .def_rw("min_depth", &Odometry::Config::min_depth,
               "Minimum scene depth (meters) sampled along the epipolar curve for L2R tracking. "
-              "ONLY used in Multicamera mode. Any negative value (e.g. -1) auto-detects from baseline.")
+              "Used in every odometry mode that tracks between overlapping camera pairs (Multicamera, Inertial, "
+              "RGBD, Multisensor); ignored in Mono. Any negative value (e.g. -1) auto-detects from baseline.")
       .def_rw("max_depth", &Odometry::Config::max_depth,
               "Maximum scene depth (meters) sampled along the epipolar curve for L2R tracking. "
-              "ONLY used in Multicamera mode. Any negative value (e.g. -1) auto-detects from baseline.");
+              "Used in the same modes as min_depth. Any negative value (e.g. -1) auto-detects from baseline.");
 
   // Odometry::State binding
   nb::class_<Odometry::State>(odom_cls, "State",
