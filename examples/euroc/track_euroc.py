@@ -90,7 +90,7 @@ blueprint_path = os.path.join(os.path.dirname(__file__), "cpp", "euroc_blueprint
 euroc_tracking_mode = cuvslam.Odometry.OdometryMode.Inertial
 
 # Configure tracker
-cfg = cuvslam.Odometry.Config(
+odom_cfg = cuvslam.Odometry.Config(
     async_sba=False,
     enable_observations_export=True,
     enable_final_landmarks_export=True,
@@ -102,7 +102,7 @@ cfg = cuvslam.Odometry.Config(
 rig = get_rig(sequence_path)
 
 # Initialize tracker
-tracker = cuvslam.Tracker(rig, cfg)
+tracker = cuvslam.Tracker(rig, odom_cfg)
 print(f"cuVSLAM Tracker initilized with odometry mode: {cfg.odometry_mode}")
 
 # Track frames

@@ -74,7 +74,7 @@ def main() -> None:
     rgbd_settings.enable_depth_stereo_tracking = False
 
     # Configure tracker
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=True,
         enable_final_landmarks_export=True,
         odometry_mode=vslam.Odometry.OdometryMode.RGBD,
@@ -85,7 +85,7 @@ def main() -> None:
     rig = get_rs_stereo_rig(camera_params)
 
     # Initialize tracker and visualizer
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
 
     # Get device product line for setting a supporting resolution
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)

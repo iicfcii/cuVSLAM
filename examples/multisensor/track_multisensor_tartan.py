@@ -107,7 +107,7 @@ multisensor_settings = vslam.Odometry.MultisensorSettings(
     depth_scale_factor=DEPTH_SCALE_MM,
     enable_depth_stereo_tracking=True,
 )
-cfg = vslam.Odometry.Config(
+odom_cfg = vslam.Odometry.Config(
     odometry_mode=vslam.Odometry.OdometryMode.Multisensor,
     multisensor_settings=multisensor_settings,
     enable_final_landmarks_export=True,
@@ -115,7 +115,7 @@ cfg = vslam.Odometry.Config(
     async_sba=False,
 )
 
-tracker = vslam.Tracker(rig, cfg)
+tracker = vslam.Tracker(rig, odom_cfg)
 print(f"cuVSLAM Tracker initialized with odometry mode: {cfg.odometry_mode}"
       f"{' (IMU disabled)' if not use_imu else ''}")
 

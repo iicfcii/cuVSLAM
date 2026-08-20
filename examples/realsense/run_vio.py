@@ -280,7 +280,7 @@ def main() -> None:
     camera_params = setup_camera_parameters()
 
     # Configure tracker
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
@@ -290,8 +290,8 @@ def main() -> None:
     )
     if USE_MULTISENSOR_MODE:
         # No depth ids are needed because this rig contains an overlapping stereo pair.
-        cfg.odometry_mode = vslam.Odometry.OdometryMode.Multisensor
-        cfg.multisensor_settings = vslam.Odometry.MultisensorSettings(
+        odom_cfg.odometry_mode = vslam.Odometry.OdometryMode.Multisensor
+        odom_cfg.multisensor_settings = vslam.Odometry.MultisensorSettings(
             depth_camera_ids=[]
         )
 
@@ -299,7 +299,7 @@ def main() -> None:
     rig = get_rs_vio_rig(camera_params)
 
     # Initialize tracker
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
 
     # Set up IR pipeline
     ir_pipe = rs.pipeline()

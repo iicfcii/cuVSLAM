@@ -205,7 +205,7 @@ def main() -> None:
         depth_scale_factor=1 / depth_scale,
         enable_depth_stereo_tracking=True
     )
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
@@ -213,7 +213,7 @@ def main() -> None:
         multisensor_settings=multisensor_settings,
         rectified_stereo_camera=False
     )
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
 
     video_pipe = rs.pipeline()
     video_config = rs.config()

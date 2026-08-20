@@ -211,12 +211,12 @@ def main() -> None:
     rig = get_rs_multi_rig(camera_params)
 
     # Initialize tracker
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         rectified_stereo_camera=True
     )
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
 
     # Configure all devices
     configure_all_devices(pipelines, configs)

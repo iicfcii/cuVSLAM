@@ -51,7 +51,7 @@ def main():
     rgbd_settings.enable_depth_stereo_tracking = RUN_STEREO
 
     # Configure tracker
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=True,
         enable_final_landmarks_export=True,
         odometry_mode=vslam.Odometry.OdometryMode.RGBD,
@@ -63,7 +63,7 @@ def main():
     rig = get_zed_rgbd_rig(camera_info, RUN_STEREO)
 
     # Initialize tracker and visualizer
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
     visualizer = RerunVisualizer(num_viz_cameras=2+RUN_STEREO)
 
     # Create and set RuntimeParameters after opening the camera

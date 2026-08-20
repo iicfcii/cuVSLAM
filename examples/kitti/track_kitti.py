@@ -83,12 +83,12 @@ for i in [0, 1]:
 cameras[1].rig_from_camera.translation[0] = -intrinsics[1][0][3] / intrinsics[1][0][0]
 
 # Initialize the cuvslam tracker
-cfg = cuvslam.Odometry.Config(
+odom_cfg = cuvslam.Odometry.Config(
     async_sba=False,
     enable_final_landmarks_export=True,
     rectified_stereo_camera=True
 )
-tracker = cuvslam.Tracker(cuvslam.Rig(cameras), cfg)
+tracker = cuvslam.Tracker(cuvslam.Rig(cameras), odom_cfg)
 
 # Get timestamps from times.txt file
 timestamps = [

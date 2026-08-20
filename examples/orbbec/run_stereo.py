@@ -158,7 +158,7 @@ def main() -> None:
     rig = get_orbbec_stereo_rig(stereo_params)
 
     # Configure tracker
-    cfg = vslam.Odometry.Config(
+    odom_cfg = vslam.Odometry.Config(
         async_sba=False,
         enable_final_landmarks_export=True,
         enable_observations_export=True,
@@ -166,7 +166,7 @@ def main() -> None:
     )
 
     # Initialize tracker and visualizer
-    tracker = vslam.Tracker(rig, cfg)
+    tracker = vslam.Tracker(rig, odom_cfg)
     visualizer = RerunVisualizer()
 
     frame_id = 0

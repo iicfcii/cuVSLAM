@@ -93,9 +93,9 @@ for i, camera in enumerate(cameras):
 rig = vslam.Rig()
 rig.cameras = cameras
 
-cfg = vslam.Odometry.Config(enable_final_landmarks_export = True)
+odom_cfg = vslam.Odometry.Config(enable_final_landmarks_export = True)
 
-tracker = vslam.Tracker(rig, cfg)
+tracker = vslam.Tracker(rig, odom_cfg)
 
 trajectory = []
 

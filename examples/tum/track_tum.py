@@ -92,7 +92,7 @@ rgbd_settings.depth_camera_id = 0
 rgbd_settings.enable_depth_stereo_tracking = False
 
 # Configure tracker
-cfg = cuvslam.Odometry.Config(
+odom_cfg = cuvslam.Odometry.Config(
     async_sba=True,
     enable_final_landmarks_export=True,
     odometry_mode=cuvslam.Odometry.OdometryMode.RGBD,
@@ -100,7 +100,7 @@ cfg = cuvslam.Odometry.Config(
 )
 
 # Initialize tracker
-tracker = cuvslam.Tracker(cuvslam.Rig([camera]), cfg)
+tracker = cuvslam.Tracker(cuvslam.Rig([camera]), odom_cfg)
 
 frame_id = 0
 prev_timestamp = None

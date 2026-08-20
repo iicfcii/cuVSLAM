@@ -177,13 +177,13 @@ for i in [0, 1]:
 cameras[1].rig_from_camera.translation[0] = -intrinsics[1][0][3] / intrinsics[1][0][0]
 
 # Set Odometry and SLAM Configs and initialize the cuvslam tracker
-cfg = cuvslam.Odometry.Config(
+odom_cfg = cuvslam.Odometry.Config(
     async_sba=False,
     enable_final_landmarks_export=True,
     rectified_stereo_camera=True
 )
-s_cfg = cuvslam.Slam.Config(sync_mode=SLAM_SYNC_MODE)
-tracker = cuvslam.Tracker(cuvslam.Rig(cameras), cfg, s_cfg)
+slam_cfg = cuvslam.Slam.Config(sync_mode=SLAM_SYNC_MODE)
+tracker = cuvslam.Tracker(cuvslam.Rig(cameras), odom_cfg, slam_cfg)
 
 # Get timestamps from times.txt file
 timestamps = [
@@ -385,8 +385,8 @@ try:
     del loop_closure_poses
     del tracker
     del cameras
-    del cfg
-    del s_cfg
+    del odom_cfg
+    del slam_cfg
 except Exception as e:
     print(f"Warning during cleanup: {e}")
 
