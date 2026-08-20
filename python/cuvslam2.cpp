@@ -1108,11 +1108,9 @@ NB_MODULE(pycuvslam, m) {
           "__init__",
           [](Tracker* self, const Rig& rig, const std::optional<Odometry::Config>& odom_config,
              const std::optional<Slam::Config>& slam_config) {
-            Tracker::Config cfg;
             // An omitted config means the Python default, which is not the C++ default.
-            cfg.odometry = odom_config.value_or(PyDefaultOdometryConfig());
-            cfg.slam = slam_config;
-            new (self) Tracker(rig, cfg);
+            const Odometry::Config odometry_config = odom_config.value_or(PyDefaultOdometryConfig());
+            new (self) Tracker(rig, odometry_config, slam_config.has_value() ? &*slam_config : nullptr);
           },
           nb::arg("rig"), nb::arg("odom_config") = nb::none(), nb::arg("slam_config") = nb::none(),
           "Initialize the cuVSLAM system. Each `Odometry.OdometryMode` has specific `rig` requirements.\n\n"

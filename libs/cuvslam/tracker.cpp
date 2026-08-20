@@ -23,12 +23,12 @@ namespace cuvslam {
 
 namespace {
 
-Odometry::Config TrackerOdometryConfig(const Tracker::Config& cfg) {
-  if (cfg.slam.has_value() && cfg.slam->gt_align_mode) {
+Odometry::Config TrackerOdometryConfig(const Odometry::Config& odometry_config, const Slam::Config* slam_config) {
+  if (slam_config != nullptr && slam_config->gt_align_mode) {
     throw std::invalid_argument{"Tracker does not support gt_align_mode; use standalone Odometry and Slam instances."};
   }
-  Odometry::Config odometry = cfg.odometry;
-  if (cfg.slam.has_value()) {
+  Odometry::Config odometry = odometry_config;
+  if (slam_config != nullptr) {
     odometry.enable_observations_export = true;
     odometry.enable_landmarks_export = true;
   }
@@ -37,9 +37,10 @@ Odometry::Config TrackerOdometryConfig(const Tracker::Config& cfg) {
 
 }  // namespace
 
-Tracker::Tracker(const Rig& rig, const Config& cfg) : odometry_{rig, TrackerOdometryConfig(cfg)} {
-  if (cfg.slam.has_value()) {
-    slam_ = std::make_unique<Slam>(rig, odometry_.GetPrimaryCameras(), *cfg.slam);
+Tracker::Tracker(const Rig& rig, const Odometry::Config& odometry_config, const Slam::Config* slam_config)
+    : odometry_{rig, TrackerOdometryConfig(odometry_config, slam_config)} {
+  if (slam_config != nullptr) {
+    slam_ = std::make_unique<Slam>(rig, odometry_.GetPrimaryCameras(), *slam_config);
   }
 }
 

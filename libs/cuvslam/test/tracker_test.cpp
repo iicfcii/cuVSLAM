@@ -52,14 +52,16 @@ Rig MakeStereoRig() {
 }
 
 /// Run the bundler and SLAM in the calling thread so the tests do not depend on background workers.
-Tracker::Config MakeSyncConfig(bool enable_slam) {
-  Tracker::Config cfg;
+struct SyncConfig {
+  Odometry::Config odometry;
+  Slam::Config slam;
+};
+
+SyncConfig MakeSyncConfig() {
+  SyncConfig cfg;
   cfg.odometry.async_sba = false;
-  if (enable_slam) {
-    cfg.slam = Slam::Config{};
-    cfg.slam->sync_mode = true;
-    cfg.slam->enable_reading_internals = true;
-  }
+  cfg.slam.sync_mode = true;
+  cfg.slam.enable_reading_internals = true;
   return cfg;
 }
 
@@ -102,14 +104,15 @@ TEST_F(TrackerTest, SlamIsDisabledByDefault) {
 }
 
 TEST_F(TrackerTest, GtAlignModeRequiresManualDispatch) {
-  Tracker::Config cfg = MakeSyncConfig(/*enable_slam=*/true);
-  cfg.slam->gt_align_mode = true;
+  SyncConfig cfg = MakeSyncConfig();
+  cfg.slam.gt_align_mode = true;
 
-  EXPECT_THROW(Tracker(rig, cfg), std::invalid_argument);
+  EXPECT_THROW(Tracker(rig, cfg.odometry, &cfg.slam), std::invalid_argument);
 }
 
 TEST_F(TrackerTest, TrackReturnsSlamPoseWhenEnabled) {
-  Tracker tracker{rig, MakeSyncConfig(/*enable_slam=*/true)};
+  SyncConfig cfg = MakeSyncConfig();
+  Tracker tracker{rig, cfg.odometry, &cfg.slam};
 
   EXPECT_TRUE(tracker.IsSlamEnabled());
   EXPECT_NO_THROW(tracker.GetSlam());
@@ -124,11 +127,11 @@ TEST_F(TrackerTest, TrackReturnsSlamPoseWhenEnabled) {
 
 // A SLAM configuration must turn on the exports SLAM depends on, whatever the odometry config said.
 TEST_F(TrackerTest, SlamConfigEnablesRequiredExports) {
-  Tracker::Config cfg = MakeSyncConfig(/*enable_slam=*/true);
+  SyncConfig cfg = MakeSyncConfig();
   cfg.odometry.enable_observations_export = false;
   cfg.odometry.enable_landmarks_export = false;
 
-  Tracker tracker{rig, cfg};
+  Tracker tracker{rig, cfg.odometry, &cfg.slam};
   tracker.Track(NextFrame());
 
   EXPECT_NO_THROW(tracker.GetOdometry().GetLastObservations(0));
@@ -141,11 +144,11 @@ TEST_F(TrackerTest, SlamConfigEnablesRequiredExports) {
 
 // Without SLAM the exports stay as configured, which is what makes the test above meaningful.
 TEST_F(TrackerTest, ExportsStayDisabledWithoutSlam) {
-  Tracker::Config cfg = MakeSyncConfig(/*enable_slam=*/false);
+  SyncConfig cfg = MakeSyncConfig();
   cfg.odometry.enable_observations_export = false;
   cfg.odometry.enable_landmarks_export = false;
 
-  Tracker tracker{rig, cfg};
+  Tracker tracker{rig, cfg.odometry};
   tracker.Track(NextFrame());
 
   EXPECT_THROW(tracker.GetOdometry().GetLastObservations(0), std::invalid_argument);
@@ -153,7 +156,8 @@ TEST_F(TrackerTest, ExportsStayDisabledWithoutSlam) {
 }
 
 TEST_F(TrackerTest, ExposesUnderlyingComponents) {
-  Tracker tracker{rig, MakeSyncConfig(/*enable_slam=*/true)};
+  SyncConfig cfg = MakeSyncConfig();
+  Tracker tracker{rig, cfg.odometry, &cfg.slam};
 
   EXPECT_FALSE(tracker.GetOdometry().GetPrimaryCameras().empty());
 
@@ -169,7 +173,8 @@ TEST_F(TrackerTest, ExposesUnderlyingComponents) {
 // to match against, so the tracker legitimately reports no pose from the second frame onwards; this
 // test is about the moved-to tracker still owning working components, not about tracking success.
 TEST_F(TrackerTest, MoveKeepsComponentsUsable) {
-  Tracker tracker{rig, MakeSyncConfig(/*enable_slam=*/true)};
+  SyncConfig cfg = MakeSyncConfig();
+  Tracker tracker{rig, cfg.odometry, &cfg.slam};
   tracker.Track(NextFrame());
 
   Tracker moved{std::move(tracker)};

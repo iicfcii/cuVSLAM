@@ -500,21 +500,20 @@ int main(int argc, char **argv) {
     cuvslam::Rig rig = getRig(dataset_path);
 
     // Configure the tracker for visual-inertial odometry with SLAM
-    cuvslam::Tracker::Config config;
-    config.odometry.odometry_mode = cuvslam::Odometry::OdometryMode::Inertial;
-    config.odometry.async_sba = false;
-    config.odometry.rectified_stereo_camera = false;
-    config.odometry.enable_observations_export = true;
-    config.odometry.enable_landmarks_export = true;
-    config.odometry.enable_final_landmarks_export = true;
+    cuvslam::Odometry::Config odometry_config;
+    odometry_config.odometry_mode = cuvslam::Odometry::OdometryMode::Inertial;
+    odometry_config.async_sba = false;
+    odometry_config.rectified_stereo_camera = false;
+    odometry_config.enable_observations_export = true;
+    odometry_config.enable_landmarks_export = true;
+    odometry_config.enable_final_landmarks_export = true;
 
-    // Setting the SLAM config enables SLAM; leave it empty for odometry only
-    config.slam = cuvslam::Slam::Config{};
-    config.slam->sync_mode = true;
-    config.slam->enable_reading_internals = true;
+    cuvslam::Slam::Config slam_config;
+    slam_config.sync_mode = true;
+    slam_config.enable_reading_internals = true;
 
     std::cout << "Initializing tracker (odometry + SLAM)..." << std::endl;
-    cuvslam::Tracker tracker(rig, config);
+    cuvslam::Tracker tracker(rig, odometry_config, &slam_config);
 
     // Reading SLAM data layers is not mirrored on Tracker, so reach the SLAM instance directly.
     // It is non-null here because the config above enables SLAM.

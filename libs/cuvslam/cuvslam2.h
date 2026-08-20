@@ -1011,9 +1011,9 @@ private:
 /**
  * @brief Visual odometry with optional SLAM, combined behind a single interface
  *
- * Tracker owns an Odometry instance and, when Config::slam is set, a Slam instance. It runs the
- * standard per-frame sequence for you: Odometry::Track(), then Odometry::GetState() and
- * Slam::Track() when odometry produced a pose, then Slam::GetPose().
+ * Tracker owns an Odometry instance and, when constructed with a non-null SLAM configuration,
+ * a Slam instance. It runs the standard per-frame sequence for you: Odometry::Track(), then
+ * Odometry::GetState() and Slam::Track() when odometry produced a pose, then Slam::GetPose().
  *
  * Everything Tracker does can be done by driving Odometry and Slam directly; use those when you
  * need full control over the two components. Tracker is the recommended entry point otherwise.
@@ -1032,28 +1032,6 @@ public:
   using ImageSet = Odometry::ImageSet;
 
   /**
-   * @brief Configuration of the tracker
-   */
-  struct Config {
-    /// Odometry configuration.
-    /// @note When `slam` is set, the tracker enables `enable_observations_export` and
-    /// `enable_landmarks_export` on its own copy of this config, because SLAM needs both. The
-    /// config object you pass in is never modified.
-    Odometry::Config odometry;
-    /// SLAM configuration. Empty (the default) disables SLAM, and the tracker then runs pure
-    /// visual odometry. `Slam::Config::gt_align_mode` is not supported by Tracker; use standalone
-    /// Odometry and Slam instances for ground-truth-aligned map building.
-    std::optional<Slam::Config> slam;
-  };
-
-  // TODO(vikuznetsov): remove when https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165 is fixed
-  /// @brief Get default configuration. SLAM is disabled by default.
-  ///
-  /// @see Config for default values.
-  /// @return default configuration
-  static Config GetDefaultConfig() { return Config{}; }
-
-  /**
    * @brief Result of a single Track() call
    */
   struct TrackResult {
@@ -1067,12 +1045,19 @@ public:
   /**
    * @brief Construct a tracker
    *
-   * @param[in] rig  rig setup
-   * @param[in] cfg  tracker configuration
+   * When `slam_config` is non-null, Tracker enables observation and landmark export on its own copy
+   * of `odometry_config`, because SLAM needs both. The configs passed by the caller are not modified.
+   *
+   * @param[in] rig               rig setup
+   * @param[in] odometry_config   odometry configuration
+   * @param[in] slam_config       optional SLAM configuration; pass nullptr (the default) to disable
+   * SLAM. `Slam::Config::gt_align_mode` is not supported by Tracker; use standalone Odometry and
+   * Slam instances for ground-truth-aligned map building.
    * @throws std::runtime_error if odometry or SLAM fails to initialize
-   * @throws std::invalid_argument if rig or config is invalid
+   * @throws std::invalid_argument if rig or configuration is invalid
    */
-  explicit Tracker(const Rig& rig, const Config& cfg = GetDefaultConfig());
+  explicit Tracker(const Rig& rig, const Odometry::Config& odometry_config = Odometry::GetDefaultConfig(),
+                   const Slam::Config* slam_config = nullptr);
 
   /**
    * @brief Move constructor
