@@ -28,7 +28,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Callable, Dict, Optional, Sequence, Tuple
+from typing import Callable, Dict, Optional, Sequence
 
 DEFAULT_RAW_DIR_TEMPLATE = "./datasets/{dataset}/raw"
 DEFAULT_OUTPUT_DIR = "./datasets/converted"
@@ -127,48 +127,3 @@ def run_preparation(prepare: Callable[[], Path]) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     return 0
-
-
-# --- Compatibility shims for datasets that still wrap a preparation shell script. ---
-# Removed once every dataset owns a prepare.py module.
-
-
-def source_prepare_script(current_file: str, dataset_name: str, script_name: str) -> Optional[Path]:
-    """Return the repository-local package script when running from a source checkout."""
-    current = Path(current_file).resolve()
-    for parent in current.parents:
-        candidate = (
-            parent
-            / "tools"
-            / "python_tools"
-            / "cuvslam_tools"
-            / "dataset_preparation"
-            / dataset_name
-            / script_name
-        )
-        if candidate.exists():
-            return candidate
-    return None
-
-
-def bundled_prepare_script(current_file: str, script_name: str) -> Path:
-    """Return the preparation script bundled next to a dataset CLI module."""
-    return Path(current_file).resolve().with_name(script_name)
-
-
-def resolve_prepare_script(current_file: str, dataset_name: str, script_name: str) -> Tuple[Path, bool]:
-    """Return the best script path and whether it came from a source checkout."""
-    source_script = source_prepare_script(current_file, dataset_name, script_name)
-    if source_script is not None:
-        return source_script, True
-    return bundled_prepare_script(current_file, script_name), False
-
-
-def installed_raw_dir(dataset_name: str) -> Path:
-    """Default raw-data directory for installed package runs."""
-    return default_raw_dir(dataset_name)
-
-
-def installed_output_dir() -> Path:
-    """Default converted-data directory for installed package runs."""
-    return default_output_dir()

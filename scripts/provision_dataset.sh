@@ -56,15 +56,12 @@ s3_tarball="$(s3_tarball_uri "$DATASET")"
 upload_subdir="$(dataset_upload_subdir "$DATASET")"
 upload_src="$converted_dir${upload_subdir:+/$upload_subdir}"
 
-# Migrated datasets are prepared by a Python module; the rest still use a shell
-# script until every dataset owns a prepare.py.
 PYTHON_TOOLS_DIR="$REPO_ROOT/tools/python_tools"
 prepare_module="cuvslam_tools.dataset_preparation.${DATASET}.prepare"
 prepare_module_file="$PYTHON_TOOLS_DIR/${prepare_module//.//}.py"
-prepare_script="$REPO_ROOT/$(dataset_prepare_script "$DATASET")"
 
-if [ ! -f "$prepare_module_file" ] && [ ! -f "$prepare_script" ]; then
-  echo "Error: no preparation module or script found for '$DATASET'" >&2
+if [ ! -f "$prepare_module_file" ]; then
+  echo "Error: dataset preparation module not found: $prepare_module" >&2
   exit 1
 fi
 
@@ -88,19 +85,11 @@ fi
 rm -rf "$raw_dir" "$converted_dir" "$tarball"
 mkdir -p "$raw_dir" "$converted_dir"
 
-if [ -f "$prepare_module_file" ]; then
-  echo "=== Preparing $DATASET with $prepare_module ==="
-  PYTHONPATH="$PYTHON_TOOLS_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m "$prepare_module" \
-    --raw-dir "$raw_dir" \
-    --output-dir "$converted_dir" \
-    "${download_args[@]}"
-else
-  echo "=== Preparing $DATASET with $(basename "$prepare_script") ==="
-  bash "$prepare_script" \
-    --raw-dir "$raw_dir" \
-    --output-dir "$converted_dir" \
-    "${download_args[@]}"
-fi
+echo "=== Preparing $DATASET with $prepare_module ==="
+PYTHONPATH="$PYTHON_TOOLS_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m "$prepare_module" \
+  --raw-dir "$raw_dir" \
+  --output-dir "$converted_dir" \
+  "${download_args[@]}"
 
 file_count="$(find "$upload_src" -type f | wc -l)"
 if [ "$file_count" -eq 0 ]; then

@@ -189,7 +189,10 @@ prepare_tum \
     --output-dir /path/to/datasets/converted
 ```
 
-All dataset preparation commands support `--force-download` and `--download-only`.
+All dataset preparation commands support `--force-download` and `--download-only`, default to `./datasets/<dataset>/raw`
+and `./datasets/converted` relative to the current directory, and are implemented as
+`cuvslam_tools.dataset_preparation.<dataset>.prepare`. Each module exposes a `prepare()` function that scripts can call
+directly and a `main()` entry point behind the console command.
 
 ## Tracking
 
