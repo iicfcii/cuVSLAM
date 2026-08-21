@@ -12,10 +12,10 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+import contextlib
 import io
 import json
 import os
-import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -23,6 +23,7 @@ from pathlib import Path
 from unittest import mock
 
 from cuvslam_tools.dataset_preparation.euroc import convert_euroc
+from cuvslam_tools.dataset_preparation.euroc import prepare as euroc_prepare
 
 
 _CAMERA_X_IN_BODY = [
@@ -272,7 +273,7 @@ class TestEurocConvertedSequence(unittest.TestCase):
 
 
 class TestEurocConfigGeneration(unittest.TestCase):
-    def test_prepare_script_converts_explicit_subset_end_to_end(self):
+    def test_prepare_converts_explicit_subset_end_to_end(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             raw = root / "raw"
@@ -290,28 +291,17 @@ class TestEurocConfigGeneration(unittest.TestCase):
                 "printf '363f5c2502b469cdd97ef85997714806  %s\\n' \"$2\"\n"
             )
             md5sum.chmod(0o755)
-            env = dict(os.environ)
-            env["PATH"] = f"{fake_bin}:{env['PATH']}"
-            script = Path(convert_euroc.__file__).with_name("prepare_euroc.sh")
 
-            completed = subprocess.run(
-                [
-                    "bash",
-                    str(script),
-                    "--raw-dir",
-                    str(raw),
-                    "--output-dir",
-                    str(output),
-                    "--sequences",
-                    "MH_01_easy",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
+            # The cached archive lets the real download script verify and reuse it.
+            with mock.patch.dict(os.environ, {"PATH": f"{fake_bin}:{os.environ['PATH']}"}):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    prepared = euroc_prepare.prepare(
+                        raw_dir=raw,
+                        output_dir=output,
+                        sequences=["MH_01_easy"],
+                    )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(prepared, output / "euroc")
             self.assertTrue((output / "euroc" / "dataset_metadata.json").is_file())
             self.assertTrue((output / "euroc" / "MH_01_easy" / "gt.txt").is_file())
 

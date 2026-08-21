@@ -720,6 +720,16 @@ def _selected_sequences(sequences: Optional[Sequence[str]]) -> List[str]:
     return ordered
 
 
+def required_archives(sequences: Optional[Sequence[str]] = None) -> List[str]:
+    """Return the source bundle archives needed to convert the selected sequences."""
+    selected = set(_selected_sequences(sequences))
+    return [
+        archive_name
+        for archive_name, archive_sequences in _OUTER_ZIPS
+        if selected.intersection(archive_sequences)
+    ]
+
+
 def _dataset_metadata(
     archives: List[Dict[str, str]],
     config_names: List[str],

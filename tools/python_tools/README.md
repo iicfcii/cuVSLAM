@@ -129,9 +129,9 @@ from cuvslam_tools.dataset_preparation.kitti.prepare import prepare
 converted_root = prepare(raw_dir="/data/kitti/raw", output_dir="/data/converted")
 ```
 
-`prepare_euroc` downloads the official Machine Hall, Vicon Room 1, and Vicon Room 2 bundles and converts all 11
-EuRoC MAV sequences. The output is portable: camera images are copied under each prepared sequence instead of
-being linked to raw data outside the prepared root.
+`prepare_euroc` runs `cuvslam_tools.dataset_preparation.euroc.prepare`. It downloads the official Machine Hall,
+Vicon Room 1, and Vicon Room 2 bundles and converts all 11 EuRoC MAV sequences. The output is portable: camera
+images are copied under each prepared sequence instead of being linked to raw data outside the prepared root.
 
 ```bash
 prepare_euroc \
