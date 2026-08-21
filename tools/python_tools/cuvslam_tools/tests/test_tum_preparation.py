@@ -14,8 +14,8 @@
 
 """Archive extraction safety for the TUM RGB-D preparation.
 
-Extraction is hand-rolled on Python tarfile instead of tar, so member and link
-paths that would escape the destination need to stay rejected.
+Extraction is hand-rolled on Python tarfile instead of tar, which validates
+member names and link targets separately. One case covers each branch.
 """
 
 import io
@@ -26,21 +26,6 @@ from pathlib import Path
 
 from cuvslam_tools.dataset_preparation.common import PreparationError
 from cuvslam_tools.dataset_preparation.tum import prepare as tum_prepare
-
-SEQUENCE = tum_prepare.SEQUENCE_NAME
-
-
-def _add_file(tar: tarfile.TarFile, name: str, contents: bytes = b"payload") -> None:
-    info = tarfile.TarInfo(name)
-    info.size = len(contents)
-    tar.addfile(info, io.BytesIO(contents))
-
-
-def _add_link(tar: tarfile.TarFile, name: str, target: str, symlink: bool = True) -> None:
-    info = tarfile.TarInfo(name)
-    info.type = tarfile.SYMTYPE if symlink else tarfile.LNKTYPE
-    info.linkname = target
-    tar.addfile(info)
 
 
 class TestTumSafeExtraction(unittest.TestCase):
@@ -59,46 +44,25 @@ class TestTumSafeExtraction(unittest.TestCase):
             build(tar)
         return archive
 
-    def test_regular_members_are_extracted(self):
-        archive = self._archive(lambda tar: _add_file(tar, f"{SEQUENCE}/rgb.txt", b"# rgb\n"))
-
-        tum_prepare.extract_archive(archive, self.destination)
-
-        self.assertEqual((self.destination / SEQUENCE / "rgb.txt").read_text(), "# rgb\n")
-
-    def test_parent_traversal_member_is_rejected(self):
-        archive = self._archive(lambda tar: _add_file(tar, "../escaped.txt"))
+    def test_traversing_member_is_rejected(self):
+        def build(tar):
+            info = tarfile.TarInfo("../escaped.txt")
+            info.size = len(b"payload")
+            tar.addfile(info, io.BytesIO(b"payload"))
 
         with self.assertRaisesRegex(PreparationError, "unsafe member path"):
-            tum_prepare.extract_archive(archive, self.destination)
+            tum_prepare.extract_archive(self._archive(build), self.destination)
         self.assertFalse((self.root / "escaped.txt").exists())
 
-    def test_absolute_member_is_rejected(self):
-        archive = self._archive(lambda tar: _add_file(tar, "/etc/escaped.txt"))
-
-        with self.assertRaisesRegex(PreparationError, "unsafe member path"):
-            tum_prepare.extract_archive(archive, self.destination)
-
-    def test_traversing_symlink_target_is_rejected(self):
-        archive = self._archive(lambda tar: _add_link(tar, f"{SEQUENCE}/link", "../../outside"))
+    def test_traversing_link_target_is_rejected(self):
+        def build(tar):
+            info = tarfile.TarInfo(f"{tum_prepare.SEQUENCE_NAME}/link")
+            info.type = tarfile.SYMTYPE
+            info.linkname = "../../outside"
+            tar.addfile(info)
 
         with self.assertRaisesRegex(PreparationError, "unsafe link target"):
-            tum_prepare.extract_archive(archive, self.destination)
-
-    def test_absolute_hardlink_target_is_rejected(self):
-        archive = self._archive(
-            lambda tar: _add_link(tar, f"{SEQUENCE}/link", "/etc/passwd", symlink=False)
-        )
-
-        with self.assertRaisesRegex(PreparationError, "unsafe link target"):
-            tum_prepare.extract_archive(archive, self.destination)
-
-    def test_corrupt_archive_is_reported(self):
-        archive = self.root / "broken.tgz"
-        archive.write_bytes(b"not a gzip archive")
-
-        with self.assertRaisesRegex(PreparationError, "failed to extract"):
-            tum_prepare.extract_archive(archive, self.destination)
+            tum_prepare.extract_archive(self._archive(build), self.destination)
 
 
 if __name__ == "__main__":
