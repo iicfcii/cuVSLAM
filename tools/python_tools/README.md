@@ -170,7 +170,7 @@ cuvslam_reporter \
     --use_segments
 ```
 
-`prepare_tartan` downloads a TartanGround variant, stages each available `lcam_*`/`rcam_*` stereo pair into the classic TartanAir layout expected by the converter, and converts the staged sequences to EDEX.
+`prepare_tartan` runs `cuvslam_tools.dataset_preparation.tartan.prepare`. It downloads a TartanGround variant, stages each available `lcam_*`/`rcam_*` stereo pair into the classic TartanAir layout expected by the converter, and converts the staged sequences to EDEX.
 
 ```bash
 prepare_tartan \
