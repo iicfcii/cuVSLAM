@@ -520,6 +520,10 @@ public:
     /// guesses for left-to-right (L2R) tracking. Used in the same modes as min_depth.
     /// Any negative value (e.g. -1) auto-detects from the pair baseline: small stereo (~7 cm)
     /// → 20 m, KITTI-scale (~0.5 m) → 1000 m. Default: -1.f (auto).
+    /// This only places the farthest initial guess; nothing is clamped. Points beyond max_depth
+    /// still track and triangulate normally — the leftover disparity there (fx*B/max_depth, about
+    /// 0.4 px for KITTI at 1000 m) is well inside LK's basin. Infinity is therefore unnecessary,
+    /// and non-finite values are rejected.
     float max_depth = -1.f;
   };
 
