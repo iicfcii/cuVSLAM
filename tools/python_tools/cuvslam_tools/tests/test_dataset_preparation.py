@@ -94,16 +94,6 @@ class TestPreparationHelpers(unittest.TestCase):
         with self.assertRaisesRegex(common.PreparationError, "download script not found"):
             common.run_download_script(Path("/nonexistent/download_missing.sh"))
 
-    def test_download_script_receives_extra_environment(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            script = root / "download_env.sh"
-            script.write_text(f'#!/usr/bin/env bash\nprintf "%s" "$MARKER" > "{root}/marker"\n')
-
-            common.run_download_script(script, extra_env={"MARKER": "set"})
-
-            self.assertEqual((root / "marker").read_text(), "set")
-
     def test_empty_artifacts_are_treated_as_missing(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

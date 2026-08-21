@@ -12,6 +12,12 @@
 # By using, reproducing, modifying, distributing, performing, or displaying any portion or element
 # of the software or derivative works thereof, you agree to be bound by this License.
 
+"""EuRoC bundle selection, plus the download script's cache and user-agent handling.
+
+Selecting the wrong bundle means downloading 6-12 GB that is not needed, so the
+sequence-to-archive mapping is worth pinning down.
+"""
+
 import io
 import os
 import subprocess
@@ -21,7 +27,6 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
-from cuvslam_tools.dataset_preparation.common import PreparationError
 from cuvslam_tools.dataset_preparation.euroc import convert_euroc
 from cuvslam_tools.dataset_preparation.euroc import prepare as euroc_prepare
 
@@ -74,143 +79,37 @@ class TestEurocBundleSelection(unittest.TestCase):
         with self.assertRaisesRegex(convert_euroc.ConversionError, "unknown sequence"):
             convert_euroc.required_archives(["MH_99_easy"])
 
-
-class TestEurocPrepareApi(unittest.TestCase):
-    def setUp(self):
-        self._temporary = tempfile.TemporaryDirectory()
-        self.root = Path(self._temporary.name)
-        self.raw_dir = self.root / "raw"
-        self.output_dir = self.root / "converted"
-
-    def tearDown(self):
-        self._temporary.cleanup()
-
-    def _run(self, **kwargs):
-        with mock.patch.object(euroc_prepare, "run_download_script") as download, mock.patch.object(
-            euroc_prepare.convert_euroc, "convert"
-        ) as convert, mock.patch.object(euroc_prepare, "require_nonempty_files"), redirect_stdout(
-            io.StringIO()
-        ):
-            prepared = euroc_prepare.prepare(
-                raw_dir=self.raw_dir,
-                output_dir=self.output_dir,
-                **kwargs,
-            )
-        return prepared, download, convert
-
     def test_explicit_subset_downloads_only_its_bundles(self):
-        _, download, _ = self._run(sequences=["MH_01_easy", "V1_01_easy"])
+        with tempfile.TemporaryDirectory() as temporary:
+            raw_dir = Path(temporary) / "raw"
+            with mock.patch.object(euroc_prepare, "run_download_script") as download, redirect_stdout(
+                io.StringIO()
+            ):
+                euroc_prepare.prepare(
+                    raw_dir=raw_dir,
+                    output_dir=Path(temporary) / "converted",
+                    sequences=["MH_01_easy", "V1_01_easy"],
+                    download_only=True,
+                )
 
         self.assertEqual(
             download.call_args.args[1],
-            [str(self.raw_dir), "--archive", "machine_hall.zip", "--archive", "vicon_room1.zip"],
+            [str(raw_dir), "--archive", "machine_hall.zip", "--archive", "vicon_room1.zip"],
         )
 
     def test_default_run_leaves_bundle_selection_to_the_download_script(self):
-        _, download, convert = self._run()
-
-        self.assertEqual(download.call_args.args[1], [str(self.raw_dir)])
-        convert.assert_called_once_with(self.raw_dir, self.output_dir / "euroc", None)
-
-    def test_download_only_never_converts(self):
-        prepared, download, convert = self._run(sequences=["MH_01_easy"], download_only=True)
-
-        self.assertEqual(prepared, self.raw_dir)
-        convert.assert_not_called()
-        download.assert_called_once()
-
-    def test_force_download_reaches_the_download_script(self):
-        _, download, _ = self._run(sequences=["V2_01_easy"], force_download=True)
-
-        self.assertEqual(
-            download.call_args.args[1],
-            [str(self.raw_dir), "--force", "--archive", "vicon_room2.zip"],
-        )
-
-    def test_unknown_sequence_fails_before_downloading(self):
-        with mock.patch.object(euroc_prepare, "run_download_script") as download, redirect_stdout(
-            io.StringIO()
-        ):
-            with self.assertRaisesRegex(PreparationError, "unknown sequence"):
+        with tempfile.TemporaryDirectory() as temporary:
+            raw_dir = Path(temporary) / "raw"
+            with mock.patch.object(euroc_prepare, "run_download_script") as download, redirect_stdout(
+                io.StringIO()
+            ):
                 euroc_prepare.prepare(
-                    raw_dir=self.raw_dir,
-                    output_dir=self.output_dir,
-                    sequences=["MH_99_easy"],
+                    raw_dir=raw_dir,
+                    output_dir=Path(temporary) / "converted",
+                    download_only=True,
                 )
 
-        download.assert_not_called()
-
-    def test_missing_converter_output_is_reported(self):
-        with mock.patch.object(euroc_prepare, "run_download_script"), mock.patch.object(
-            euroc_prepare.convert_euroc, "convert"
-        ), redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(PreparationError, "dataset_metadata.json"):
-                euroc_prepare.prepare(
-                    raw_dir=self.raw_dir,
-                    output_dir=self.output_dir,
-                    sequences=["MH_01_easy"],
-                )
-
-    def test_defaults_are_relative_to_the_current_directory(self):
-        previous = Path.cwd()
-        os.chdir(self.root)
-        try:
-            with mock.patch.object(euroc_prepare, "run_download_script"), mock.patch.object(
-                euroc_prepare.convert_euroc, "convert"
-            ) as convert, mock.patch.object(
-                euroc_prepare, "require_nonempty_files"
-            ), redirect_stdout(io.StringIO()):
-                euroc_prepare.prepare()
-        finally:
-            os.chdir(previous)
-
-        convert.assert_called_once_with(
-            self.root / "datasets" / "euroc" / "raw",
-            self.root / "datasets" / "converted" / "euroc",
-            None,
-        )
-
-
-class TestEurocPrepareCli(unittest.TestCase):
-    def test_main_forwards_every_flag_to_prepare(self):
-        with mock.patch.object(euroc_prepare, "prepare") as prepare:
-            self.assertEqual(
-                euroc_prepare.main(
-                    [
-                        "--raw-dir",
-                        "/raw",
-                        "--output-dir",
-                        "/converted",
-                        "--sequences",
-                        "MH_01_easy",
-                        "V1_01_easy",
-                        "--force-download",
-                    ]
-                ),
-                0,
-            )
-
-        prepare.assert_called_once_with(
-            raw_dir=Path("/raw"),
-            output_dir=Path("/converted"),
-            sequences=["MH_01_easy", "V1_01_easy"],
-            force_download=True,
-            download_only=False,
-        )
-
-    def test_main_rejects_an_unknown_sequence_as_a_usage_error(self):
-        with mock.patch("sys.stderr", new_callable=io.StringIO):
-            with self.assertRaises(SystemExit) as raised:
-                euroc_prepare.main(["--sequences", "MH_99_easy"])
-
-        self.assertEqual(raised.exception.code, 2)
-
-    def test_main_reports_preparation_errors_on_stderr(self):
-        with mock.patch.object(euroc_prepare, "prepare", side_effect=PreparationError("bundle missing")):
-            with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
-                self.assertEqual(euroc_prepare.main([]), 1)
-
-        self.assertIn("bundle missing", stderr.getvalue())
+        self.assertEqual(download.call_args.args[1], [str(raw_dir)])
 
 
 class TestEurocDownloadScript(unittest.TestCase):

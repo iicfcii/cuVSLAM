@@ -24,11 +24,10 @@ turns those into a nonzero exit code and a concise stderr message.
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Callable, Dict, Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 DEFAULT_RAW_DIR_TEMPLATE = "./datasets/{dataset}/raw"
 DEFAULT_OUTPUT_DIR = "./datasets/converted"
@@ -90,23 +89,14 @@ def add_common_arguments(
     parser.add_argument("--download-only", action="store_true", help=download_only_help)
 
 
-def run_download_script(
-    script: Path,
-    arguments: Sequence[str] = (),
-    extra_env: Optional[Dict[str, str]] = None,
-) -> None:
+def run_download_script(script: Path, arguments: Sequence[str] = ()) -> None:
     """Run a dataset ``download_*.sh`` script and raise on failure."""
     if not script.is_file():
         raise PreparationError(f"download script not found: {script}")
 
-    env = None
-    if extra_env:
-        env = dict(os.environ)
-        env.update(extra_env)
-
     # Keep our own progress output ordered relative to the script's output.
     sys.stdout.flush()
-    completed = subprocess.run(["bash", str(script), *arguments], check=False, env=env)
+    completed = subprocess.run(["bash", str(script), *arguments], check=False)
     if completed.returncode != 0:
         raise PreparationError(f"{script.name} failed with exit code {completed.returncode}")
 
