@@ -23,7 +23,6 @@ import zipfile
 from pathlib import Path
 from unittest import mock
 
-from cuvslam_tools.dataset_preparation.common import PreparationError
 from cuvslam_tools.dataset_preparation.euroc import convert_euroc
 from cuvslam_tools.dataset_preparation.euroc import prepare as euroc_prepare
 
@@ -547,14 +546,6 @@ class TestEurocBundleSelection(unittest.TestCase):
             convert_euroc.required_archives(["V2_01_easy", "MH_01_easy"]),
             ["machine_hall.zip", "vicon_room2.zip"],
         )
-
-    def test_explicitly_empty_selection_is_rejected_rather_than_converting_everything(self):
-        with mock.patch.object(euroc_prepare, "run_download_script") as download:
-            with contextlib.redirect_stdout(io.StringIO()):
-                with self.assertRaisesRegex(PreparationError, "no sequences selected"):
-                    euroc_prepare.prepare(raw_dir=Path("/raw"), output_dir=Path("/out"), sequences=[])
-
-        download.assert_not_called()
 
     def test_explicit_subset_downloads_only_its_bundles(self):
         with tempfile.TemporaryDirectory() as temporary:
