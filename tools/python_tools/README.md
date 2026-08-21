@@ -179,6 +179,10 @@ prepare_tartan \
     --output-dir /path/to/datasets/converted
 ```
 
+This command needs the [tartanair](https://tartanair.org/installation.html) package for the download step
+(`pip install tartanair`). That package is x86_64-only, so on aarch64 download on an x86_64 machine and transfer the
+data.
+
 Use `--variant multicamera` for EDEX conversion from the 12-camera TartanGround image variant. Both TartanGround variants also download metadata, including `pose_lcam_*` and `pose_rcam_*` files. The multicamera variant converts each complete stereo orientation, for example `P2000_front`, `P2000_left`, and `P2000_right`. The `multisensor` variant is intended for the RGB-D/IMU example data and can be downloaded with `--download-only`.
 
 `prepare_tum` runs `cuvslam_tools.dataset_preparation.tum.prepare`. It downloads and lays out the TUM RGB-D `freiburg3_long_office_household` dataset and copies the bundled rig calibration into the sequence folder.

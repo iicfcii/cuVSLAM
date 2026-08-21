@@ -24,25 +24,21 @@ is preserved.
 
 import argparse
 import shutil
-import sys
 from pathlib import Path
 from typing import List, Optional
 
 from cuvslam_tools.dataset_preparation.common import (
     PreparationError,
     add_common_arguments,
-    dataset_file,
     resolve_output_dir,
     resolve_raw_dir,
-    run_download_script,
     run_preparation,
 )
 
-from .download import VARIANTS
+from .download import VARIANTS, download_tartan_ground
 from .stage_sequences import stage_sequences
 
 DATASET_NAME = "tartan"
-DOWNLOAD_SCRIPT = "download_tartan.sh"
 DEFAULT_VARIANT = "multisensor"
 
 # The converter writes its results in place but still requires both output folders,
@@ -79,14 +75,11 @@ def prepare(
     if not download_only and not force_download and converted_dir.exists():
         raise PreparationError(f"{converted_dir} already exists; use --force-download to overwrite")
 
-    download_arguments = [str(raw_dir), "--variant", variant]
-    if force_download:
-        download_arguments.append("--force")
-    run_download_script(
-        dataset_file(__file__, DOWNLOAD_SCRIPT),
-        download_arguments,
-        extra_env={"PYTHON_BIN": sys.executable},
-    )
+    if force_download and sequence_root.exists():
+        shutil.rmtree(sequence_root)
+
+    print(f"Downloading TartanGround ({variant}) into {sequence_root} …")
+    download_tartan_ground(variant, str(sequence_root))
 
     if download_only:
         return raw_dir

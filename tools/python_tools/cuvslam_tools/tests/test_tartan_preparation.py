@@ -51,7 +51,7 @@ class TestTartanPrepareDownload(unittest.TestCase):
         self._temporary.cleanup()
 
     def test_download_only_multisensor_never_stages_or_converts(self):
-        with mock.patch.object(tartan_prepare, "run_download_script") as download, mock.patch.object(
+        with mock.patch.object(tartan_prepare, "download_tartan_ground") as download, mock.patch.object(
             tartan_prepare, "stage_sequences"
         ) as stage, redirect_stdout(io.StringIO()):
             prepared = tartan_prepare.prepare(
@@ -63,12 +63,13 @@ class TestTartanPrepareDownload(unittest.TestCase):
 
         self.assertEqual(prepared, self.raw_dir)
         stage.assert_not_called()
-        script, arguments = download.call_args.args
-        self.assertEqual(script.name, "download_tartan.sh")
-        self.assertEqual(arguments, [str(self.raw_dir), "--variant", "multisensor"])
+        download.assert_called_once_with(
+            "multisensor",
+            str(self.raw_dir / "dataset" / "tartan_ground"),
+        )
 
-    def test_downloader_runs_with_the_current_interpreter(self):
-        with mock.patch.object(tartan_prepare, "run_download_script") as download, redirect_stdout(
+    def test_downloader_receives_an_absolute_data_root(self):
+        with mock.patch.object(tartan_prepare, "download_tartan_ground") as download, redirect_stdout(
             io.StringIO()
         ):
             tartan_prepare.prepare(
@@ -77,10 +78,16 @@ class TestTartanPrepareDownload(unittest.TestCase):
                 download_only=True,
             )
 
-        self.assertEqual(download.call_args.kwargs["extra_env"], {"PYTHON_BIN": sys.executable})
+        data_root = Path(download.call_args.args[1])
+        self.assertTrue(data_root.is_absolute())
+        self.assertEqual(data_root, self.raw_dir / "dataset" / "tartan_ground")
 
-    def test_force_download_reaches_the_download_script(self):
-        with mock.patch.object(tartan_prepare, "run_download_script") as download, redirect_stdout(
+    def test_force_download_discards_the_previous_download(self):
+        sequence_root = self.raw_dir / "dataset" / "tartan_ground"
+        sequence_root.mkdir(parents=True)
+        (sequence_root / "stale.zip").write_text("stale")
+
+        with mock.patch.object(tartan_prepare, "download_tartan_ground") as download, redirect_stdout(
             io.StringIO()
         ):
             tartan_prepare.prepare(
@@ -91,13 +98,25 @@ class TestTartanPrepareDownload(unittest.TestCase):
                 download_only=True,
             )
 
-        self.assertEqual(
-            download.call_args.args[1],
-            [str(self.raw_dir), "--variant", "multicamera", "--force"],
-        )
+        self.assertFalse((sequence_root / "stale.zip").exists())
+        download.assert_called_once_with("multicamera", str(sequence_root))
+
+    def test_existing_download_is_kept_without_force(self):
+        sequence_root = self.raw_dir / "dataset" / "tartan_ground"
+        sequence_root.mkdir(parents=True)
+        (sequence_root / "cached.zip").write_text("cached")
+
+        with mock.patch.object(tartan_prepare, "download_tartan_ground"), redirect_stdout(io.StringIO()):
+            tartan_prepare.prepare(
+                raw_dir=self.raw_dir,
+                output_dir=self.output_dir,
+                download_only=True,
+            )
+
+        self.assertEqual((sequence_root / "cached.zip").read_text(), "cached")
 
     def test_unknown_variant_is_rejected_before_downloading(self):
-        with mock.patch.object(tartan_prepare, "run_download_script") as download:
+        with mock.patch.object(tartan_prepare, "download_tartan_ground") as download:
             with self.assertRaisesRegex(PreparationError, "unknown variant"):
                 tartan_prepare.prepare(raw_dir=self.raw_dir, variant="stereo")
 
@@ -107,7 +126,7 @@ class TestTartanPrepareDownload(unittest.TestCase):
         previous = Path.cwd()
         os.chdir(self.root)
         try:
-            with mock.patch.object(tartan_prepare, "run_download_script") as download, redirect_stdout(
+            with mock.patch.object(tartan_prepare, "download_tartan_ground") as download, redirect_stdout(
                 io.StringIO()
             ):
                 prepared = tartan_prepare.prepare(download_only=True)
@@ -116,7 +135,15 @@ class TestTartanPrepareDownload(unittest.TestCase):
 
         expected_raw = self.root / "datasets" / "tartan" / "raw"
         self.assertEqual(prepared, expected_raw)
-        self.assertEqual(download.call_args.args[1], [str(expected_raw), "--variant", "multisensor"])
+        self.assertEqual(
+            download.call_args.args[1],
+            str(expected_raw / "dataset" / "tartan_ground"),
+        )
+
+    def test_missing_tartanair_package_is_reported_with_install_instructions(self):
+        with mock.patch.dict(sys.modules, {"tartanair": None}):
+            with self.assertRaisesRegex(PreparationError, "pip install tartanair"):
+                tartan_download.download_tartan_ground("multisensor", str(self.raw_dir))
 
 
 class TestTartanPrepareConversion(unittest.TestCase):
@@ -130,9 +157,11 @@ class TestTartanPrepareConversion(unittest.TestCase):
     def tearDown(self):
         self._temporary.cleanup()
 
-    def _prepare(self, converter, **kwargs):
+    def _prepare(self, converter, download=None, **kwargs):
         """Run prepare() with a stubbed download step and converter."""
-        with mock.patch.object(tartan_prepare, "run_download_script"), mock.patch.dict(
+        with mock.patch.object(
+            tartan_prepare, "download_tartan_ground", side_effect=download
+        ), mock.patch.dict(
             sys.modules,
             {"cuvslam_tools.dataset_preparation.tartan.dataset_converter.convert": converter},
         ), redirect_stdout(io.StringIO()):
@@ -204,7 +233,16 @@ class TestTartanPrepareConversion(unittest.TestCase):
         converted_dir.mkdir(parents=True)
         (converted_dir / "previous.txt").write_text("stale")
 
-        self._prepare(self._converter_writing_cfg_edex(), variant="multicamera", force_download=True)
+        # force_download discards the raw download first, so the stub re-fetches it.
+        def refetch(variant, data_root):
+            _write_tartanground_sequence(self.sequence_dir)
+
+        self._prepare(
+            self._converter_writing_cfg_edex(),
+            download=refetch,
+            variant="multicamera",
+            force_download=True,
+        )
 
         self.assertFalse((converted_dir / "previous.txt").exists())
         self.assertIsNotNone(next(converted_dir.rglob("cfg.edex"), None))
@@ -245,7 +283,7 @@ class TestTartanPrepareEndToEnd(unittest.TestCase):
             sequence_dir = raw_dir / "dataset" / "tartan_ground" / "OldTownFall" / "Data_anymal" / "P2000"
             _write_tartanground_sequence(sequence_dir, orientations=("front", "left"))
 
-            with mock.patch.object(tartan_prepare, "run_download_script"), redirect_stdout(io.StringIO()):
+            with mock.patch.object(tartan_prepare, "download_tartan_ground"), redirect_stdout(io.StringIO()):
                 converted_dir = tartan_prepare.prepare(
                     raw_dir=raw_dir,
                     output_dir=root / "converted",
@@ -365,6 +403,17 @@ class TestTartanDownloadVariants(unittest.TestCase):
             )
 
         download_tartan_ground.assert_called_once_with("multicamera", "/tmp/tartan_ground")
+
+    def test_download_main_reports_a_missing_package_on_stderr(self):
+        with mock.patch.object(
+            tartan_download,
+            "download_tartan_ground",
+            side_effect=PreparationError("the tartanair package is required"),
+        ):
+            with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+                self.assertEqual(tartan_download.main([]), 1)
+
+        self.assertIn("tartanair package is required", stderr.getvalue())
 
 
 class TestTartanStaging(unittest.TestCase):

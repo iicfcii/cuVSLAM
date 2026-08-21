@@ -35,12 +35,12 @@ CI scripts (`scripts/`):
 - `Dockerfile` / `build_cuvslam_in_docker.sh` - product build image and wrapper; preserve Git/LFS metadata used by
   `get_version()`.
 
-Dataset tooling: `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/` (`prepare.py` plus `download_<name>.sh`), `tools/cuvslam_app/` (eval runner and `edex_reader.py`).
+Dataset tooling: `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/` (`prepare.py`, plus `download_<name>.sh` where `curl` resume and checksum behaviour is needed), `tools/cuvslam_app/` (eval runner and `edex_reader.py`).
 
 ## Task: add a dataset
 
 1. In `scripts/datasets_config.sh`, add the name to `PROVISIONABLE_DATASETS` and add its `dataset_upload_subdir` case (empty string means the converted root; otherwise the subdir under the converted output).
-2. Add `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/prepare.py` (plus a download script) exposing `prepare()` and `main()`, which converts raw data to the edex layout under `--output-dir`. `provision_dataset.sh` resolves the module as `cuvslam_tools.dataset_preparation.<name>.prepare` and requires it to accept `--raw-dir`, `--output-dir`, and `--force-download`.
+2. Add `tools/python_tools/cuvslam_tools/dataset_preparation/<name>/prepare.py` (plus a downloader) exposing `prepare()` and `main()`, which converts raw data to the edex layout under `--output-dir`. `provision_dataset.sh` resolves the module as `cuvslam_tools.dataset_preparation.<name>.prepare` and requires it to accept `--raw-dir`, `--output-dir`, and `--force-download`.
 3. Add the dataset to the `dataset` choice input in `provision-datasets.yml`.
 4. Run Provision dataset (`workflow_dispatch`) on the default branch. It writes `<S3_DATASETS_BUCKET>/<name>.tar`.
 5. Add the name to `EVAL_DATASET_NAMES` in `datasets_config.sh`, and add a record to `DATASETS[]` in `scripts/run_eval.sh`: `LABEL|link_name|subdir|test_config|app_flags`.
