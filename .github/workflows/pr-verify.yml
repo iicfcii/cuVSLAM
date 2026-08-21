@@ -128,6 +128,20 @@ jobs:
           DOCKER_BUILDKIT=1 docker build -f scripts/Dockerfile.ci . --network host --tag cuvslam-ci:local \
             --secret id=aws_cli_public_key,src="$keyfile"
 
+      # Runs before the build so a broken tool fails in seconds. The package is
+      # copied out of the read-only mount before installing, as run_eval.sh does,
+      # to keep pip build artifacts out of the runner workspace.
+      - name: Run Python tools tests
+        run: |
+          docker run --rm --network host \
+            -v "$(pwd):/cuvslam:ro" \
+            cuvslam-ci:local \
+            bash -c 'set -euo pipefail
+              src="$(mktemp -d)"
+              cp -a /cuvslam/tools/python_tools/. "$src/"
+              pip install --quiet "$src"
+              PYTHONPATH="$src" python3 -m unittest discover -v -s "$src/cuvslam_tools/tests"'
+
       - name: Verify eval prerequisites
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_RO_ACCESS_KEY_ID }}

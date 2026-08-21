@@ -120,7 +120,9 @@ jobs:
       matrix:
         include:
           # x86_64 configs (CUDA/Ubuntu controlled by Docker build args)
-          - { name: "x86_64 / cuda-12.6 / ubuntu-22.04", runner: '["gpu"]', cuda: "12.6.3", ubuntu: "22.04", archs: "75;80;86;89;90", platform: "x86_64", wheel: true, eval: true, docs: true }
+          # tools_tests is platform-independent, so one config runs it. It needs the
+          # CI tools image, which is only built for eval-enabled configs.
+          - { name: "x86_64 / cuda-12.6 / ubuntu-22.04", runner: '["gpu"]', cuda: "12.6.3", ubuntu: "22.04", archs: "75;80;86;89;90", platform: "x86_64", wheel: true, eval: true, docs: true, tools_tests: true }
           - { name: "x86_64 / cuda-12.6 / ubuntu-24.04", runner: '["gpu"]', cuda: "12.6.3", ubuntu: "24.04", archs: "75;80;86;89;90", platform: "x86_64", wheel: true, eval: true }
           - { name: "x86_64 / cuda-13.2 / ubuntu-22.04", runner: '["gpu"]', cuda: "13.2.0", ubuntu: "22.04", archs: "75;80;86;89;100;120;121", platform: "x86_64", wheel: true, eval: true }
           - { name: "x86_64 / cuda-13.2 / ubuntu-24.04", runner: '["gpu"]', cuda: "13.2.0", ubuntu: "24.04", archs: "75;80;86;89;100;120;121", platform: "x86_64", wheel: true, eval: true }
@@ -170,6 +172,21 @@ jobs:
           printf '%s\n' "$AWS_CLI_PUBLIC_KEY" > "$keyfile"
           DOCKER_BUILDKIT=1 docker build -f scripts/Dockerfile.ci . --network host --tag cuvslam-ci:local \
             --secret id=aws_cli_public_key,src="$keyfile"
+
+      # Runs before the build so a broken tool fails in seconds. The package is
+      # copied out of the read-only mount before installing, as run_eval.sh does,
+      # to keep pip build artifacts out of the runner workspace.
+      - name: Run Python tools tests
+        if: matrix.tools_tests
+        run: |
+          docker run --rm --network host \
+            -v "$(pwd):/cuvslam:ro" \
+            cuvslam-ci:local \
+            bash -c 'set -euo pipefail
+              src="$(mktemp -d)"
+              cp -a /cuvslam/tools/python_tools/. "$src/"
+              pip install --quiet "$src"
+              PYTHONPATH="$src" python3 -m unittest discover -v -s "$src/cuvslam_tools/tests"'
 
       - name: Verify eval prerequisites
         if: matrix.eval
