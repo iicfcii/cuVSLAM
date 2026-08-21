@@ -65,7 +65,9 @@ def prepare(
     """
     raw_dir = resolve_raw_dir(raw_dir, DATASET_NAME)
     output_dir = resolve_output_dir(output_dir)
-    selected = list(sequences) if sequences else None
+    # Only an omitted selection means "all 11"; an explicitly empty one is an error
+    # the converter reports, not a request to convert everything.
+    selected = list(sequences) if sequences is not None else None
 
     print(f"Raw dir    : {raw_dir}")
     print(f"Output dir : {output_dir}")
