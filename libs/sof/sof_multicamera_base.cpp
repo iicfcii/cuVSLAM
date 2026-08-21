@@ -31,6 +31,7 @@ MultiSOFBase::MultiSOFBase(const camera::Rig& rig, const camera::FrustumIntersec
 float MultiSOFBase::CrossCamSearchRadius(int top_level) {
   // Empirical multiplier — smaller values under-reach for jittery interpolation, larger values
   // invite decoy matches. 3 gives best KITTI ATE with the current epipolar-curve construction.
+  // Works out to 48 base-level px for the usual 4-level pyramid.
   constexpr float kMultiplier = 3.f;
   return kMultiplier * static_cast<float>(1u << (top_level + 1));
 }

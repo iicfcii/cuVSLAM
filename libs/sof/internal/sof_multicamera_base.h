@@ -82,7 +82,8 @@ protected:
   // within a few pixels of the true match, LK only needs local refinement. Sized at an
   // empirically-tuned multiple of top-level pixel size (see .cpp for tuning notes) — large enough
   // to permit refinement, small enough to prevent lateral drift onto decoy features. Shared by
-  // MultiSOFCPU and MultiSOFGPU so both paths use the same reach.
+  // MultiSOFCPU and MultiSOFGPU so both paths use the same reach, and by LK and LKHorizontal alike
+  // — rectified stereo gets the same radius as the general case.
   static float CrossCamSearchRadius(int top_level);
 
   camera::Rig rig_;
