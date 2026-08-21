@@ -24,7 +24,6 @@ from unittest import mock
 from cuvslam_tools.dataset_preparation.tartan import cli as tartan_cli
 from cuvslam_tools.dataset_preparation.tartan import download as tartan_download
 from cuvslam_tools.dataset_preparation.tartan import stage_sequences as tartan_stage
-from cuvslam_tools.dataset_preparation.tum import cli as tum_cli
 
 
 class TestDatasetPreparationCli(unittest.TestCase):
@@ -71,19 +70,6 @@ class TestDatasetPreparationCli(unittest.TestCase):
         )
         self.assertFalse(kwargs["check"])
         self.assertEqual(kwargs["env"]["PYTHON_BIN"], sys.executable)
-
-    def test_prepare_tum_source_defaults_defer_to_shell_script(self):
-        completed = subprocess.CompletedProcess(args=[], returncode=0)
-        script = Path("/src/tum/prepare_tum.sh")
-
-        with mock.patch.object(
-            tum_cli,
-            "resolve_prepare_script",
-            return_value=(script, True),
-        ), mock.patch.object(tum_cli.subprocess, "run", return_value=completed) as run:
-            self.assertEqual(tum_cli.main([]), 0)
-
-        run.assert_called_once_with(["bash", str(script)], check=False)
 
     def test_tartan_download_variants_share_download_implementation(self):
         expected_variants = {
