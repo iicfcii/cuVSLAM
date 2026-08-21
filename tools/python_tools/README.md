@@ -103,7 +103,7 @@ undistort_edex_images --help
 
 ## Dataset Preparation
 
-`prepare_kitti` is the installed CLI wrapper for the `cuvslam_tools.dataset_preparation.kitti` workflow. It downloads the KITTI odometry archives when needed, converts them to cuVSLAM format, and writes the reporter config files produced by that workflow, including:
+`prepare_kitti` runs `cuvslam_tools.dataset_preparation.kitti.prepare`. It downloads the KITTI odometry archives when needed, converts them to cuVSLAM format, and writes the reporter config files produced by that workflow, including:
 
 - `kitti-vio_gt.cfg`
 - `kitti-slam_gt.cfg`
@@ -119,6 +119,15 @@ prepare_kitti \
 ```
 
 The converted dataset layout is suitable for tracker and reporter workflows. Pass one of the generated KITTI config files to `cuvslam_reporter --test_config`.
+
+Without `--raw-dir` and `--output-dir`, the command uses `./datasets/kitti/raw` and `./datasets/converted`, relative to
+the current directory. The same workflow is importable, so scripts can prepare a dataset without going through the CLI:
+
+```python
+from cuvslam_tools.dataset_preparation.kitti.prepare import prepare
+
+converted_root = prepare(raw_dir="/data/kitti/raw", output_dir="/data/converted")
+```
 
 `prepare_euroc` downloads the official Machine Hall, Vicon Room 1, and Vicon Room 2 bundles and converts all 11
 EuRoC MAV sequences. The output is portable: camera images are copied under each prepared sequence instead of
