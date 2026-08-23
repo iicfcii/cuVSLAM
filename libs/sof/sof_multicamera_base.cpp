@@ -19,6 +19,12 @@
 
 namespace cuvslam::sof {
 
+// Minimum number of primary->secondary matches for a frame to be usable as a keyframe. Only
+// matched pairs can be triangulated, so below this the keyframe would contribute no landmarks.
+// Kept deliberately low: this rejects frames that can contribute nothing, it does not try to
+// judge whether a frame is a *good* anchor. See the call site in trackNextFrame().
+constexpr size_t kMinStereoPairsForKeyframe = 10;
+
 MultiSOFBase::MultiSOFBase(const camera::Rig& rig, const camera::FrustumIntersectionGraph& fid,
                            const Settings& sof_settings, const odom::KeyFrameSettings& keyframe_settings)
     : rig_(rig), fid_(fid), box_prefilter_(sof_settings.box3_prefilter), kf_selector_(keyframe_settings) {}
@@ -104,6 +110,18 @@ bool MultiSOFBase::trackNextFrame(const Sources& curr_sources, Images& curr_imag
     // (e.g. Blackwell sm_121), leading to CUDA error 700 after ~200 frames.
     cudaDeviceSynchronize();
     StartKeyframe();
+
+    // Count how many tracks get matched from a primary camera into a secondary one. Only those
+    // can be triangulated into landmarks, so the count is what this frame is able to contribute
+    // to the map. Taken as a before/after difference on the total observation count because the
+    // two backends emit their matches in different places: the GPU path defers to
+    // GetTrackingResults(), while the CPU path pushes directly from LaunchTrackingPrimaryToSecondary
+    // and leaves GetTrackingResults() a no-op. Bracketing the whole section covers both.
+    size_t observations_before = 0;
+    for (const auto& cam_observations : observations) {
+      observations_before += cam_observations.size();
+    }
+
     const auto& primary_cams = fid_.primary_cameras();
     for (CameraId primary_cam_id : primary_cams) {
       if (primary_cam_id >= curr_images.size() || curr_images[primary_cam_id] == nullptr) {
@@ -118,13 +136,28 @@ bool MultiSOFBase::trackNextFrame(const Sources& curr_sources, Images& curr_imag
                                          observations[primary_cam_id], &observations[secondary_cam_id]);
       }
     }
-    // if (num_prim_to_sec_tracks == 0) {
-    //     /* We cant track any stereo pair because of the image loss. Just pass observations to 3D in the hope we
-    //      * won't drift too much. Reset keyframe selector to try on the next frame; */
-    //     reset_keyframe_selector();
-    //     return true;
-    // }
     GetTrackingResults(observations);
+
+    size_t observations_after = 0;
+    for (const auto& cam_observations : observations) {
+      observations_after += cam_observations.size();
+    }
+    const size_t stereo_pairs = observations_after - observations_before;
+
+    if (stereo_pairs < kMinStereoPairsForKeyframe) {
+      // No track was seen by two cameras, so triangulate() would produce nothing and this frame
+      // cannot anchor anything. Degraded images are the common cause, but a failed or badly
+      // calibrated secondary camera looks the same and is handled identically.
+      //
+      // reset_keyframe_selector() un-consumes the request that is_keyframe() just recorded, so the
+      // next frame is offered again instead of waiting for 41% track attrition or the 60 s
+      // backstop. Note this is not a quality gate: SOF cannot see which tracks already carry
+      // landmarks (that lives in the solver's MulticamTriangulator), so it can only tell whether
+      // stereo is working at all. Judging whether a keyframe is worth committing belongs in
+      // SolverSfMInertial, which can see the map.
+      reset_keyframe_selector();
+      return true;  // state stays FrameState::None
+    }
     state = FrameState::Key;
   }
   return true;
