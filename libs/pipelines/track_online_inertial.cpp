@@ -652,12 +652,35 @@ bool SolverSfMInertial::solveNextFrame(int64_t time_ns, const sof::FrameState& f
       // visual anchor, avoiding accumulated error from chaining frame-to-frame steps.
       sba_imu::IMUPreintegration preint(calib_, imu_storage_, s.gyro_bias, s.acc_bias, it->keyframe->time_ns(),
                                         time_ns);
+      // The integration window that predict_pose will coast over: [anchor keyframe, now]. dT_s is
+      // the dt that multiplies velocity and squares against gravity, so it is the quantity that
+      // sets how far an IMU-only pose can drift from the last visual fix.
+      TraceMessage("[INTEG WINDOW] kf_t=%lld now=%lld age=%.4f s dT_s=%.4f s samples=%d vel=[%.3f,%.3f,%.3f]",
+                   static_cast<long long>(it->keyframe->time_ns()), static_cast<long long>(time_ns),
+                   static_cast<double>(time_ns - it->keyframe->time_ns()) * 1e-9,
+                   static_cast<double>(preint.GetDeltaT_s()), static_cast<int>(preint.size()), s.velocity.x(),
+                   s.velocity.y(), s.velocity.z());
       integ_kf = {s.rig_from_w.inverse() * rig_from_imu, s.velocity, s.gyro_bias, s.acc_bias, preint};
     }
   }
 
   if (integrated) {
-    integ_kf.predict_pose(*maybe_gravity, integ_kf.preintegration, curr_pose);
+    // Propagate from the previous frame, not from the newest keyframe.
+    //
+    // prev_pose holds the pose published for the previous frame, and prev_pose.preintegration was
+    // assigned from last_frame_preint_ above, so it spans exactly [previous frame, now] — one
+    // frame, rather than the age of the last keyframe. runInertialPnP leaves prev_pose untouched
+    // when it fails, and the std::swap below has not run yet, so prev_pose is still the previous
+    // frame's pose at this point.
+    //
+    // Chaining this every frame integrates the same IMU samples as one long propagation from the
+    // keyframe — algebraically the same double integral — but starts from the most recent visual
+    // fix instead of one that can be tens of seconds old. That matters because predict_pose's
+    // 0.5*g*dt^2 term must cancel against R1*dP to millimetres: measured on EuRoC MH_01, a residual
+    // of ~0.6% of g turns a 20 s keyframe age into a 3.8 m position error, while the same residual
+    // over one 50 ms frame is negligible. Keyframe age is set by track attrition (41%) with a 60 s
+    // backstop, so it is unbounded and unrelated to how long vision has actually been unavailable.
+    prev_pose.predict_pose(*maybe_gravity, prev_pose.preintegration, curr_pose);
     TraceDebug("Pose was integrated!");
   }
   if (pnp_result || imu_state == StateMachine::State::Ok) {
@@ -699,12 +722,15 @@ bool SolverSfMInertial::solveNextFrame(int64_t time_ns, const sof::FrameState& f
     is_first_run = false;
   }
 
-  // IMU-only fallback poses bridge short visual outages, but they are not visual
-  // measurements. Committing them as keyframes can poison the map with anchors
-  // that have no reliable visual pose constraint, which makes later IMU-only
-  // propagation jump from a bad keyframe state. Keep the initial no-PnP bootstrap
-  // path intact; it is needed before the map has enough landmarks for PnP.
-  if (frameState == sof::FrameState::Key && !integrated) {
+  // d203689 ("[bug] Fix inertial mode in case image blackout", PR #33, branch zheng/gh-47-issue)
+  // added a `&& !integrated` guard here to stop IMU-only poses becoming map anchors. Reverted
+  // deliberately: vetoing the commit leaves the map holding landmarks whose track ids all died
+  // during the outage, so re-detected features match nothing and PnP can never recover. Measured
+  // on EuRoC MH_01 with 5-frame blackouts every 500 frames, the guard put 13% of the run under
+  // zero visual constraint (worst stretch 404 frames / 20 s) against 5 frames without it, and
+  // halved gravity coverage to 47%. The jump it was written to prevent is addressed at the
+  // anchor instead — see the prev_pose propagation above.
+  if (frameState == sof::FrameState::Key) {
     auto tr_landmarks = triangulator.triangulate(world_from_rig, obs_vector_);
 
     State state = {rig_from_w, !lost ? prev_pose.velocity : last_valid_pose.velocity,
