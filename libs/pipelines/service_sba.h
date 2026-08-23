@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
+#include <utility>
 
 #include "camera/rig.h"
 #include "common/log.h"
@@ -37,6 +39,12 @@ namespace cuvslam::pipelines {
 using namespace cuvslam::map;
 
 int CalcNumFixedKeyframes(size_t map_size, size_t numFixedKeyFrames);
+
+// Index of the first keyframe of the newest visually-connected component in the window.
+// Keyframes before it share no landmark, directly or transitively, with the newest keyframe, so
+// in a visual bundle adjustment nothing constrains their pose relative to it. Returns 0 when the
+// whole window is connected, which is the normal case.
+size_t FindNewestVisualComponentStart(const UnifiedMap::SubMap& sub_map);
 
 // Non-template base for SBA services that need per-call settings updates.
 // Provides a thread-safe pending/current split so that settings written by the
@@ -180,8 +188,27 @@ void run_sba(const UnifiedMap::SubMap& recent_map, const camera::Rig& rig, const
 }
 
 template <typename bundler_type>
-void run_imu_sba(const UnifiedMap::SubMap& recent_map, const Vector3T& gravity, const camera::Rig& rig,
+void run_imu_sba(UnifiedMap::SubMap recent_map, const Vector3T& gravity, const camera::Rig& rig,
                  const imu::ImuCalibration& calib, const sba::Settings& sba_settings, bundler_type& bundler) {
+  // Keyframes before the split share no landmark with the newest keyframe, so no reprojection
+  // residual relates the two halves and the only thing joining them is the inter-keyframe IMU
+  // edge. Across a multi-second gap that edge's 0.5*g*dt^2 term is large and confidently wrong:
+  // measured on EuRoC MH_01 after a blackout, it relocated the recovery keyframe by 0.269 m and
+  // dragged its landmarks with it, which the live tracker then followed. Optimize the newest
+  // component alone. The discarded keyframes have already been refined by earlier passes; the new
+  // ones have not, and after the erase the recovery keyframe sits at index 0 where
+  // num_fixed_key_frames pins it at the coasted pose -- the right place for a pose vision cannot
+  // correct. The bad edge goes with the prefix, since a preintegration is stored on the keyframe
+  // it starts from (map.h: "contains measurements SINCE this keyframe").
+  if (const size_t split = FindNewestVisualComponentStart(recent_map); split > 0) {
+    TraceMessage("[SBA SPLIT] dropping %d of %d keyframes: no landmark shared with the newest component",
+                 static_cast<int>(split), static_cast<int>(recent_map.consecutive_keyframes.size()));
+    auto& kfs = recent_map.consecutive_keyframes;
+    auto& lms = recent_map.landmark_and_obs;
+    kfs.erase(kfs.begin(), kfs.begin() + static_cast<std::ptrdiff_t>(split));
+    lms.erase(lms.begin(), lms.begin() + static_cast<std::ptrdiff_t>(split));
+  }
+
   sba_imu::ImuBAProblem problem;
   problem.rig = rig;
   problem.gravity = gravity;
@@ -367,7 +394,7 @@ public:
     // first run
     if (gravity) {
       TRACE_EVENT ev1 = profiler_domain_.trace_event("run_imu_sba");
-      run_imu_sba(recent_map, *gravity, rig_, calib_, current_, imu_bundler_);
+      run_imu_sba(std::move(recent_map), *gravity, rig_, calib_, current_, imu_bundler_);
       TraceDebug("IMU SBA has finished");
     } else {
       TRACE_EVENT ev1 = profiler_domain_.trace_event("run_sba");

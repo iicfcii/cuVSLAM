@@ -17,6 +17,8 @@
 
 #include "pipelines/service_sba.h"
 
+#include <unordered_set>
+
 namespace cuvslam::pipelines {
 
 int CalcNumFixedKeyframes(size_t map_size, size_t numFixedKeyFrames) {
@@ -31,5 +33,44 @@ int CalcNumFixedKeyframes(size_t map_size, size_t numFixedKeyFrames) {
   }
 
   return numFixedKeyFrames;
+}
+
+size_t FindNewestVisualComponentStart(const UnifiedMap::SubMap& sub_map) {
+  const size_t n = sub_map.landmark_and_obs.size();
+  if (n < 2) {
+    return 0;
+  }
+
+  // Walk the window forward, carrying the landmark set of the component built so far. A keyframe
+  // sharing nothing with that set cannot be tied to it by any reprojection residual, so it opens a
+  // new component; the last one opened is the one containing the newest keyframe.
+  size_t start = 0;
+  std::unordered_set<LandmarkPtr> component;
+
+  const auto insert_landmarks = [&component](const auto& landmarks) {
+    for (const auto& [landmark, obs] : landmarks) {
+      if (landmark->get_pose()) {
+        component.insert(landmark);
+      }
+    }
+  };
+  const auto shares_landmark = [&component](const auto& landmarks) {
+    for (const auto& [landmark, obs] : landmarks) {
+      if (landmark->get_pose() && component.count(landmark) > 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  insert_landmarks(sub_map.landmark_and_obs[0]);
+  for (size_t i = 1; i < n; i++) {
+    if (!shares_landmark(sub_map.landmark_and_obs[i])) {
+      start = i;
+      component.clear();
+    }
+    insert_landmarks(sub_map.landmark_and_obs[i]);
+  }
+  return start;
 }
 }  // namespace cuvslam::pipelines

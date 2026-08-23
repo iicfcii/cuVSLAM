@@ -14,6 +14,7 @@
 
 set(SOURCES
     tracker_state_machine_test.cpp
+    service_sba_test.cpp
 )
 
 set(LIBS
