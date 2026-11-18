@@ -1,0 +1,6 @@
+# files written by replay_rrd_compare.py: <recording>__<label>.{rrd,png,json,npz}
+*__*.rrd
+*__*.png
+*__*.json
+*__*.npz
+__pycache__/

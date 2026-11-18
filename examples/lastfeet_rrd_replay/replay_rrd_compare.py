@@ -10,7 +10,7 @@ SLAM with background threads, `async_sba`, `use_gpu`, rig anchored at the URDF b
 initial world pose. The live poses in the recording are in that same world frame, so the two trajectories are
 directly comparable with no alignment step.
 
-What it writes (into --out, named `<recording>__<label>`):
+What it writes (into --out, by default the directory this script is in, named `<recording>__<label>`):
 
     .rrd    rerun recording: 3D trajectories (live vs replay) plus track() time, divergence, gravity series
     .png    one-page summary of the same
@@ -19,10 +19,10 @@ What it writes (into --out, named `<recording>__<label>`):
 
 Typical use (A/B over the two IMU patches, one build, no rebuild):
 
-    python replay_rrd_compare.py logs/.../real_nov-11-2026_12-58-41.rrd --out out/
-    CUVSLAM_HOLD_GRAVITY=0 python replay_rrd_compare.py <rrd> --out out/
-    CUVSLAM_IMU_SBA_INIT=1 python replay_rrd_compare.py <rrd> --out out/
-    python replay_rrd_compare.py <rrd> --out out/ --no-replay --overlay out/*.npz   # side-by-side figure
+    python replay_rrd_compare.py logs/.../real_nov-11-2026_12-58-41.rrd
+    CUVSLAM_HOLD_GRAVITY=0 python replay_rrd_compare.py <rrd>
+    CUVSLAM_IMU_SBA_INIT=1 python replay_rrd_compare.py <rrd>
+    python replay_rrd_compare.py <rrd> --no-replay --overlay *.npz   # side-by-side figure
 
 Needs, besides cuvslam: numpy, scipy, opencv, pyyaml, matplotlib and rerun-sdk >= 0.35 (older rerun cannot
 read these files). It imports the live tracker's calibration helpers from the monorepo (--monorepo).
@@ -58,7 +58,8 @@ DEFAULT_MONOREPO = Path.home() / "code" / "lastfeet-monorepo"
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("rrd", type=Path, help="control-rs recording (the raw .rrd, not *_policy_pinhole.rrd)")
-    p.add_argument("--out", type=Path, default=Path("replay_out"), help="output directory")
+    p.add_argument("--out", type=Path, default=Path(__file__).resolve().parent,
+                   help="output directory (default: next to this script; generated files are gitignored)")
     p.add_argument("--label", default=None,
                    help="run label (default: cuvslam version + the two IMU experiment flags)")
     p.add_argument("--monorepo", type=Path, default=DEFAULT_MONOREPO,

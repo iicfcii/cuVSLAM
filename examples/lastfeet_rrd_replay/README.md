@@ -51,17 +51,17 @@ so the first few `track()` calls of a fresh machine are slow. The script reports
 cd ~/code/lastfeet-monorepo/logs/delivery-veho-rw-20261111
 S=~/code/cuVSLAM/examples/lastfeet_rrd_replay/replay_rrd_compare.py
 
-python $S real_nov-11-2026_12-58-41.rrd --out ~/replay_out                      # paced at the recorded rate
-python $S real_nov-11-2026_12-58-41.rrd --out ~/replay_out --speed 0            # as fast as possible
+python $S real_nov-11-2026_12-58-41.rrd                      # paced at the recorded rate
+python $S real_nov-11-2026_12-58-41.rrd --speed 0            # as fast as possible
 python $S ... --max-seconds 30 --speed 0                                        # quick functional check
 
 # the A/B matrix: each run writes its own .npz
-CUVSLAM_HOLD_GRAVITY=0                         python $S <rrd> --out ~/replay_out
-CUVSLAM_IMU_SBA_INIT=1                         python $S <rrd> --out ~/replay_out
-CUVSLAM_HOLD_GRAVITY=0 CUVSLAM_IMU_SBA_INIT=1  python $S <rrd> --out ~/replay_out
+CUVSLAM_HOLD_GRAVITY=0                         python $S <rrd>
+CUVSLAM_IMU_SBA_INIT=1                         python $S <rrd>
+CUVSLAM_HOLD_GRAVITY=0 CUVSLAM_IMU_SBA_INIT=1  python $S <rrd>
 
 # one figure / one rerun recording with all of them against the live run
-python $S <rrd> --out ~/replay_out --no-replay --overlay ~/replay_out/*.npz
+python $S <rrd> --no-replay --overlay *.npz
 ```
 
 Use the raw `real_*.rrd`, not `*_policy_pinhole.rrd`. Other useful flags: `--aux left right` (try 4 pairs, live used
@@ -94,7 +94,8 @@ Not reproduced:
 
 ## Outputs
 
-For recording `X` and run label `L` (cuvslam version + the two flags), `--out` gets `X__L.{rrd,png,json,npz}`:
+For recording `X` and run label `L` (cuvslam version + the two flags), `--out` (default: this directory, where
+`.gitignore` keeps the generated files out of git) gets `X__L.{rrd,png,json,npz}`:
 
 - `.rrd`: open with `rerun`. 3D view with the live SLAM path in white and each replay run in colour (solid = slam,
   dark = odometry, light = the pose graph after the final optimisation), loop closures, a moving pose frame per source,
