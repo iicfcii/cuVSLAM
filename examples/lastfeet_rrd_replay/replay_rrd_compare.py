@@ -43,10 +43,14 @@ import os
 import re
 import sys
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
+
+# rerun warns about Python 3.10 reaching end of life on every import; not actionable here.
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # --------------------------------------------------------------------------------------------------------
 # Arguments
