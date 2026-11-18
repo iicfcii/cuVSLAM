@@ -144,7 +144,12 @@ private:
   sba_imu::IMUBundler init_bundler_;
   StateMachine sm_;
 
-  bool enable_imu_sba_init_ = true;
+  // OFF deliberately. run_imu_sba_init bundle-adjusts synchronously on the tracking thread
+  // whatever async_sba says, which stalls the tracker at gravity init on Jetson Orin. Measured
+  // cost of disabling it on EuRoC MH_01: gravity converged at frame 276 instead of 261, and
+  // nothing else moved (3682/3682 frames tracked either way). Private member, so this cannot
+  // come from apply_expert_parameters -- it has to be a source edit.
+  bool enable_imu_sba_init_ = false;
   bool is_first_run_ = true;
   bool integrated_ = false;
   int64_t prev_pose_ts_ns_ = -1;

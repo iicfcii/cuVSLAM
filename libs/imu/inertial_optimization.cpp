@@ -669,10 +669,13 @@ bool InertialOptimizer::optimize_inertial(std::vector<Pose>& poses, const imu::I
 
       {
         TRACE_EVENT ev1 = profiler_domain_.trace_event("update");
-        Matrix3T R;
-        Vector3T twist = {step[0], 0, step[1]};
-        math::Exp(R, twist);
-        Rgravity = Rgravity * R;
+        // Gravity is deliberately NOT updated here: held at the LinearAlignment +
+        // RefineGravity estimate while the LM refines velocities and biases only.
+        // Gravity and acc_bias separate only under attitude change, so on a mostly-yawing
+        // platform the cost is near-flat along that manifold and cost-reducing steps walk
+        // far along it, re-explaining a bias by tilting gravity. Measured on an OAK-D W,
+        // solver error vs the accelerometer: 9-12 deg -> 1.2 deg (poorly excited), 2 deg
+        // -> 0.1 deg (well excited). step[0..1] are still solved for, just not applied.
 
         gyro_bias += step.segment<3>(2);
         acc_bias += step.segment<3>(5);
