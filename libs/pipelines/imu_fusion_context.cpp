@@ -18,6 +18,7 @@
 #include "pipelines/imu_fusion_context.h"
 
 #include "common/include_eigen.h"
+#include "common/log.h"
 #include "common/vector_2t.h"
 #include "epipolar/camera_selection.h"
 
@@ -120,6 +121,8 @@ ImuFusionContext::ImuFusionContext(map::UnifiedMap& map, const camera::Rig& rig,
       init_bundler_(calib, use_gpu_bundler),
       sm_() {
   prev_pose_.w_from_imu = calib_.rig_from_imu();
+  TraceWarning("IMU experiment flags: CUVSLAM_IMU_SBA_INIT=%d CUVSLAM_HOLD_GRAVITY=%d",
+               enable_imu_sba_init_ ? 1 : 0, ExperimentFlag("CUVSLAM_HOLD_GRAVITY", true) ? 1 : 0);
 }
 
 void ImuFusionContext::register_gravity_callback() {
