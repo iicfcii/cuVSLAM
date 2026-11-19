@@ -94,8 +94,8 @@ Not reproduced:
 
 ## Outputs
 
-For recording `X` and run label `L` (cuvslam version + the two flags), `--out` (default: this directory, where
-`.gitignore` keeps the generated files out of git) gets `X__L.{rrd,png,json,npz}`:
+For recording `X` and run label `L` (cuvslam version + the two flags), `--out` (default: `results/` next to the script,
+created if missing and gitignored) gets `X__L.{rrd,png,json,npz}`:
 
 - `.rrd`: open with `rerun`. 3D view with the live SLAM path in white and each replay run in colour (solid = slam,
   dark = odometry, light = the pose graph after the final optimisation), loop closures, a moving pose frame per source,

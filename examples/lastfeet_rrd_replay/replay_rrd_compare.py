@@ -10,7 +10,7 @@ SLAM with background threads, `async_sba`, `use_gpu`, rig anchored at the URDF b
 initial world pose. The live poses in the recording are in that same world frame, so the two trajectories are
 directly comparable with no alignment step.
 
-What it writes (into --out, by default the directory this script is in, named `<recording>__<label>`):
+What it writes (into --out, by default `results/` next to this script, named `<recording>__<label>`):
 
     .rrd    rerun recording: 3D trajectories (live vs replay) plus track() time, divergence, gravity series
     .png    one-page summary of the same
@@ -62,8 +62,8 @@ DEFAULT_MONOREPO = Path.home() / "code" / "lastfeet-monorepo"
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("rrd", type=Path, help="control-rs recording (the raw .rrd, not *_policy_pinhole.rrd)")
-    p.add_argument("--out", type=Path, default=Path(__file__).resolve().parent,
-                   help="output directory (default: next to this script; generated files are gitignored)")
+    p.add_argument("--out", type=Path, default=Path(__file__).resolve().parent / "results",
+                   help="output directory, created if missing (default: results/ next to this script, gitignored)")
     p.add_argument("--label", default=None,
                    help="run label (default: cuvslam version + the two IMU experiment flags)")
     p.add_argument("--monorepo", type=Path, default=DEFAULT_MONOREPO,
@@ -83,6 +83,9 @@ def parse_args():
     p.add_argument("--no-imu", action="store_true", help="Multisensor without IMU fusion")
     p.add_argument("--cuvslam-verbosity", type=int, default=2,
                    help="2 (warning) prints the IMU experiment flags the build is running with")
+    p.add_argument("--gravity-window", type=int, default=10,
+                   help="ticks either side of the gravity-init tick to summarise track() over (the init SBA, when "
+                        "enabled, runs synchronously around there)")
     p.add_argument("--no-replay", action="store_true",
                    help="do not run cuvslam; only draw the live trajectory and the --overlay runs")
     p.add_argument("--overlay", nargs="*", type=Path, default=[], help=".npz files from earlier runs to draw too")
@@ -542,7 +545,8 @@ def run_replay(args, rec, label):
         "label": label, "recording": args.rrd.name, "cuvslam_version": cuvslam.get_version()[0],
         "flags": flags, "mode": str(mode), "speed": args.speed, "imu": bool(imu_calib), "slam": slam_on,
         "cameras": cams, "ticks": n, "tick_errors": len(errors), "wall_s": wall,
-        "frame_period_ms": frame_period_s * 1e3, "gravity_first_frame": gravity_frame,
+        "frame_period_ms": frame_period_s * 1e3 / (args.speed if args.speed > 0 else 1.0),
+        "gravity_first_frame": gravity_frame,
         "max_seconds": args.max_seconds,
     }
     return {
@@ -586,6 +590,9 @@ def divergence(run_ts, run_xyz, live):
     return d
 
 
+GRAVITY_WINDOW = 10  # set from --gravity-window in main()
+
+
 def metrics_for(run, rec):
     live_slam, live_odom = live_arrays(rec)
     ts = run["ts"]
@@ -607,6 +614,24 @@ def metrics_for(run, rec):
         m["track_ramp_last_over_first_third"] = float(v[-third:].mean() / max(v[:third].mean(), 1e-9))
         win = np.floor(t_s[ok] / 10).astype(int)
         m["track_ms_per_10s_window_mean"] = [float(v[win == w].mean()) for w in np.unique(win)]
+    # The synchronous IMU SBA init, when enabled, runs on the tracking thread when gravity is first estimated, so
+    # a stall shows up as a single slow track() at that tick. A window mean would hide it; report the max.
+    m["top_track_spikes"] = [{"tick": int(i), "ms": float(tm[i])} for i in np.argsort(np.nan_to_num(tm))[::-1][:5]]
+    g0 = run["meta"]["gravity_first_frame"]
+    if g0 is not None and ok.any():
+        lo, hi = max(0, g0 - GRAVITY_WINDOW), min(len(tm), g0 + GRAVITY_WINDOW + 1)
+        w = tm[lo:hi]
+        w = w[~np.isnan(w)]
+        if len(w):
+            wmax_i = lo + int(np.nanargmax(tm[lo:hi]))
+            budget = run["meta"]["frame_period_ms"]
+            m["gravity_tick_window"] = {
+                "gravity_tick": int(g0), "ticks": [int(lo), int(hi - 1)], "max_ms": float(w.max()),
+                "max_tick": wmax_i, "mean_ms": float(w.mean()), "run_median_ms": float(np.nanmedian(tm)),
+                "over_frame_period": int((w > budget).sum()),
+                # 1 = the slowest track() of the whole run falls in this window
+                "rank_among_run": int((np.nan_to_num(tm) > w.max()).sum()) + 1,
+            }
     lag = run["lag_ms"][~np.isnan(run["lag_ms"])]
     if len(lag):
         m["lag_ms"] = {"mean": float(lag.mean()), "max": float(lag.max()), "final": float(lag[-1])}
@@ -665,6 +690,15 @@ def print_summary(rec, runs_metrics, live_m):
         if dv:
             print(f"  vs live slam: median {dv['median']:.2f}  p95 {dv['p95']:.2f}  max {dv['max']:.2f}  "
                   f"final {dv['final']:.2f} m")
+        gw = m.get("gravity_tick_window")
+        if gw:
+            print(f"  track() around gravity init (tick {gw['gravity_tick']}, ticks {gw['ticks'][0]}-{gw['ticks'][1]}): "
+                  f"max {gw['max_ms']:.1f} ms at tick {gw['max_tick']}, mean {gw['mean_ms']:.1f} "
+                  f"(run median {gw['run_median_ms']:.1f}), {gw['over_frame_period']} over the frame period, "
+                  f"slowest-in-run rank {gw['rank_among_run']}")
+        if m.get("top_track_spikes"):
+            print("  slowest track() calls: " + ", ".join(f"tick {t['tick']} {t['ms']:.0f} ms"
+                                                          for t in m["top_track_spikes"]))
         if "gravity_tilt_deg" in m:
             g = m["gravity_tilt_deg"]
             print(f"  gravity converged at tick {m['gravity_first_frame']}, tilt median {g['median']:.1f}  "
@@ -824,6 +858,8 @@ def default_label(version):
 
 def main():
     args = parse_args()
+    global GRAVITY_WINDOW
+    GRAVITY_WINDOW = args.gravity_window
     if not args.rrd.exists():
         sys.exit(f"{args.rrd} not found")
     if "policy_pinhole" in args.rrd.name:
